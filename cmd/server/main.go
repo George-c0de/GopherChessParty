@@ -1,8 +1,8 @@
 package main
 
 import (
-	"fmt"
 	"github.com/George-c0de/GopherChessParty/internal/config"
+	chess "github.com/George-c0de/GopherChessParty/internal/services"
 	"log/slog"
 	"os"
 )
@@ -16,8 +16,8 @@ const (
 func main() {
 	cfg := config.MustLoad()
 	log := setupLogger(cfg.Env)
-	fmt.Printf("%+v\n", cfg)
-	fmt.Printf("%+v\n", log)
+	manager := chess.New(log)
+	manager.CreateGame()
 	log.Info("starting server")
 }
 func setupLogger(env string) *slog.Logger {
