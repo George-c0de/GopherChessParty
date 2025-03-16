@@ -1,7 +1,7 @@
 -- +goose Up
 -- +goose StatementBegin
 alter table users
-    add password char;
+    add password VARCHAR(255) NOT NULL;
 -- +goose StatementEnd
 
 -- +goose Down

@@ -18,6 +18,7 @@
 - [Структура репозитория](#Структура-репозитория)
 - [Планы на будущее]()
 - [Ресурсы и ссылки]()
+- [GOOSE](#goose)
 
 ---
 
@@ -134,3 +135,9 @@ gopherchessparty/
 ├── internal/
 └── README.md
 ```
+
+## goose
+export GOOSE_DRIVER=postgres
+export GOOSE_DBSTRING=postgresql://postgres:postgres@127.0.0.1:5432/gopher_chess?sslmode=disable
+
+goose -dir db/migrations up
