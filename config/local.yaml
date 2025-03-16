@@ -1,2 +1,8 @@
 env: "local"
 storage_path: "./storage/chess.db"
+database:
+  DB_HOST: "localhost"
+  DB_PORT: 5432
+  DB_USER: "postgres"
+  DB_PASSWORD: "postgres"
+  DB_DATABASE: "gopher_chess"

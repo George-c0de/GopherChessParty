@@ -1,10 +1,10 @@
 package postgres
 
 import (
+	"github.com/George-c0de/GopherChessParty/internal/config"
 	_ "github.com/jackc/pgx/v4/stdlib"
 	"github.com/jmoiron/sqlx"
 	"log/slog"
-	"time"
 )
 
 type Postgres struct {
@@ -12,16 +12,11 @@ type Postgres struct {
 	Log *slog.Logger
 }
 
-func New(log *slog.Logger) (*Postgres, error) {
-	dsn := "user=postgres dbname=gopher_chess sslmode=disable"
-	db, err := sqlx.Connect("pgx", dsn)
-	if err != nil {
-		log.Error("Ошибка подключения:", err)
-	}
-	// Настройка пула соединений
-	db.SetMaxOpenConns(25)           // максимальное количество открытых соединений
-	db.SetMaxIdleConns(25)           // максимальное количество простаивающих соединений
-	db.SetConnMaxLifetime(time.Hour) // время жизни каждого соединения
+func MustNew(log *slog.Logger, cfg config.Database) *Postgres {
+	db := sqlx.MustConnect("pgx", cfg.DBUrl())
+	db.SetMaxOpenConns(cfg.MaxOpenConns)   // максимальное количество открытых соединений
+	db.SetMaxIdleConns(cfg.MaxIdleConns)   // максимальное количество простаивающих соединений
+	db.SetConnMaxLifetime(cfg.MaxTimeLife) // время жизни каждого соединения
 
-	return &Postgres{Db: db, Log: log}, nil
+	return &Postgres{Db: db, Log: log}
 }
