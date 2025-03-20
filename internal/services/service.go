@@ -1,6 +1,7 @@
 package services
 
 import (
+	"github.com/George-c0de/GopherChessParty/internal/dto"
 	"github.com/George-c0de/GopherChessParty/internal/models"
 	"github.com/George-c0de/GopherChessParty/internal/storage"
 	"github.com/corentings/chess/v2"
@@ -38,4 +39,8 @@ func (m *Service) Move(game *chess.Game, move string) (error, bool) {
 		return err, false
 	}
 	return nil, true
+}
+
+func (m *Service) CreateUser(data *dto.CreateUser) (*models.User, error) {
+	return m.Repository.CreateUser(data)
 }

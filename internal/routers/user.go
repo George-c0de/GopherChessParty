@@ -1,6 +1,7 @@
 package routers
 
 import (
+	"github.com/George-c0de/GopherChessParty/internal/dto"
 	"github.com/George-c0de/GopherChessParty/internal/services"
 	"net/http"
 
@@ -25,13 +26,22 @@ func addUserRoutes(rg *gin.RouterGroup) {
 			return
 		}
 		users := service.GetUsers()
-		c.JSON(http.StatusOK, gin.H{"users": users})
+		c.JSON(http.StatusOK, gin.H{"items": users})
 	})
 
 	users.POST("/", func(c *gin.Context) {
+		var data dto.CreateUser
+		if err := c.BindJSON(&data); err != nil {
+			return
+		}
 		service := GetService(c)
 		if service == nil {
 			return
 		}
+		user, err := service.CreateUser(&data)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		}
+		c.JSON(http.StatusOK, gin.H{"item": user})
 	})
 }

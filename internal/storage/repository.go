@@ -21,7 +21,7 @@ func NewRepository(postgres *postgres.Postgres) *Repository {
 }
 func (r *Repository) GetUsers() []*models.User {
 	var users []*models.User
-	err := r.Db.Select(&users, "SELECT * FROM users;")
+	err := r.Db.Select(&users, "SELECT id, name, email, created_at, updated_at FROM users;")
 	if err != nil {
 		r.Log.Error("Ошибка при получении пользователей", err)
 		return users
@@ -33,7 +33,7 @@ func (r *Repository) CreateUser(user *dto.CreateUser) (*models.User, error) {
 	query := `
 		INSERT INTO users (name, email, password)
 		VALUES (:name, :email, :password)
-		RETURNING id, name, email, created_at, updated_at, password
+		RETURNING id, name, email, created_at, updated_at
 	`
 	rows, err := r.Db.NamedQuery(query, user)
 	if err != nil {

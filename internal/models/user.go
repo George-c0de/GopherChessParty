@@ -19,5 +19,4 @@ type User struct {
 	Email     string
 	CreatedAt time.Time `db:"created_at"`
 	UpdatedAt time.Time `db:"updated_at"`
-	Password  string
 }
