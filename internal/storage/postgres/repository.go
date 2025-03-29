@@ -1,32 +1,28 @@
-package storage
+package postgres
 
 import (
+	"GopherChessParty/internal/dto"
+	"GopherChessParty/internal/models"
 	"fmt"
-	"github.com/George-c0de/GopherChessParty/internal/dto"
-	"github.com/George-c0de/GopherChessParty/internal/models"
-	"github.com/George-c0de/GopherChessParty/internal/storage/postgres"
 )
 
-type IRepository interface {
-}
-
 type Repository struct {
-	*postgres.Postgres
+	*Postgres
 }
 
-func NewRepository(postgres *postgres.Postgres) *Repository {
+func NewRepository(postgres *Postgres) *Repository {
 	return &Repository{
 		Postgres: postgres,
 	}
 }
-func (r *Repository) GetUsers() []*models.User {
+func (r *Repository) GetUsers() ([]*models.User, error) {
 	var users []*models.User
 	err := r.Db.Select(&users, "SELECT id, name, email, created_at, updated_at FROM users;")
 	if err != nil {
 		r.Log.Error("Ошибка при получении пользователей", err)
-		return users
+		return users, err
 	}
-	return users
+	return users, nil
 }
 
 func (r *Repository) CreateUser(user *dto.CreateUser) (*models.User, error) {

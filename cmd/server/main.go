@@ -1,12 +1,11 @@
 package main
 
 import (
-	"github.com/George-c0de/GopherChessParty/internal/config"
-	"github.com/George-c0de/GopherChessParty/internal/logger"
-	"github.com/George-c0de/GopherChessParty/internal/routers"
-	"github.com/George-c0de/GopherChessParty/internal/services"
-	"github.com/George-c0de/GopherChessParty/internal/storage"
-	"github.com/George-c0de/GopherChessParty/internal/storage/postgres"
+	"GopherChessParty/internal/config"
+	"GopherChessParty/internal/logger"
+	"GopherChessParty/internal/routers"
+	"GopherChessParty/internal/services"
+	"GopherChessParty/internal/storage/ent_repository"
 )
 
 func main() {
@@ -17,8 +16,7 @@ func main() {
 	log := logger.SetupLogger(cfg.Env)
 
 	// Подключение к базе данных и создание репозитория
-	database := postgres.MustNew(log, cfg.Database)
-	repository := storage.NewRepository(database)
+	repository := ent_repository.MustNewRepository(cfg.Database)
 
 	// Создание сервиса
 	service := services.New(log, repository)

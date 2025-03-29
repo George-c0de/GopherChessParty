@@ -1,46 +1,17 @@
 package services
 
 import (
-	"github.com/George-c0de/GopherChessParty/internal/dto"
-	"github.com/George-c0de/GopherChessParty/internal/models"
-	"github.com/George-c0de/GopherChessParty/internal/storage"
-	"github.com/corentings/chess/v2"
-	"github.com/google/uuid"
+	"GopherChessParty/internal/storage/interfaces"
 	"log/slog"
 )
 
 type Service struct {
-	log        *slog.Logger
-	nowGames   map[uuid.UUID]*chess.Game
-	Repository *storage.Repository
+	IUserService
+	IGameService
 }
 
-func New(log *slog.Logger, repository *storage.Repository) *Service {
-	return &Service{log, make(map[uuid.UUID]*chess.Game), repository}
-}
-
-func (m *Service) CreateGame() *chess.Game {
-	random, err := uuid.NewRandom()
-	if err != nil {
-		m.log.Error(err.Error())
-		panic(err)
-	}
-	m.nowGames[random] = chess.NewGame()
-	return m.nowGames[random]
-}
-
-func (m *Service) GetUsers() []*models.User {
-	return m.Repository.GetUsers()
-}
-func (m *Service) Move(game *chess.Game, move string) (error, bool) {
-	err := game.PushMove(move, nil)
-	if err != nil {
-		m.log.Error(err.Error())
-		return err, false
-	}
-	return nil, true
-}
-
-func (m *Service) CreateUser(data *dto.CreateUser) (*models.User, error) {
-	return m.Repository.CreateUser(data)
+func New(log *slog.Logger, repository interfaces.IRepository) *Service {
+	userService := UserService{log: log, repository: repository}
+	gameService := GameService{log: log}
+	return &Service{IUserService: &userService, IGameService: &gameService}
 }

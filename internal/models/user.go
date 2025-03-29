@@ -2,6 +2,7 @@ package models
 
 import (
 	"fmt"
+	"github.com/google/uuid"
 	"time"
 )
 
@@ -14,9 +15,13 @@ func (u BaseUser) String() string {
 }
 
 type User struct {
-	*BaseUser
-	Id        int
-	Email     string
-	CreatedAt time.Time `db:"created_at"`
-	UpdatedAt time.Time `db:"updated_at"`
+	Id        uuid.UUID `json:"id"`
+	Name      string    `json:"name"`
+	Email     string    `json:"email"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+}
+
+func (u User) String() string {
+	return fmt.Sprintf("User(Name=%q)", u.Name)
 }

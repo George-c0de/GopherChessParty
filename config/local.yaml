@@ -1,5 +1,5 @@
 env: "local"
-storage_path: "./storage/chess.db"
+storage_path: "./ent_repository/chess.db"
 database:
   DB_HOST: "localhost"
   DB_PORT: 5432

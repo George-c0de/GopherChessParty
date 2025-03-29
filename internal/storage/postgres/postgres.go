@@ -1,7 +1,7 @@
 package postgres
 
 import (
-	"github.com/George-c0de/GopherChessParty/internal/config"
+	"GopherChessParty/internal/config"
 	_ "github.com/jackc/pgx/v4/stdlib"
 	"github.com/jmoiron/sqlx"
 	"log/slog"

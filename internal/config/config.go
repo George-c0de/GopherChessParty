@@ -9,15 +9,15 @@ import (
 )
 
 type Database struct {
-	Host         string        `yaml:"DB_HOST" envDefault:"localhost"`
-	Port         int           `yaml:"DB_PORT" envDefault:"5432"`
-	User         string        `yaml:"DB_USER" envDefault:"postgres"`
-	Password     string        `yaml:"DB_PASSWORD" envDefault:"postgres"`
-	Database     string        `yaml:"DB_DATABASE" envDefault:"postgres"`
-	SSLMode      string        `yaml:"DB_SSLMODE" envDefault:"disable"`
-	MaxOpenConns int           `yaml:"DB_MAX_OPEN_CONNECTS" envDefault:"25"`
-	MaxIdleConns int           `yaml:"DB_MAX_IDLE_CONNS" envDefault:"25"`
-	MaxTimeLife  time.Duration `yaml:"DB_MAX_TIME_LIFE" envDefault:"24h"`
+	Host         string        `yaml:"DB_HOST" env-default:"localhost"`
+	Port         int           `yaml:"DB_PORT" env-default:"5432"`
+	User         string        `yaml:"DB_USER" env-default:"postgres"`
+	Password     string        `yaml:"DB_PASSWORD" env-default:"postgres"`
+	Database     string        `yaml:"DB_DATABASE" env-default:"postgres"`
+	SSLMode      string        `yaml:"DB_SSLMODE" env-default:"disable"`
+	MaxOpenConns int           `yaml:"DB_MAX_OPEN_CONNECTS" env-default:"25"`
+	MaxIdleConns int           `yaml:"DB_MAX_IDLE_CONNS" env-default:"25"`
+	MaxTimeLife  time.Duration `yaml:"DB_MAX_TIME_LIFE" env-default:"24h"`
 }
 
 func (d *Database) DBUrl() string {
