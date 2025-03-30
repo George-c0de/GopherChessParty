@@ -1,9 +1,9 @@
 package dto
 
 type CreateUser struct {
-	Name     string `json:"name" binding:"required"`
-	Email    string `json:"email" binding:"required,email"`
-	Password string `json:"password" binding:"required,min=8"`
+	Name     string `binding:"required"       json:"name"`
+	Email    string `binding:"required,email" json:"email"`
+	Password string `binding:"required,min=8" json:"password"`
 }
 
 type AuthenticateUser struct {

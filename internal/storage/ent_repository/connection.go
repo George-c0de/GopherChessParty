@@ -47,8 +47,10 @@ func (r *Repository) CreateUser(user *dto.CreateUser) (*models.User, error) {
 }
 
 func (r *Repository) GetUsers() ([]*models.User, error) {
-	ctx := context.Background()
-	var users []*models.User
+	var (
+		users []*models.User
+		ctx   = context.Background()
+	)
 	err := r.client.User.
 		Query().
 		Select(user.FieldID, user.FieldName, user.FieldEmail, user.FieldCreatedAt, user.FieldUpdatedAt).
@@ -60,12 +62,12 @@ func (r *Repository) GetUsers() ([]*models.User, error) {
 	return users, nil
 }
 
-func (r *Repository) GetUserPassword(Email string) (string, error) {
+func (r *Repository) GetUserPassword(email string) (string, error) {
 	ctx := context.Background()
 	var Password []string
 	err := r.client.User.
 		Query().
-		Where(user.Email(Email)).
+		Where(user.Email(email)).
 		Limit(1).
 		Select(user.FieldPassword).
 		Scan(ctx, &Password)

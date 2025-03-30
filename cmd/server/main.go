@@ -24,7 +24,10 @@ func main() {
 	// Создание экземпляра Gin
 	router := routers.GetRoutes(service)
 
-	router.Run(":8000")
+	err := router.Run(":8000")
+	if err != nil {
+		panic(err)
+	}
 
 	//users := service.GetUsers()
 	//

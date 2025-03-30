@@ -4,6 +4,7 @@ import (
 	"GopherChessParty/internal/dto"
 	"GopherChessParty/internal/models"
 	"fmt"
+	"github.com/jmoiron/sqlx"
 )
 
 type Repository struct {
@@ -36,7 +37,12 @@ func (r *Repository) CreateUser(user *dto.CreateUser) (*models.User, error) {
 		r.Log.Error("Ошибка при создании пользователя", err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func(rows *sqlx.Rows) {
+		err := rows.Close()
+		if err != nil {
+			r.Log.Error(err.Error())
+		}
+	}(rows)
 
 	var createdUser models.User
 	if rows.Next() {
