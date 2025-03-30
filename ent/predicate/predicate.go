@@ -6,5 +6,8 @@ import (
 	"entgo.io/ent/dialect/sql"
 )
 
+// Chess is the predicate function for chess builders.
+type Chess func(*sql.Selector)
+
 // User is the predicate function for user builders.
 type User func(*sql.Selector)

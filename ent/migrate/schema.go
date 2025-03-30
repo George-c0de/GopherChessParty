@@ -8,6 +8,22 @@ import (
 )
 
 var (
+	// ChessesColumns holds the columns for the "chesses" table.
+	ChessesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID, Unique: true},
+		{Name: "first_user_id", Type: field.TypeUUID},
+		{Name: "second_user_id", Type: field.TypeUUID},
+		{Name: "winner", Type: field.TypeUUID},
+		{Name: "status", Type: field.TypeUint8, Default: 0},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+	}
+	// ChessesTable holds the schema information for the "chesses" table.
+	ChessesTable = &schema.Table{
+		Name:       "chesses",
+		Columns:    ChessesColumns,
+		PrimaryKey: []*schema.Column{ChessesColumns[0]},
+	}
 	// UsersColumns holds the columns for the "users" table.
 	UsersColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID, Unique: true},
@@ -25,6 +41,7 @@ var (
 	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
+		ChessesTable,
 		UsersTable,
 	}
 )

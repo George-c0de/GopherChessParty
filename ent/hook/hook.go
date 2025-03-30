@@ -8,6 +8,18 @@ import (
 	"fmt"
 )
 
+// The ChessFunc type is an adapter to allow the use of ordinary
+// function as Chess mutator.
+type ChessFunc func(context.Context, *ent.ChessMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ChessFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ChessMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ChessMutation", m)
+}
+
 // The UserFunc type is an adapter to allow the use of ordinary
 // function as User mutator.
 type UserFunc func(context.Context, *ent.UserMutation) (ent.Value, error)

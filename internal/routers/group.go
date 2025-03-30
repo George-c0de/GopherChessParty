@@ -13,6 +13,6 @@ func GetRoutes(service services.IService) *gin.Engine {
 	v1 := router.Group("/v1")
 	addAuthRoutes(v1)
 	addUserRoutes(v1, service)
-
+	addChessRoute(v1, service)
 	return router
 }
