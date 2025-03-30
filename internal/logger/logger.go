@@ -11,7 +11,25 @@ const (
 	envProd  = "prod"
 )
 
-func SetupLogger(env string) *slog.Logger {
+type Logger struct {
+	log *slog.Logger
+}
+
+func (logger *Logger) Info(msg string, v ...interface{}) {
+	logger.log.Info(msg, v...)
+}
+
+func (logger *Logger) Error(err error) {
+	if err != nil {
+		logger.log.Error(err.Error())
+	}
+}
+
+func (logger *Logger) ErrorWithMsg(msg string, err error) {
+	logger.log.Error(msg, slog.String("error", err.Error()))
+}
+
+func SetupLogger(env string) *Logger {
 	var log *slog.Logger
 
 	switch env {
@@ -29,5 +47,5 @@ func SetupLogger(env string) *slog.Logger {
 		)
 	}
 
-	return log
+	return &Logger{log: log}
 }

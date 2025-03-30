@@ -2,24 +2,24 @@ package connection
 
 import (
 	"context"
-	"log/slog"
 
 	"GopherChessParty/ent"
 	"GopherChessParty/ent/user"
 	"GopherChessParty/internal/config"
 	"GopherChessParty/internal/dto"
+	"GopherChessParty/internal/logger"
 	"GopherChessParty/internal/models"
 	"entgo.io/ent/dialect/sql"
 	_ "github.com/lib/pq"
 )
 
 type Repository struct {
-	log    *slog.Logger
+	log    *logger.Logger
 	client *ent.Client
 }
 
 // MustNewRepository Создание нового подключения.
-func MustNewRepository(cfg config.Database, log *slog.Logger) *Repository {
+func MustNewRepository(cfg config.Database, log *logger.Logger) *Repository {
 	drv, err := sql.Open("postgres", cfg.DBUrl())
 	if err != nil {
 		panic(err)
@@ -42,7 +42,7 @@ func (r *Repository) CreateUser(user *dto.CreateUser) (*models.User, error) {
 		SetName(user.Name).
 		Save(ctx)
 	if err != nil {
-		r.log.Error("Error create user: ", err)
+		r.log.Error(err)
 		return nil, err
 	}
 	return &models.User{
@@ -63,7 +63,7 @@ func (r *Repository) GetUsers() ([]*models.User, error) {
 		Select(user.FieldID, user.FieldName, user.FieldEmail, user.FieldCreatedAt, user.FieldUpdatedAt).
 		Scan(ctx, &users)
 	if err != nil {
-		r.log.Error("Error select users: ", err)
+		r.log.Error(err)
 		return nil, err
 	}
 	return users, nil
@@ -81,7 +81,7 @@ func (r *Repository) GetUserPassword(email string) (string, error) {
 		Scan(ctx, &Password)
 
 	if err != nil || len(Password) != 1 {
-		r.log.Error("Error select users: ", err)
+		r.log.Error(err)
 		return "", err
 	}
 

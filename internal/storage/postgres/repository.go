@@ -22,7 +22,7 @@ func (r *Repository) GetUsers() ([]*models.User, error) {
 	var users []*models.User
 	err := r.Db.Select(&users, "SELECT id, name, email, created_at, updated_at FROM users;")
 	if err != nil {
-		r.Log.Error("Ошибка при получении пользователей", err)
+		r.Log.Error(err)
 		return users, err
 	}
 	return users, nil
@@ -36,20 +36,20 @@ func (r *Repository) CreateUser(user *dto.CreateUser) (*models.User, error) {
 	`
 	rows, err := r.Db.NamedQuery(query, user)
 	if err != nil {
-		r.Log.Error("Ошибка при создании пользователя", err)
+		r.Log.Error(err)
 		return nil, err
 	}
 	defer func(rows *sqlx.Rows) {
 		err := rows.Close()
 		if err != nil {
-			r.Log.Error(err.Error())
+			r.Log.Error(err)
 		}
 	}(rows)
 
 	var createdUser models.User
 	if rows.Next() {
 		if err := rows.StructScan(&createdUser); err != nil {
-			r.Log.Error("Ошибка при сканировании созданного пользователя", err)
+			r.Log.Error(err)
 			return nil, err
 		}
 		return &createdUser, nil

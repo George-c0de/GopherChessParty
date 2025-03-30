@@ -1,19 +1,18 @@
 package postgres
 
 import (
-	"log/slog"
-
 	"GopherChessParty/internal/config"
+	"GopherChessParty/internal/logger"
 	_ "github.com/jackc/pgx/v4/stdlib"
 	"github.com/jmoiron/sqlx"
 )
 
 type Postgres struct {
 	Db  *sqlx.DB
-	Log *slog.Logger
+	Log *logger.Logger
 }
 
-func MustNew(log *slog.Logger, cfg config.Database) *Postgres {
+func MustNew(log *logger.Logger, cfg config.Database) *Postgres {
 	db := sqlx.MustConnect("pgx", cfg.DBUrl())
 	db.SetMaxOpenConns(cfg.MaxOpenConns)   // максимальное количество открытых соединений
 	db.SetMaxIdleConns(cfg.MaxIdleConns)   // максимальное количество простаивающих соединений

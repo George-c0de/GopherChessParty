@@ -1,10 +1,9 @@
 package services
 
 import (
-	"log/slog"
-
 	"GopherChessParty/internal/config"
 	"GopherChessParty/internal/dto"
+	"GopherChessParty/internal/logger"
 	"GopherChessParty/internal/models"
 	"GopherChessParty/internal/storage/interfaces"
 	"github.com/corentings/chess/v2"
@@ -22,10 +21,10 @@ type Service struct {
 	IUserService
 	IGameService
 	IAuthService
-	logger *slog.Logger
+	logger *logger.Logger
 }
 
-func New(log *slog.Logger, repository interfaces.IRepository, cfg config.Auth) *Service {
+func New(log *logger.Logger, repository interfaces.IRepository, cfg config.Auth) *Service {
 	userService := UserService{log: log, repository: repository}
 	gameService := GameService{log: log, nowGames: map[uuid.UUID]*chess.Game{}}
 	authService := AuthService{log: log, jwtSecret: cfg.JwtSecret, exp: cfg.ExpTime}
@@ -44,7 +43,7 @@ func (s *Service) CreateUser(data *dto.CreateUser) (*models.User, error) {
 func (s *Service) ValidPassword(data dto.AuthenticateUser) bool {
 	HashedPassword, err := s.GetUserPassword(data.Email)
 	if err != nil {
-		s.logger.Error("Not Found User", err, data.Email)
+		s.logger.ErrorWithMsg("Not Found User", err)
 	}
 	return s.IsValidPassword(HashedPassword, data.Password)
 }

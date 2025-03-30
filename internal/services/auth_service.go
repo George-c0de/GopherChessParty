@@ -1,10 +1,10 @@
 package services
 
 import (
-	"log/slog"
 	"time"
 
 	"GopherChessParty/internal/errors"
+	"GopherChessParty/internal/logger"
 	"github.com/golang-jwt/jwt"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -17,7 +17,7 @@ type IAuthService interface {
 }
 
 type AuthService struct {
-	log       *slog.Logger
+	log       *logger.Logger
 	jwtSecret string
 	exp       time.Duration
 }
@@ -51,7 +51,7 @@ func (s *AuthService) IsValidPassword(hashedPassword string, plainPassword strin
 func (s *AuthService) GeneratePassword(rawPassword string) (string, error) {
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(rawPassword), bcrypt.DefaultCost)
 	if err != nil {
-		s.log.Error("Failed to hash password", err)
+		s.log.Error(err)
 		return "", err
 	}
 	return string(hashedPassword), nil

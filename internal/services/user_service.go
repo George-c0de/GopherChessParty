@@ -1,9 +1,8 @@
 package services
 
 import (
-	"log/slog"
-
 	"GopherChessParty/internal/dto"
+	"GopherChessParty/internal/logger"
 	"GopherChessParty/internal/models"
 	"GopherChessParty/internal/storage/interfaces"
 	"golang.org/x/crypto/bcrypt"
@@ -17,13 +16,13 @@ type IUserService interface {
 
 type UserService struct {
 	repository interfaces.IRepository
-	log        *slog.Logger
+	log        *logger.Logger
 }
 
 func (m *UserService) CreateUser(data *dto.CreateUser) (*models.User, error) {
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(data.Password), bcrypt.DefaultCost)
 	if err != nil {
-		m.log.Error("Failed to hash password", err)
+		m.log.Error(err)
 		return nil, err
 	}
 

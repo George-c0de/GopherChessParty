@@ -31,6 +31,5 @@ func addAuthRoutes(rg *gin.RouterGroup) {
 		}
 
 		c.JSON(http.StatusOK, gin.H{"token": token})
-		return
 	})
 }

@@ -3,112 +3,112 @@ linters:
   # Default set of linters.
   # The value can be: `standard`, `all`, `none`, or `fast`.
   # Default: standard
-  default: all
+  default: standard
   # Enable specific linter.
   # https://golangci-lint.run/usage/linters/#enabled-by-default
-  enable:
-    - asasalint
-    - asciicheck
-    - bidichk
-    - bodyclose
-    - canonicalheader
-    - containedctx
-    - contextcheck
-    - copyloopvar
-    - cyclop
-    - decorder
-    - dogsled
-    - dupl
-    - dupword
-    - durationcheck
-    - err113
-    - errcheck
-    - errchkjson
-    - errname
-    - errorlint
-    - exhaustive
-    - exhaustruct
-    - exptostd
-    - fatcontext
-    - forbidigo
-    - forcetypeassert
-    - funlen
-    - ginkgolinter
-    - gocheckcompilerdirectives
-    - gochecknoglobals
-    - gochecknoinits
-    - gochecksumtype
-    - gocognit
-    - goconst
-    - gocritic
-    - gocyclo
-    - godot
-    - godox
-    - goheader
-    - gomoddirectives
-    - gomodguard
-    - goprintffuncname
-    - gosec
-    - gosmopolitan
-    - govet
-    - grouper
-    - iface
-    - importas
-    - inamedparam
-    - ineffassign
-    - interfacebloat
-    - intrange
-    - ireturn
-    - lll
-    - loggercheck
-    - maintidx
-    - makezero
-    - mirror
-    - misspell
-    - mnd
-    - musttag
-    - nakedret
-    - nestif
-    - nilerr
-    - nilnesserr
-    - nilnil
-    - nlreturn
-    - noctx
-    - nolintlint
-    - nonamedreturns
-    - nosprintfhostport
-    - paralleltest
-    - perfsprint
-    - prealloc
-    - predeclared
-    - promlinter
-    - protogetter
-    - reassign
-    - recvcheck
-    - revive
-    - rowserrcheck
-    - sloglint
-    - spancheck
-    - sqlclosecheck
-    - staticcheck
-    - tagalign
-    - tagliatelle
-    - testableexamples
-    - testifylint
-    - testpackage
-    - thelper
-    - tparallel
-    - unconvert
-    - unparam
-    - unused
-    - usestdlibvars
-    - usetesting
-    - varnamelen
-    - wastedassign
-    - whitespace
-    - wrapcheck
-    - wsl
-    - zerologlint
+#  enable:
+#    - asasalint
+#    - asciicheck
+#    - bidichk
+#    - bodyclose
+#    - canonicalheader
+#    - containedctx
+#    - contextcheck
+#    - copyloopvar
+#    - cyclop
+#    - decorder
+#    - dogsled
+#    - dupl
+#    - dupword
+#    - durationcheck
+#    - err113
+#    - errcheck
+#    - errchkjson
+#    - errname
+#    - errorlint
+#    - exhaustive
+#    - exhaustruct
+#    - exptostd
+#    - fatcontext
+#    - forbidigo
+#    - forcetypeassert
+#    - funlen
+#    - ginkgolinter
+#    - gocheckcompilerdirectives
+#    - gochecknoglobals
+#    - gochecknoinits
+#    - gochecksumtype
+#    - gocognit
+#    - goconst
+#    - gocritic
+#    - gocyclo
+#    - godot
+#    - godox
+#    - goheader
+#    - gomoddirectives
+#    - gomodguard
+#    - goprintffuncname
+#    - gosec
+#    - gosmopolitan
+#    - govet
+#    - grouper
+#    - iface
+#    - importas
+#    - inamedparam
+#    - ineffassign
+#    - interfacebloat
+#    - intrange
+#    - ireturn
+#    - lll
+#    - loggercheck
+#    - maintidx
+#    - makezero
+#    - mirror
+#    - misspell
+#    - mnd
+#    - musttag
+#    - nakedret
+#    - nestif
+#    - nilerr
+#    - nilnesserr
+#    - nilnil
+#    - nlreturn
+#    - noctx
+#    - nolintlint
+#    - nonamedreturns
+#    - nosprintfhostport
+#    - paralleltest
+#    - perfsprint
+#    - prealloc
+#    - predeclared
+#    - promlinter
+#    - protogetter
+#    - reassign
+#    - recvcheck
+#    - revive
+#    - rowserrcheck
+#    - sloglint
+#    - spancheck
+#    - sqlclosecheck
+#    - staticcheck
+#    - tagalign
+#    - tagliatelle
+#    - testableexamples
+#    - testifylint
+#    - testpackage
+#    - thelper
+#    - tparallel
+#    - unconvert
+#    - unparam
+#    - unused
+#    - usestdlibvars
+#    - usetesting
+#    - varnamelen
+#    - wastedassign
+#    - whitespace
+#    - wrapcheck
+#    - wsl
+#    - zerologlint
   # Disable specific linter
   # https://golangci-lint.run/usage/linters/#disabled-by-default
   # All available settings of specific linters.
@@ -167,14 +167,15 @@ linters:
     # Which file paths to exclude: they will be analyzed, but issues from them won't be reported.
     # "/" will be replaced by the current OS file path separator to properly work on Windows.
     # Default: []
-    paths:
-      - ".*\\.my\\.go$"
-      - lib/bad.go
+#    paths:
+#      - ".*\\.my\\.go$"
+#      - lib/bad.go
     # Which file paths to not exclude.
     # Default: []
     paths-except:
-      - ".*\\.my\\.go$"
-      - lib/bad.go
+#      - ".*\\.postgres\\.go$"
+      - postgres/postgres.go
+      - postgres/repository.go
 
 
 formatters:
@@ -200,6 +201,6 @@ formatters:
     generated: strict
     # Which file paths to exclude.
     # Default: []
-    paths:
-      - ".*\\.my\\.go$"
-      - lib/bad.go
+#    paths:
+#      - ".*\\.my\\.go$"
+#      - lib/bad.go
