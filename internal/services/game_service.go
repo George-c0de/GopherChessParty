@@ -9,7 +9,7 @@ import (
 
 type IGameService interface {
 	CreateGame() *chess.Game
-	Move(game *chess.Game, move string) (error, bool)
+	Move(game *chess.Game, move string) (bool, error)
 }
 type GameService struct {
 	log      *slog.Logger
@@ -27,11 +27,11 @@ func (m *GameService) CreateGame() *chess.Game {
 	return m.nowGames[random]
 }
 
-func (m *GameService) Move(game *chess.Game, move string) (error, bool) {
+func (m *GameService) Move(game *chess.Game, move string) (bool, error) {
 	err := game.PushMove(move, nil)
 	if err != nil {
 		m.log.Error(err.Error())
-		return err, false
+		return false, err
 	}
-	return nil, true
+	return true, nil
 }

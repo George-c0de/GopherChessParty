@@ -1,11 +1,11 @@
 env: "local"
-storage_path: "./ent_repository/chess.db"
+storagePath: "./connection/chess.db"
 database:
-  DB_HOST: "localhost"
-  DB_PORT: 5432
-  DB_USER: "postgres"
-  DB_PASSWORD: "postgres"
-  DB_DATABASE: "gopher_chess"
+  dbHost: "localhost"
+  dbPort: 5432
+  dbUser: "postgres"
+  dbPassword: "postgres"
+  dbDatabase: "gopher_chess"
 auth:
-  JWT_SECRET: "secret_key"
-  EXP_TIME: 24h
+  jwtSecret: "secret_key"
+  expTime: 24h

@@ -36,6 +36,6 @@ func (m *UserService) GetUsers() ([]*models.User, error) {
 	return m.repository.GetUsers()
 }
 
-func (m *UserService) GetUserPassword(Email string) (string, error) {
-	return m.repository.GetUserPassword(Email)
+func (m *UserService) GetUserPassword(email string) (string, error) {
+	return m.repository.GetUserPassword(email)
 }

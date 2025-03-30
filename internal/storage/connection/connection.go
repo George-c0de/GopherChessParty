@@ -1,4 +1,4 @@
-package ent_repository
+package connection
 
 import (
 	"context"
@@ -18,13 +18,13 @@ type Repository struct {
 	client *ent.Client
 }
 
+// MustNewRepository Создание нового подключения.
 func MustNewRepository(cfg config.Database, log *slog.Logger) *Repository {
 	drv, err := sql.Open("postgres", cfg.DBUrl())
 	if err != nil {
 		panic(err)
 	}
 
-	//
 	db := drv.DB()
 	db.SetMaxIdleConns(cfg.MaxIdleConns)   // Максимальное количество простаивающих соединений.
 	db.SetMaxOpenConns(cfg.MaxOpenConns)   // Максимальное количество открытых соединений.
@@ -35,12 +35,12 @@ func MustNewRepository(cfg config.Database, log *slog.Logger) *Repository {
 
 func (r *Repository) CreateUser(user *dto.CreateUser) (*models.User, error) {
 	ctx := context.Background()
+
 	newUser, err := r.client.User.Create().
 		SetEmail(user.Email).
 		SetPassword(user.Password).
 		SetName(user.Name).
 		Save(ctx)
-
 	if err != nil {
 		r.log.Error("Error create user: ", err)
 		return nil, err
@@ -62,7 +62,6 @@ func (r *Repository) GetUsers() ([]*models.User, error) {
 		Query().
 		Select(user.FieldID, user.FieldName, user.FieldEmail, user.FieldCreatedAt, user.FieldUpdatedAt).
 		Scan(ctx, &users)
-
 	if err != nil {
 		r.log.Error("Error select users: ", err)
 		return nil, err

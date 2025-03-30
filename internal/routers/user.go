@@ -15,7 +15,6 @@ func addUserRoutes(rg *gin.RouterGroup, service services.IService) {
 	users.GET("/", func(c *gin.Context) {
 		service := GetService(c)
 		users, err := service.GetUsers()
-
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return

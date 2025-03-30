@@ -5,7 +5,7 @@ import (
 	"GopherChessParty/internal/logger"
 	"GopherChessParty/internal/routers"
 	"GopherChessParty/internal/services"
-	"GopherChessParty/internal/storage/ent_repository"
+	"GopherChessParty/internal/storage/connection"
 )
 
 func main() {
@@ -16,7 +16,7 @@ func main() {
 	log := logger.SetupLogger(cfg.Env)
 
 	// Подключение к базе данных и создание репозитория
-	repository := ent_repository.MustNewRepository(cfg.Database, log)
+	repository := connection.MustNewRepository(cfg.Database, log)
 
 	// Создание сервиса
 	service := services.New(log, repository, cfg.Auth)
