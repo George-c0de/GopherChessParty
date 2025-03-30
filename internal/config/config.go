@@ -34,6 +34,7 @@ func (a *Auth) MustParseECDSAPrivateKey() *ecdsa.PrivateKey {
 	if block == nil || block.Type != "EC PRIVATE KEY" {
 		panic("failed to parse PEM block containing the EC private key")
 	}
+
 	key, err := x509.ParseECPrivateKey(block.Bytes)
 	if err != nil {
 		panic(err)
@@ -60,10 +61,13 @@ func MustLoad() *Config {
 	if path == "" {
 		panic("config file path is empty")
 	}
+
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		panic("config file not found: " + path)
 	}
+
 	var cfg Config
+
 	if err := cleanenv.ReadConfig(path, &cfg); err != nil {
 		panic("cannot read config: " + err.Error())
 	}
@@ -76,6 +80,7 @@ func fetchConfigPath() string {
 
 	flag.StringVar(&res, "config", "", "path to config file")
 	flag.Parse()
+
 	if res == "" {
 		res = os.Getenv("CONFIG_PATH")
 	}

@@ -26,6 +26,7 @@ func (m *UserService) CreateUser(data *dto.CreateUser) (*models.User, error) {
 		m.log.Error("Failed to hash password", err)
 		return nil, err
 	}
+
 	data.Password = string(hashedPassword)
 
 	return m.repository.CreateUser(data)

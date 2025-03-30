@@ -40,6 +40,7 @@ func (r *Repository) CreateUser(user *dto.CreateUser) (*models.User, error) {
 		SetPassword(user.Password).
 		SetName(user.Name).
 		Save(ctx)
+
 	if err != nil {
 		r.log.Error("Error create user: ", err)
 		return nil, err
@@ -54,14 +55,14 @@ func (r *Repository) CreateUser(user *dto.CreateUser) (*models.User, error) {
 }
 
 func (r *Repository) GetUsers() ([]*models.User, error) {
-	var (
-		users []*models.User
-		ctx   = context.Background()
-	)
+	ctx := context.Background()
+
+	var users []*models.User
 	err := r.client.User.
 		Query().
 		Select(user.FieldID, user.FieldName, user.FieldEmail, user.FieldCreatedAt, user.FieldUpdatedAt).
 		Scan(ctx, &users)
+
 	if err != nil {
 		r.log.Error("Error select users: ", err)
 		return nil, err
@@ -71,6 +72,7 @@ func (r *Repository) GetUsers() ([]*models.User, error) {
 
 func (r *Repository) GetUserPassword(email string) (string, error) {
 	ctx := context.Background()
+
 	var Password []string
 	err := r.client.User.
 		Query().
@@ -78,6 +80,7 @@ func (r *Repository) GetUserPassword(email string) (string, error) {
 		Limit(1).
 		Select(user.FieldPassword).
 		Scan(ctx, &Password)
+
 	if err != nil || len(Password) != 1 {
 		r.log.Error("Error select users: ", err)
 		return "", err

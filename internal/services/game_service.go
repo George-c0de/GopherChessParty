@@ -22,6 +22,7 @@ func (m *GameService) CreateGame() *chess.Game {
 		m.log.Error(err.Error())
 		panic(err)
 	}
+
 	m.nowGames[random] = chess.NewGame()
 	return m.nowGames[random]
 }
