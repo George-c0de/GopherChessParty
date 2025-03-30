@@ -6,26 +6,27 @@ import (
 	"encoding/pem"
 	"flag"
 	"fmt"
-	"github.com/ilyakaznacheev/cleanenv"
 	"os"
 	"time"
+
+	"github.com/ilyakaznacheev/cleanenv"
 )
 
 type Database struct {
-	Host         string        `yaml:"DB_HOST" env-default:"localhost"`
-	Port         int           `yaml:"DB_PORT" env-default:"5432"`
-	User         string        `yaml:"DB_USER" env-default:"postgres"`
-	Password     string        `yaml:"DB_PASSWORD" env-default:"postgres"`
-	Database     string        `yaml:"DB_DATABASE" env-default:"postgres"`
-	SSLMode      string        `yaml:"DB_SSLMODE" env-default:"disable"`
+	Host         string        `yaml:"DB_HOST"              env-default:"localhost"`
+	Port         int           `yaml:"DB_PORT"              env-default:"5432"`
+	User         string        `yaml:"DB_USER"              env-default:"postgres"`
+	Password     string        `yaml:"DB_PASSWORD"          env-default:"postgres"`
+	Database     string        `yaml:"DB_DATABASE"          env-default:"postgres"`
+	SSLMode      string        `yaml:"DB_SSLMODE"           env-default:"disable"`
 	MaxOpenConns int           `yaml:"DB_MAX_OPEN_CONNECTS" env-default:"25"`
-	MaxIdleConns int           `yaml:"DB_MAX_IDLE_CONNS" env-default:"25"`
-	MaxTimeLife  time.Duration `yaml:"DB_MAX_TIME_LIFE" env-default:"24h"`
+	MaxIdleConns int           `yaml:"DB_MAX_IDLE_CONNS"    env-default:"25"`
+	MaxTimeLife  time.Duration `yaml:"DB_MAX_TIME_LIFE"     env-default:"24h"`
 }
 
 type Auth struct {
 	JwtSecret string        `yaml:"JWT_SECRET" env-default:"secret"`
-	ExpTime   time.Duration `yaml:"EXP_TIME" env-default:"24h"`
+	ExpTime   time.Duration `yaml:"EXP_TIME"   env-default:"24h"`
 }
 
 func (a *Auth) MustParseECDSAPrivateKey() *ecdsa.PrivateKey {
@@ -48,10 +49,10 @@ func (d *Database) DBUrl() string {
 }
 
 type Config struct {
-	Env         string   `yaml:"env" env-default:"local"`
-	StoragePath string   `yaml:"storage_path" env-required:"true"`
-	Database    Database `yaml:"database" env-required:"true"`
-	Auth        Auth     `yaml:"auth" env-required:"true"`
+	Env         string   `yaml:"env"          env-default:"local"`
+	StoragePath string   `yaml:"storage_path"                     env-required:"true"`
+	Database    Database `yaml:"database"                         env-required:"true"`
+	Auth        Auth     `yaml:"auth"                             env-required:"true"`
 }
 
 func MustLoad() *Config {

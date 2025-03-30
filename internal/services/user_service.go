@@ -1,11 +1,12 @@
 package services
 
 import (
+	"log/slog"
+
 	"GopherChessParty/internal/dto"
 	"GopherChessParty/internal/models"
 	"GopherChessParty/internal/storage/interfaces"
 	"golang.org/x/crypto/bcrypt"
-	"log/slog"
 )
 
 type IUserService interface {

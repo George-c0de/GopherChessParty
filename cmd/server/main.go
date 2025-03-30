@@ -28,7 +28,6 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-
 	//users := service.GetUsers()
 	//
 	//for i := 0; i < len(users); i++ {

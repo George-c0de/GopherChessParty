@@ -1,9 +1,10 @@
 package services
 
 import (
+	"log/slog"
+
 	"github.com/corentings/chess/v2"
 	"github.com/google/uuid"
-	"log/slog"
 )
 
 type IGameService interface {

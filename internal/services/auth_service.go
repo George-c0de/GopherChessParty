@@ -1,11 +1,12 @@
 package services
 
 import (
+	"log/slog"
+	"time"
+
 	"GopherChessParty/internal/errors"
 	"github.com/golang-jwt/jwt"
 	"golang.org/x/crypto/bcrypt"
-	"log/slog"
-	"time"
 )
 
 type IAuthService interface {
@@ -31,6 +32,7 @@ func (s *AuthService) GenerateToken(email string) (string, error) {
 	// Подписываем токен секретным ключом
 	return token.SignedString([]byte(s.jwtSecret))
 }
+
 func (s *AuthService) ValidateToken(tokenString string) (*jwt.Token, error) {
 	return jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		// Проверяем, что метод подписи соответствует ожиданиям
@@ -39,12 +41,13 @@ func (s *AuthService) ValidateToken(tokenString string) (*jwt.Token, error) {
 		}
 		return []byte(s.jwtSecret), nil
 	})
-
 }
+
 func (s *AuthService) IsValidPassword(hashedPassword string, plainPassword string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(plainPassword))
 	return err == nil
 }
+
 func (s *AuthService) GeneratePassword(rawPassword string) (string, error) {
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(rawPassword), bcrypt.DefaultCost)
 	if err != nil {

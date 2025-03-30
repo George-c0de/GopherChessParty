@@ -1,11 +1,12 @@
 package services
 
 import (
+	"log/slog"
+
 	"GopherChessParty/internal/config"
 	"GopherChessParty/internal/dto"
 	"GopherChessParty/internal/models"
 	"GopherChessParty/internal/storage/interfaces"
-	"log/slog"
 )
 
 type IService interface {
@@ -26,7 +27,12 @@ func New(log *slog.Logger, repository interfaces.IRepository, cfg config.Auth) *
 	userService := UserService{log: log, repository: repository}
 	gameService := GameService{log: log}
 	authService := AuthService{log: log, jwtSecret: cfg.JwtSecret, exp: cfg.ExpTime}
-	return &Service{IUserService: &userService, IGameService: &gameService, IAuthService: &authService, logger: log}
+	return &Service{
+		IUserService: &userService,
+		IGameService: &gameService,
+		IAuthService: &authService,
+		logger:       log,
+	}
 }
 
 func (s *Service) CreateUser(data *dto.CreateUser) (*models.User, error) {

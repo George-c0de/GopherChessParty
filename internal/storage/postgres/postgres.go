@@ -1,10 +1,11 @@
 package postgres
 
 import (
+	"log/slog"
+
 	"GopherChessParty/internal/config"
 	_ "github.com/jackc/pgx/v4/stdlib"
 	"github.com/jmoiron/sqlx"
-	"log/slog"
 )
 
 type Postgres struct {

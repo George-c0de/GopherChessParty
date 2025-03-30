@@ -1,9 +1,10 @@
 package routers
 
 import (
+	"net/http"
+
 	"GopherChessParty/internal/services"
 	"github.com/gin-gonic/gin"
-	"net/http"
 )
 
 func GetService(c *gin.Context) *services.Service {

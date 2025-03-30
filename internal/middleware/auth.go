@@ -1,10 +1,10 @@
 package middleware
 
 import (
-	"GopherChessParty/internal/services"
 	"net/http"
 	"strings"
 
+	"GopherChessParty/internal/services"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt"
 )

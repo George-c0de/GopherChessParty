@@ -1,13 +1,13 @@
 package routers
 
 import (
+	"net/http"
+
 	"GopherChessParty/internal/dto"
 	"github.com/gin-gonic/gin"
-	"net/http"
 )
 
 func addAuthRoutes(rg *gin.RouterGroup) {
-
 	// Публичный маршрут для логина
 	rg.POST("/login", func(c *gin.Context) {
 		data, err := BindJSON[dto.AuthenticateUser](c)
@@ -27,6 +27,6 @@ func addAuthRoutes(rg *gin.RouterGroup) {
 			return
 		}
 		c.JSON(http.StatusOK, gin.H{"token": token})
+		return
 	})
-
 }

@@ -1,9 +1,10 @@
 package postgres
 
 import (
+	"fmt"
+
 	"GopherChessParty/internal/dto"
 	"GopherChessParty/internal/models"
-	"fmt"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -16,6 +17,7 @@ func NewRepository(postgres *Postgres) *Repository {
 		Postgres: postgres,
 	}
 }
+
 func (r *Repository) GetUsers() ([]*models.User, error) {
 	var users []*models.User
 	err := r.Db.Select(&users, "SELECT id, name, email, created_at, updated_at FROM users;")

@@ -1,11 +1,11 @@
 package routers
 
 import (
+	"net/http"
+
 	"GopherChessParty/internal/dto"
 	"GopherChessParty/internal/middleware"
 	"GopherChessParty/internal/services"
-	"net/http"
-
 	"github.com/gin-gonic/gin"
 )
 
@@ -20,6 +20,7 @@ func addUserRoutes(rg *gin.RouterGroup, service services.IService) {
 			return
 		}
 		c.JSON(http.StatusOK, gin.H{"items": users})
+		return
 	})
 
 	users.POST("/", func(c *gin.Context) {
@@ -32,7 +33,9 @@ func addUserRoutes(rg *gin.RouterGroup, service services.IService) {
 		user, err := service.CreateUser(data)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "not create user"})
+			return
 		}
 		c.JSON(http.StatusOK, gin.H{"item": user})
+		return
 	})
 }
