@@ -11,6 +11,8 @@ func GetRoutes(service services.IService) *gin.Engine {
 	// Применение middleware для добавления сервиса в контекст
 	router.Use(middleware.ServiceMiddleware(service))
 	v1 := router.Group("/v1")
-	addUserRoutes(v1)
+	addAuthRoutes(v1)
+	addUserRoutes(v1, service)
+
 	return router
 }

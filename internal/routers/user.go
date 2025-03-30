@@ -2,29 +2,18 @@ package routers
 
 import (
 	"GopherChessParty/internal/dto"
+	"GopherChessParty/internal/middleware"
 	"GopherChessParty/internal/services"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
 
-func GetService(c *gin.Context) *services.Service {
-	svc, exists := c.Get("service")
-	if !exists {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "service not found"})
-		return nil
-	}
-	// Приводим к нужному типу
-	return svc.(*services.Service)
-}
-func addUserRoutes(rg *gin.RouterGroup) {
+func addUserRoutes(rg *gin.RouterGroup, service services.IService) {
 	users := rg.Group("/users")
-
+	users.Use(middleware.JWTAuthMiddleware(service))
 	users.GET("/", func(c *gin.Context) {
 		service := GetService(c)
-		if service == nil {
-			return
-		}
 		users, err := service.GetUsers()
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -34,17 +23,15 @@ func addUserRoutes(rg *gin.RouterGroup) {
 	})
 
 	users.POST("/", func(c *gin.Context) {
-		var data dto.CreateUser
-		if err := c.BindJSON(&data); err != nil {
+		data, err := BindJSON[dto.CreateUser](c)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
 		service := GetService(c)
-		if service == nil {
-			return
-		}
-		user, err := service.CreateUser(&data)
+		user, err := service.CreateUser(data)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "not create user"})
 		}
 		c.JSON(http.StatusOK, gin.H{"item": user})
 	})

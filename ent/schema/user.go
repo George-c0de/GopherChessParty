@@ -16,7 +16,7 @@ type User struct {
 func (User) Fields() []ent.Field {
 	return []ent.Field{
 		field.UUID("id", uuid.UUID{}).Default(uuid.New).Unique(),
-		field.String("email").MaxLen(100),
+		field.String("email").MaxLen(100).Unique(),
 		field.String("name").MaxLen(255),
 		field.Time("created_at").Default(time.Now),
 		field.Time("updated_at").Default(time.Now),

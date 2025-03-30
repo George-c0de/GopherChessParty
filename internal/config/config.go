@@ -1,6 +1,9 @@
 package config
 
 import (
+	"crypto/ecdsa"
+	"crypto/x509"
+	"encoding/pem"
 	"flag"
 	"fmt"
 	"github.com/ilyakaznacheev/cleanenv"
@@ -20,6 +23,23 @@ type Database struct {
 	MaxTimeLife  time.Duration `yaml:"DB_MAX_TIME_LIFE" env-default:"24h"`
 }
 
+type Auth struct {
+	JwtSecret string        `yaml:"JWT_SECRET" env-default:"secret"`
+	ExpTime   time.Duration `yaml:"EXP_TIME" env-default:"24h"`
+}
+
+func (a *Auth) MustParseECDSAPrivateKey() *ecdsa.PrivateKey {
+	block, _ := pem.Decode([]byte(a.JwtSecret))
+	if block == nil || block.Type != "EC PRIVATE KEY" {
+		panic("failed to parse PEM block containing the EC private key")
+	}
+	key, err := x509.ParseECPrivateKey(block.Bytes)
+	if err != nil {
+		panic(err)
+	}
+	return key
+}
+
 func (d *Database) DBUrl() string {
 	return fmt.Sprintf(
 		"user=%s dbname=%s password=%s host=%s  port=%d sslmode=%s",
@@ -31,6 +51,7 @@ type Config struct {
 	Env         string   `yaml:"env" env-default:"local"`
 	StoragePath string   `yaml:"storage_path" env-required:"true"`
 	Database    Database `yaml:"database" env-required:"true"`
+	Auth        Auth     `yaml:"auth" env-required:"true"`
 }
 
 func MustLoad() *Config {

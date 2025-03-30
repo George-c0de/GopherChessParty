@@ -3,6 +3,7 @@
 package ent
 
 import (
+	"GopherChessParty/ent/user"
 	"context"
 	"errors"
 	"fmt"
@@ -12,7 +13,6 @@ import (
 	"GopherChessParty/ent/migrate"
 	"github.com/google/uuid"
 
-	"GopherChessPa
 	"entgo.io/ent"
 	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/sql"

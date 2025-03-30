@@ -6,3 +6,6 @@ database:
   DB_USER: "postgres"
   DB_PASSWORD: "postgres"
   DB_DATABASE: "gopher_chess"
+auth:
+  JWT_SECRET: "secret_key"
+  EXP_TIME: 24h

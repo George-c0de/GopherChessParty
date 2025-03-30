@@ -8,4 +8,5 @@ import (
 type IRepository interface {
 	CreateUser(user *dto.CreateUser) (*models.User, error)
 	GetUsers() ([]*models.User, error)
+	GetUserPassword(Email string) (string, error)
 }
