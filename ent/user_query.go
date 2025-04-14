@@ -3,9 +3,11 @@
 package ent
 
 import (
+	"GopherChessParty/ent/chess"
 	"GopherChessParty/ent/predicate"
 	"GopherChessParty/ent/user"
 	"context"
+	"database/sql/driver"
 	"fmt"
 	"math"
 
@@ -19,10 +21,13 @@ import (
 // UserQuery is the builder for querying User entities.
 type UserQuery struct {
 	config
-	ctx        *QueryContext
-	order      []user.OrderOption
-	inters     []Interceptor
-	predicates []predicate.User
+	ctx                 *QueryContext
+	order               []user.OrderOption
+	inters              []Interceptor
+	predicates          []predicate.User
+	withChessesAsFirst  *ChessQuery
+	withChessesAsSecond *ChessQuery
+	withChessesWon      *ChessQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -57,6 +62,72 @@ func (uq *UserQuery) Unique(unique bool) *UserQuery {
 func (uq *UserQuery) Order(o ...user.OrderOption) *UserQuery {
 	uq.order = append(uq.order, o...)
 	return uq
+}
+
+// QueryChessesAsFirst chains the current query on the "chesses_as_first" edge.
+func (uq *UserQuery) QueryChessesAsFirst() *ChessQuery {
+	query := (&ChessClient{config: uq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := uq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := uq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, selector),
+			sqlgraph.To(chess.Table, chess.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.ChessesAsFirstTable, user.ChessesAsFirstColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryChessesAsSecond chains the current query on the "chesses_as_second" edge.
+func (uq *UserQuery) QueryChessesAsSecond() *ChessQuery {
+	query := (&ChessClient{config: uq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := uq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := uq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, selector),
+			sqlgraph.To(chess.Table, chess.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.ChessesAsSecondTable, user.ChessesAsSecondColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryChessesWon chains the current query on the "chesses_won" edge.
+func (uq *UserQuery) QueryChessesWon() *ChessQuery {
+	query := (&ChessClient{config: uq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := uq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := uq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, selector),
+			sqlgraph.To(chess.Table, chess.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.ChessesWonTable, user.ChessesWonColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
 }
 
 // First returns the first User entity from the query.
@@ -246,15 +317,51 @@ func (uq *UserQuery) Clone() *UserQuery {
 		return nil
 	}
 	return &UserQuery{
-		config:     uq.config,
-		ctx:        uq.ctx.Clone(),
-		order:      append([]user.OrderOption{}, uq.order...),
-		inters:     append([]Interceptor{}, uq.inters...),
-		predicates: append([]predicate.User{}, uq.predicates...),
+		config:              uq.config,
+		ctx:                 uq.ctx.Clone(),
+		order:               append([]user.OrderOption{}, uq.order...),
+		inters:              append([]Interceptor{}, uq.inters...),
+		predicates:          append([]predicate.User{}, uq.predicates...),
+		withChessesAsFirst:  uq.withChessesAsFirst.Clone(),
+		withChessesAsSecond: uq.withChessesAsSecond.Clone(),
+		withChessesWon:      uq.withChessesWon.Clone(),
 		// clone intermediate query.
 		sql:  uq.sql.Clone(),
 		path: uq.path,
 	}
+}
+
+// WithChessesAsFirst tells the query-builder to eager-load the nodes that are connected to
+// the "chesses_as_first" edge. The optional arguments are used to configure the query builder of the edge.
+func (uq *UserQuery) WithChessesAsFirst(opts ...func(*ChessQuery)) *UserQuery {
+	query := (&ChessClient{config: uq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	uq.withChessesAsFirst = query
+	return uq
+}
+
+// WithChessesAsSecond tells the query-builder to eager-load the nodes that are connected to
+// the "chesses_as_second" edge. The optional arguments are used to configure the query builder of the edge.
+func (uq *UserQuery) WithChessesAsSecond(opts ...func(*ChessQuery)) *UserQuery {
+	query := (&ChessClient{config: uq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	uq.withChessesAsSecond = query
+	return uq
+}
+
+// WithChessesWon tells the query-builder to eager-load the nodes that are connected to
+// the "chesses_won" edge. The optional arguments are used to configure the query builder of the edge.
+func (uq *UserQuery) WithChessesWon(opts ...func(*ChessQuery)) *UserQuery {
+	query := (&ChessClient{config: uq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	uq.withChessesWon = query
+	return uq
 }
 
 // GroupBy is used to group vertices by one or more fields/columns.
@@ -333,8 +440,13 @@ func (uq *UserQuery) prepareQuery(ctx context.Context) error {
 
 func (uq *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, error) {
 	var (
-		nodes = []*User{}
-		_spec = uq.querySpec()
+		nodes       = []*User{}
+		_spec       = uq.querySpec()
+		loadedTypes = [3]bool{
+			uq.withChessesAsFirst != nil,
+			uq.withChessesAsSecond != nil,
+			uq.withChessesWon != nil,
+		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*User).scanValues(nil, columns)
@@ -342,6 +454,7 @@ func (uq *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 	_spec.Assign = func(columns []string, values []any) error {
 		node := &User{config: uq.config}
 		nodes = append(nodes, node)
+		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
 	}
 	for i := range hooks {
@@ -353,7 +466,122 @@ func (uq *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
+	if query := uq.withChessesAsFirst; query != nil {
+		if err := uq.loadChessesAsFirst(ctx, query, nodes,
+			func(n *User) { n.Edges.ChessesAsFirst = []*Chess{} },
+			func(n *User, e *Chess) { n.Edges.ChessesAsFirst = append(n.Edges.ChessesAsFirst, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := uq.withChessesAsSecond; query != nil {
+		if err := uq.loadChessesAsSecond(ctx, query, nodes,
+			func(n *User) { n.Edges.ChessesAsSecond = []*Chess{} },
+			func(n *User, e *Chess) { n.Edges.ChessesAsSecond = append(n.Edges.ChessesAsSecond, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := uq.withChessesWon; query != nil {
+		if err := uq.loadChessesWon(ctx, query, nodes,
+			func(n *User) { n.Edges.ChessesWon = []*Chess{} },
+			func(n *User, e *Chess) { n.Edges.ChessesWon = append(n.Edges.ChessesWon, e) }); err != nil {
+			return nil, err
+		}
+	}
 	return nodes, nil
+}
+
+func (uq *UserQuery) loadChessesAsFirst(ctx context.Context, query *ChessQuery, nodes []*User, init func(*User), assign func(*User, *Chess)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[uuid.UUID]*User)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	query.withFKs = true
+	query.Where(predicate.Chess(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(user.ChessesAsFirstColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.user_chesses_as_first
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "user_chesses_as_first" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "user_chesses_as_first" returned %v for node %v`, *fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (uq *UserQuery) loadChessesAsSecond(ctx context.Context, query *ChessQuery, nodes []*User, init func(*User), assign func(*User, *Chess)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[uuid.UUID]*User)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	query.withFKs = true
+	query.Where(predicate.Chess(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(user.ChessesAsSecondColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.user_chesses_as_second
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "user_chesses_as_second" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "user_chesses_as_second" returned %v for node %v`, *fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (uq *UserQuery) loadChessesWon(ctx context.Context, query *ChessQuery, nodes []*User, init func(*User), assign func(*User, *Chess)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[uuid.UUID]*User)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	query.withFKs = true
+	query.Where(predicate.Chess(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(user.ChessesWonColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.user_chesses_won
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "user_chesses_won" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "user_chesses_won" returned %v for node %v`, *fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
 }
 
 func (uq *UserQuery) sqlCount(ctx context.Context) (int, error) {

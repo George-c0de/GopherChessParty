@@ -15,7 +15,7 @@ type Chess struct {
 
 const (
 	Open = iota
-	Game
+	Games
 	Closed
 )
 
@@ -23,9 +23,6 @@ const (
 func (Chess) Fields() []ent.Field {
 	return []ent.Field{
 		field.UUID("id", uuid.UUID{}).Default(uuid.New).Unique(),
-		field.UUID("first_user_id", uuid.UUID{}),
-		field.UUID("second_user_id", uuid.UUID{}),
-		field.UUID("winner", uuid.UUID{}).Nillable(),
 		field.Uint8("status").Default(Open),
 		field.Time("created_at").Default(time.Now),
 		field.Time("updated_at").Default(time.Now),
@@ -34,5 +31,5 @@ func (Chess) Fields() []ent.Field {
 
 // Edges of the Chess.
 func (Chess) Edges() []ent.Edge {
-	return nil
+	return []ent.Edge{}
 }

@@ -18,19 +18,16 @@ type Chess struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID uuid.UUID `json:"id,omitempty"`
-	// FirstUserID holds the value of the "first_user_id" field.
-	FirstUserID uuid.UUID `json:"first_user_id,omitempty"`
-	// SecondUserID holds the value of the "second_user_id" field.
-	SecondUserID uuid.UUID `json:"second_user_id,omitempty"`
-	// Winner holds the value of the "winner" field.
-	Winner *uuid.UUID `json:"winner,omitempty"`
 	// Status holds the value of the "status" field.
 	Status uint8 `json:"status,omitempty"`
 	// CreatedAt holds the value of the "created_at" field.
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
-	UpdatedAt    time.Time `json:"updated_at,omitempty"`
-	selectValues sql.SelectValues
+	UpdatedAt              time.Time `json:"updated_at,omitempty"`
+	user_chesses_as_first  *uuid.UUID
+	user_chesses_as_second *uuid.UUID
+	user_chesses_won       *uuid.UUID
+	selectValues           sql.SelectValues
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -38,14 +35,18 @@ func (*Chess) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case chess.FieldWinner:
-			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
 		case chess.FieldStatus:
 			values[i] = new(sql.NullInt64)
 		case chess.FieldCreatedAt, chess.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
-		case chess.FieldID, chess.FieldFirstUserID, chess.FieldSecondUserID:
+		case chess.FieldID:
 			values[i] = new(uuid.UUID)
+		case chess.ForeignKeys[0]: // user_chesses_as_first
+			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
+		case chess.ForeignKeys[1]: // user_chesses_as_second
+			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
+		case chess.ForeignKeys[2]: // user_chesses_won
+			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -67,25 +68,6 @@ func (c *Chess) assignValues(columns []string, values []any) error {
 			} else if value != nil {
 				c.ID = *value
 			}
-		case chess.FieldFirstUserID:
-			if value, ok := values[i].(*uuid.UUID); !ok {
-				return fmt.Errorf("unexpected type %T for field first_user_id", values[i])
-			} else if value != nil {
-				c.FirstUserID = *value
-			}
-		case chess.FieldSecondUserID:
-			if value, ok := values[i].(*uuid.UUID); !ok {
-				return fmt.Errorf("unexpected type %T for field second_user_id", values[i])
-			} else if value != nil {
-				c.SecondUserID = *value
-			}
-		case chess.FieldWinner:
-			if value, ok := values[i].(*sql.NullScanner); !ok {
-				return fmt.Errorf("unexpected type %T for field winner", values[i])
-			} else if value.Valid {
-				c.Winner = new(uuid.UUID)
-				*c.Winner = *value.S.(*uuid.UUID)
-			}
 		case chess.FieldStatus:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field status", values[i])
@@ -103,6 +85,27 @@ func (c *Chess) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
 				c.UpdatedAt = value.Time
+			}
+		case chess.ForeignKeys[0]:
+			if value, ok := values[i].(*sql.NullScanner); !ok {
+				return fmt.Errorf("unexpected type %T for field user_chesses_as_first", values[i])
+			} else if value.Valid {
+				c.user_chesses_as_first = new(uuid.UUID)
+				*c.user_chesses_as_first = *value.S.(*uuid.UUID)
+			}
+		case chess.ForeignKeys[1]:
+			if value, ok := values[i].(*sql.NullScanner); !ok {
+				return fmt.Errorf("unexpected type %T for field user_chesses_as_second", values[i])
+			} else if value.Valid {
+				c.user_chesses_as_second = new(uuid.UUID)
+				*c.user_chesses_as_second = *value.S.(*uuid.UUID)
+			}
+		case chess.ForeignKeys[2]:
+			if value, ok := values[i].(*sql.NullScanner); !ok {
+				return fmt.Errorf("unexpected type %T for field user_chesses_won", values[i])
+			} else if value.Valid {
+				c.user_chesses_won = new(uuid.UUID)
+				*c.user_chesses_won = *value.S.(*uuid.UUID)
 			}
 		default:
 			c.selectValues.Set(columns[i], values[i])
@@ -140,17 +143,6 @@ func (c *Chess) String() string {
 	var builder strings.Builder
 	builder.WriteString("Chess(")
 	builder.WriteString(fmt.Sprintf("id=%v, ", c.ID))
-	builder.WriteString("first_user_id=")
-	builder.WriteString(fmt.Sprintf("%v", c.FirstUserID))
-	builder.WriteString(", ")
-	builder.WriteString("second_user_id=")
-	builder.WriteString(fmt.Sprintf("%v", c.SecondUserID))
-	builder.WriteString(", ")
-	if v := c.Winner; v != nil {
-		builder.WriteString("winner=")
-		builder.WriteString(fmt.Sprintf("%v", *v))
-	}
-	builder.WriteString(", ")
 	builder.WriteString("status=")
 	builder.WriteString(fmt.Sprintf("%v", c.Status))
 	builder.WriteString(", ")

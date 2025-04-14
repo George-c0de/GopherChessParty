@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/google/uuid"
 )
 
@@ -24,8 +25,35 @@ const (
 	FieldUpdatedAt = "updated_at"
 	// FieldPassword holds the string denoting the password field in the database.
 	FieldPassword = "password"
+	// EdgeChessesAsFirst holds the string denoting the chesses_as_first edge name in mutations.
+	EdgeChessesAsFirst = "chesses_as_first"
+	// EdgeChessesAsSecond holds the string denoting the chesses_as_second edge name in mutations.
+	EdgeChessesAsSecond = "chesses_as_second"
+	// EdgeChessesWon holds the string denoting the chesses_won edge name in mutations.
+	EdgeChessesWon = "chesses_won"
 	// Table holds the table name of the user in the database.
 	Table = "users"
+	// ChessesAsFirstTable is the table that holds the chesses_as_first relation/edge.
+	ChessesAsFirstTable = "chesses"
+	// ChessesAsFirstInverseTable is the table name for the Chess entity.
+	// It exists in this package in order to avoid circular dependency with the "chess" package.
+	ChessesAsFirstInverseTable = "chesses"
+	// ChessesAsFirstColumn is the table column denoting the chesses_as_first relation/edge.
+	ChessesAsFirstColumn = "user_chesses_as_first"
+	// ChessesAsSecondTable is the table that holds the chesses_as_second relation/edge.
+	ChessesAsSecondTable = "chesses"
+	// ChessesAsSecondInverseTable is the table name for the Chess entity.
+	// It exists in this package in order to avoid circular dependency with the "chess" package.
+	ChessesAsSecondInverseTable = "chesses"
+	// ChessesAsSecondColumn is the table column denoting the chesses_as_second relation/edge.
+	ChessesAsSecondColumn = "user_chesses_as_second"
+	// ChessesWonTable is the table that holds the chesses_won relation/edge.
+	ChessesWonTable = "chesses"
+	// ChessesWonInverseTable is the table name for the Chess entity.
+	// It exists in this package in order to avoid circular dependency with the "chess" package.
+	ChessesWonInverseTable = "chesses"
+	// ChessesWonColumn is the table column denoting the chesses_won relation/edge.
+	ChessesWonColumn = "user_chesses_won"
 )
 
 // Columns holds all SQL columns for user fields.
@@ -94,4 +122,67 @@ func ByUpdatedAt(opts ...sql.OrderTermOption) OrderOption {
 // ByPassword orders the results by the password field.
 func ByPassword(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldPassword, opts...).ToFunc()
+}
+
+// ByChessesAsFirstCount orders the results by chesses_as_first count.
+func ByChessesAsFirstCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newChessesAsFirstStep(), opts...)
+	}
+}
+
+// ByChessesAsFirst orders the results by chesses_as_first terms.
+func ByChessesAsFirst(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newChessesAsFirstStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByChessesAsSecondCount orders the results by chesses_as_second count.
+func ByChessesAsSecondCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newChessesAsSecondStep(), opts...)
+	}
+}
+
+// ByChessesAsSecond orders the results by chesses_as_second terms.
+func ByChessesAsSecond(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newChessesAsSecondStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByChessesWonCount orders the results by chesses_won count.
+func ByChessesWonCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newChessesWonStep(), opts...)
+	}
+}
+
+// ByChessesWon orders the results by chesses_won terms.
+func ByChessesWon(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newChessesWonStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+func newChessesAsFirstStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(ChessesAsFirstInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, ChessesAsFirstTable, ChessesAsFirstColumn),
+	)
+}
+func newChessesAsSecondStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(ChessesAsSecondInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, ChessesAsSecondTable, ChessesAsSecondColumn),
+	)
+}
+func newChessesWonStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(ChessesWonInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, ChessesWonTable, ChessesWonColumn),
+	)
 }

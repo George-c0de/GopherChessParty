@@ -23,6 +23,7 @@ type ChessQuery struct {
 	order      []chess.OrderOption
 	inters     []Interceptor
 	predicates []predicate.Chess
+	withFKs    bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -263,12 +264,12 @@ func (cq *ChessQuery) Clone() *ChessQuery {
 // Example:
 //
 //	var v []struct {
-//		FirstUserID uuid.UUID `json:"first_user_id,omitempty"`
+//		Status uint8 `json:"status,omitempty"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
 //	client.Chess.Query().
-//		GroupBy(chess.FieldFirstUserID).
+//		GroupBy(chess.FieldStatus).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
 func (cq *ChessQuery) GroupBy(field string, fields ...string) *ChessGroupBy {
@@ -286,11 +287,11 @@ func (cq *ChessQuery) GroupBy(field string, fields ...string) *ChessGroupBy {
 // Example:
 //
 //	var v []struct {
-//		FirstUserID uuid.UUID `json:"first_user_id,omitempty"`
+//		Status uint8 `json:"status,omitempty"`
 //	}
 //
 //	client.Chess.Query().
-//		Select(chess.FieldFirstUserID).
+//		Select(chess.FieldStatus).
 //		Scan(ctx, &v)
 func (cq *ChessQuery) Select(fields ...string) *ChessSelect {
 	cq.ctx.Fields = append(cq.ctx.Fields, fields...)
@@ -333,9 +334,13 @@ func (cq *ChessQuery) prepareQuery(ctx context.Context) error {
 
 func (cq *ChessQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Chess, error) {
 	var (
-		nodes = []*Chess{}
-		_spec = cq.querySpec()
+		nodes   = []*Chess{}
+		withFKs = cq.withFKs
+		_spec   = cq.querySpec()
 	)
+	if withFKs {
+		_spec.Node.Columns = append(_spec.Node.Columns, chess.ForeignKeys...)
+	}
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*Chess).scanValues(nil, columns)
 	}

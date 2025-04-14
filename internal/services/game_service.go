@@ -1,17 +1,13 @@
 package services
 
 import (
-	"GopherChessParty/internal/logger"
+	"GopherChessParty/internal/interfaces"
 	"github.com/corentings/chess/v2"
 	"github.com/google/uuid"
 )
 
-type IGameService interface {
-	CreateGame() *chess.Game
-	Move(game *chess.Game, move string) (bool, error)
-}
 type GameService struct {
-	log      *logger.Logger
+	log      interfaces.ILogger
 	nowGames map[uuid.UUID]*chess.Game
 }
 

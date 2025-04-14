@@ -29,7 +29,7 @@ func (logger *Logger) ErrorWithMsg(msg string, err error) {
 	logger.log.Error(msg, slog.String("error", err.Error()))
 }
 
-func SetupLogger(env string) *Logger {
+func NewLogger(env string) *Logger {
 	var log *slog.Logger
 
 	switch env {

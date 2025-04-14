@@ -3,6 +3,7 @@
 package ent
 
 import (
+	"GopherChessParty/ent/chess"
 	"GopherChessParty/ent/predicate"
 	"GopherChessParty/ent/user"
 	"context"
@@ -13,6 +14,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/google/uuid"
 )
 
 // UserUpdate is the builder for updating User entities.
@@ -98,9 +100,117 @@ func (uu *UserUpdate) SetNillablePassword(s *string) *UserUpdate {
 	return uu
 }
 
+// AddChessesAsFirstIDs adds the "chesses_as_first" edge to the Chess entity by IDs.
+func (uu *UserUpdate) AddChessesAsFirstIDs(ids ...uuid.UUID) *UserUpdate {
+	uu.mutation.AddChessesAsFirstIDs(ids...)
+	return uu
+}
+
+// AddChessesAsFirst adds the "chesses_as_first" edges to the Chess entity.
+func (uu *UserUpdate) AddChessesAsFirst(c ...*Chess) *UserUpdate {
+	ids := make([]uuid.UUID, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return uu.AddChessesAsFirstIDs(ids...)
+}
+
+// AddChessesAsSecondIDs adds the "chesses_as_second" edge to the Chess entity by IDs.
+func (uu *UserUpdate) AddChessesAsSecondIDs(ids ...uuid.UUID) *UserUpdate {
+	uu.mutation.AddChessesAsSecondIDs(ids...)
+	return uu
+}
+
+// AddChessesAsSecond adds the "chesses_as_second" edges to the Chess entity.
+func (uu *UserUpdate) AddChessesAsSecond(c ...*Chess) *UserUpdate {
+	ids := make([]uuid.UUID, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return uu.AddChessesAsSecondIDs(ids...)
+}
+
+// AddChessesWonIDs adds the "chesses_won" edge to the Chess entity by IDs.
+func (uu *UserUpdate) AddChessesWonIDs(ids ...uuid.UUID) *UserUpdate {
+	uu.mutation.AddChessesWonIDs(ids...)
+	return uu
+}
+
+// AddChessesWon adds the "chesses_won" edges to the Chess entity.
+func (uu *UserUpdate) AddChessesWon(c ...*Chess) *UserUpdate {
+	ids := make([]uuid.UUID, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return uu.AddChessesWonIDs(ids...)
+}
+
 // Mutation returns the UserMutation object of the builder.
 func (uu *UserUpdate) Mutation() *UserMutation {
 	return uu.mutation
+}
+
+// ClearChessesAsFirst clears all "chesses_as_first" edges to the Chess entity.
+func (uu *UserUpdate) ClearChessesAsFirst() *UserUpdate {
+	uu.mutation.ClearChessesAsFirst()
+	return uu
+}
+
+// RemoveChessesAsFirstIDs removes the "chesses_as_first" edge to Chess entities by IDs.
+func (uu *UserUpdate) RemoveChessesAsFirstIDs(ids ...uuid.UUID) *UserUpdate {
+	uu.mutation.RemoveChessesAsFirstIDs(ids...)
+	return uu
+}
+
+// RemoveChessesAsFirst removes "chesses_as_first" edges to Chess entities.
+func (uu *UserUpdate) RemoveChessesAsFirst(c ...*Chess) *UserUpdate {
+	ids := make([]uuid.UUID, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return uu.RemoveChessesAsFirstIDs(ids...)
+}
+
+// ClearChessesAsSecond clears all "chesses_as_second" edges to the Chess entity.
+func (uu *UserUpdate) ClearChessesAsSecond() *UserUpdate {
+	uu.mutation.ClearChessesAsSecond()
+	return uu
+}
+
+// RemoveChessesAsSecondIDs removes the "chesses_as_second" edge to Chess entities by IDs.
+func (uu *UserUpdate) RemoveChessesAsSecondIDs(ids ...uuid.UUID) *UserUpdate {
+	uu.mutation.RemoveChessesAsSecondIDs(ids...)
+	return uu
+}
+
+// RemoveChessesAsSecond removes "chesses_as_second" edges to Chess entities.
+func (uu *UserUpdate) RemoveChessesAsSecond(c ...*Chess) *UserUpdate {
+	ids := make([]uuid.UUID, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return uu.RemoveChessesAsSecondIDs(ids...)
+}
+
+// ClearChessesWon clears all "chesses_won" edges to the Chess entity.
+func (uu *UserUpdate) ClearChessesWon() *UserUpdate {
+	uu.mutation.ClearChessesWon()
+	return uu
+}
+
+// RemoveChessesWonIDs removes the "chesses_won" edge to Chess entities by IDs.
+func (uu *UserUpdate) RemoveChessesWonIDs(ids ...uuid.UUID) *UserUpdate {
+	uu.mutation.RemoveChessesWonIDs(ids...)
+	return uu
+}
+
+// RemoveChessesWon removes "chesses_won" edges to Chess entities.
+func (uu *UserUpdate) RemoveChessesWon(c ...*Chess) *UserUpdate {
+	ids := make([]uuid.UUID, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return uu.RemoveChessesWonIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -176,6 +286,141 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if value, ok := uu.mutation.Password(); ok {
 		_spec.SetField(user.FieldPassword, field.TypeString, value)
+	}
+	if uu.mutation.ChessesAsFirstCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.ChessesAsFirstTable,
+			Columns: []string{user.ChessesAsFirstColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(chess.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.RemovedChessesAsFirstIDs(); len(nodes) > 0 && !uu.mutation.ChessesAsFirstCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.ChessesAsFirstTable,
+			Columns: []string{user.ChessesAsFirstColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(chess.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.ChessesAsFirstIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.ChessesAsFirstTable,
+			Columns: []string{user.ChessesAsFirstColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(chess.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if uu.mutation.ChessesAsSecondCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.ChessesAsSecondTable,
+			Columns: []string{user.ChessesAsSecondColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(chess.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.RemovedChessesAsSecondIDs(); len(nodes) > 0 && !uu.mutation.ChessesAsSecondCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.ChessesAsSecondTable,
+			Columns: []string{user.ChessesAsSecondColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(chess.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.ChessesAsSecondIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.ChessesAsSecondTable,
+			Columns: []string{user.ChessesAsSecondColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(chess.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if uu.mutation.ChessesWonCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.ChessesWonTable,
+			Columns: []string{user.ChessesWonColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(chess.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.RemovedChessesWonIDs(); len(nodes) > 0 && !uu.mutation.ChessesWonCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.ChessesWonTable,
+			Columns: []string{user.ChessesWonColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(chess.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.ChessesWonIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.ChessesWonTable,
+			Columns: []string{user.ChessesWonColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(chess.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	if n, err = sqlgraph.UpdateNodes(ctx, uu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
@@ -267,9 +512,117 @@ func (uuo *UserUpdateOne) SetNillablePassword(s *string) *UserUpdateOne {
 	return uuo
 }
 
+// AddChessesAsFirstIDs adds the "chesses_as_first" edge to the Chess entity by IDs.
+func (uuo *UserUpdateOne) AddChessesAsFirstIDs(ids ...uuid.UUID) *UserUpdateOne {
+	uuo.mutation.AddChessesAsFirstIDs(ids...)
+	return uuo
+}
+
+// AddChessesAsFirst adds the "chesses_as_first" edges to the Chess entity.
+func (uuo *UserUpdateOne) AddChessesAsFirst(c ...*Chess) *UserUpdateOne {
+	ids := make([]uuid.UUID, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return uuo.AddChessesAsFirstIDs(ids...)
+}
+
+// AddChessesAsSecondIDs adds the "chesses_as_second" edge to the Chess entity by IDs.
+func (uuo *UserUpdateOne) AddChessesAsSecondIDs(ids ...uuid.UUID) *UserUpdateOne {
+	uuo.mutation.AddChessesAsSecondIDs(ids...)
+	return uuo
+}
+
+// AddChessesAsSecond adds the "chesses_as_second" edges to the Chess entity.
+func (uuo *UserUpdateOne) AddChessesAsSecond(c ...*Chess) *UserUpdateOne {
+	ids := make([]uuid.UUID, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return uuo.AddChessesAsSecondIDs(ids...)
+}
+
+// AddChessesWonIDs adds the "chesses_won" edge to the Chess entity by IDs.
+func (uuo *UserUpdateOne) AddChessesWonIDs(ids ...uuid.UUID) *UserUpdateOne {
+	uuo.mutation.AddChessesWonIDs(ids...)
+	return uuo
+}
+
+// AddChessesWon adds the "chesses_won" edges to the Chess entity.
+func (uuo *UserUpdateOne) AddChessesWon(c ...*Chess) *UserUpdateOne {
+	ids := make([]uuid.UUID, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return uuo.AddChessesWonIDs(ids...)
+}
+
 // Mutation returns the UserMutation object of the builder.
 func (uuo *UserUpdateOne) Mutation() *UserMutation {
 	return uuo.mutation
+}
+
+// ClearChessesAsFirst clears all "chesses_as_first" edges to the Chess entity.
+func (uuo *UserUpdateOne) ClearChessesAsFirst() *UserUpdateOne {
+	uuo.mutation.ClearChessesAsFirst()
+	return uuo
+}
+
+// RemoveChessesAsFirstIDs removes the "chesses_as_first" edge to Chess entities by IDs.
+func (uuo *UserUpdateOne) RemoveChessesAsFirstIDs(ids ...uuid.UUID) *UserUpdateOne {
+	uuo.mutation.RemoveChessesAsFirstIDs(ids...)
+	return uuo
+}
+
+// RemoveChessesAsFirst removes "chesses_as_first" edges to Chess entities.
+func (uuo *UserUpdateOne) RemoveChessesAsFirst(c ...*Chess) *UserUpdateOne {
+	ids := make([]uuid.UUID, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return uuo.RemoveChessesAsFirstIDs(ids...)
+}
+
+// ClearChessesAsSecond clears all "chesses_as_second" edges to the Chess entity.
+func (uuo *UserUpdateOne) ClearChessesAsSecond() *UserUpdateOne {
+	uuo.mutation.ClearChessesAsSecond()
+	return uuo
+}
+
+// RemoveChessesAsSecondIDs removes the "chesses_as_second" edge to Chess entities by IDs.
+func (uuo *UserUpdateOne) RemoveChessesAsSecondIDs(ids ...uuid.UUID) *UserUpdateOne {
+	uuo.mutation.RemoveChessesAsSecondIDs(ids...)
+	return uuo
+}
+
+// RemoveChessesAsSecond removes "chesses_as_second" edges to Chess entities.
+func (uuo *UserUpdateOne) RemoveChessesAsSecond(c ...*Chess) *UserUpdateOne {
+	ids := make([]uuid.UUID, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return uuo.RemoveChessesAsSecondIDs(ids...)
+}
+
+// ClearChessesWon clears all "chesses_won" edges to the Chess entity.
+func (uuo *UserUpdateOne) ClearChessesWon() *UserUpdateOne {
+	uuo.mutation.ClearChessesWon()
+	return uuo
+}
+
+// RemoveChessesWonIDs removes the "chesses_won" edge to Chess entities by IDs.
+func (uuo *UserUpdateOne) RemoveChessesWonIDs(ids ...uuid.UUID) *UserUpdateOne {
+	uuo.mutation.RemoveChessesWonIDs(ids...)
+	return uuo
+}
+
+// RemoveChessesWon removes "chesses_won" edges to Chess entities.
+func (uuo *UserUpdateOne) RemoveChessesWon(c ...*Chess) *UserUpdateOne {
+	ids := make([]uuid.UUID, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return uuo.RemoveChessesWonIDs(ids...)
 }
 
 // Where appends a list predicates to the UserUpdate builder.
@@ -375,6 +728,141 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 	}
 	if value, ok := uuo.mutation.Password(); ok {
 		_spec.SetField(user.FieldPassword, field.TypeString, value)
+	}
+	if uuo.mutation.ChessesAsFirstCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.ChessesAsFirstTable,
+			Columns: []string{user.ChessesAsFirstColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(chess.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.RemovedChessesAsFirstIDs(); len(nodes) > 0 && !uuo.mutation.ChessesAsFirstCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.ChessesAsFirstTable,
+			Columns: []string{user.ChessesAsFirstColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(chess.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.ChessesAsFirstIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.ChessesAsFirstTable,
+			Columns: []string{user.ChessesAsFirstColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(chess.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if uuo.mutation.ChessesAsSecondCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.ChessesAsSecondTable,
+			Columns: []string{user.ChessesAsSecondColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(chess.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.RemovedChessesAsSecondIDs(); len(nodes) > 0 && !uuo.mutation.ChessesAsSecondCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.ChessesAsSecondTable,
+			Columns: []string{user.ChessesAsSecondColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(chess.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.ChessesAsSecondIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.ChessesAsSecondTable,
+			Columns: []string{user.ChessesAsSecondColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(chess.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if uuo.mutation.ChessesWonCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.ChessesWonTable,
+			Columns: []string{user.ChessesWonColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(chess.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.RemovedChessesWonIDs(); len(nodes) > 0 && !uuo.mutation.ChessesWonCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.ChessesWonTable,
+			Columns: []string{user.ChessesWonColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(chess.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.ChessesWonIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.ChessesWonTable,
+			Columns: []string{user.ChessesWonColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(chess.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	_node = &User{config: uuo.config}
 	_spec.Assign = _node.assignValues

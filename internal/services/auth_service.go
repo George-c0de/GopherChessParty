@@ -4,20 +4,13 @@ import (
 	"time"
 
 	"GopherChessParty/internal/errors"
-	"GopherChessParty/internal/logger"
+	"GopherChessParty/internal/interfaces"
 	"github.com/golang-jwt/jwt"
 	"golang.org/x/crypto/bcrypt"
 )
 
-type IAuthService interface {
-	GenerateToken(email string) (string, error)
-	ValidateToken(tokenString string) (*jwt.Token, error)
-	GeneratePassword(rawPassword string) (string, error)
-	IsValidPassword(hashedPassword string, plainPassword string) bool
-}
-
 type AuthService struct {
-	log       *logger.Logger
+	log       interfaces.ILogger
 	jwtSecret string
 	exp       time.Duration
 }

@@ -21,24 +21,6 @@ type ChessCreate struct {
 	hooks    []Hook
 }
 
-// SetFirstUserID sets the "first_user_id" field.
-func (cc *ChessCreate) SetFirstUserID(u uuid.UUID) *ChessCreate {
-	cc.mutation.SetFirstUserID(u)
-	return cc
-}
-
-// SetSecondUserID sets the "second_user_id" field.
-func (cc *ChessCreate) SetSecondUserID(u uuid.UUID) *ChessCreate {
-	cc.mutation.SetSecondUserID(u)
-	return cc
-}
-
-// SetWinner sets the "winner" field.
-func (cc *ChessCreate) SetWinner(u uuid.UUID) *ChessCreate {
-	cc.mutation.SetWinner(u)
-	return cc
-}
-
 // SetStatus sets the "status" field.
 func (cc *ChessCreate) SetStatus(u uint8) *ChessCreate {
 	cc.mutation.SetStatus(u)
@@ -150,15 +132,6 @@ func (cc *ChessCreate) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (cc *ChessCreate) check() error {
-	if _, ok := cc.mutation.FirstUserID(); !ok {
-		return &ValidationError{Name: "first_user_id", err: errors.New(`ent: missing required field "Chess.first_user_id"`)}
-	}
-	if _, ok := cc.mutation.SecondUserID(); !ok {
-		return &ValidationError{Name: "second_user_id", err: errors.New(`ent: missing required field "Chess.second_user_id"`)}
-	}
-	if _, ok := cc.mutation.Winner(); !ok {
-		return &ValidationError{Name: "winner", err: errors.New(`ent: missing required field "Chess.winner"`)}
-	}
 	if _, ok := cc.mutation.Status(); !ok {
 		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "Chess.status"`)}
 	}
@@ -202,18 +175,6 @@ func (cc *ChessCreate) createSpec() (*Chess, *sqlgraph.CreateSpec) {
 	if id, ok := cc.mutation.ID(); ok {
 		_node.ID = id
 		_spec.ID.Value = &id
-	}
-	if value, ok := cc.mutation.FirstUserID(); ok {
-		_spec.SetField(chess.FieldFirstUserID, field.TypeUUID, value)
-		_node.FirstUserID = value
-	}
-	if value, ok := cc.mutation.SecondUserID(); ok {
-		_spec.SetField(chess.FieldSecondUserID, field.TypeUUID, value)
-		_node.SecondUserID = value
-	}
-	if value, ok := cc.mutation.Winner(); ok {
-		_spec.SetField(chess.FieldWinner, field.TypeUUID, value)
-		_node.Winner = &value
 	}
 	if value, ok := cc.mutation.Status(); ok {
 		_spec.SetField(chess.FieldStatus, field.TypeUint8, value)

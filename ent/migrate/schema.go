@@ -11,18 +11,38 @@ var (
 	// ChessesColumns holds the columns for the "chesses" table.
 	ChessesColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID, Unique: true},
-		{Name: "first_user_id", Type: field.TypeUUID},
-		{Name: "second_user_id", Type: field.TypeUUID},
-		{Name: "winner", Type: field.TypeUUID},
 		{Name: "status", Type: field.TypeUint8, Default: 0},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "user_chesses_as_first", Type: field.TypeUUID, Nullable: true},
+		{Name: "user_chesses_as_second", Type: field.TypeUUID, Nullable: true},
+		{Name: "user_chesses_won", Type: field.TypeUUID, Nullable: true},
 	}
 	// ChessesTable holds the schema information for the "chesses" table.
 	ChessesTable = &schema.Table{
 		Name:       "chesses",
 		Columns:    ChessesColumns,
 		PrimaryKey: []*schema.Column{ChessesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "chesses_users_chesses_as_first",
+				Columns:    []*schema.Column{ChessesColumns[4]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "chesses_users_chesses_as_second",
+				Columns:    []*schema.Column{ChessesColumns[5]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "chesses_users_chesses_won",
+				Columns:    []*schema.Column{ChessesColumns[6]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
 	}
 	// UsersColumns holds the columns for the "users" table.
 	UsersColumns = []*schema.Column{
@@ -47,4 +67,7 @@ var (
 )
 
 func init() {
+	ChessesTable.ForeignKeys[0].RefTable = UsersTable
+	ChessesTable.ForeignKeys[1].RefTable = UsersTable
+	ChessesTable.ForeignKeys[2].RefTable = UsersTable
 }

@@ -13,13 +13,13 @@ func main() {
 	cfg := config.MustLoad()
 
 	// Создание Логгера
-	log := logger.SetupLogger(cfg.Env)
+	log := logger.NewLogger(cfg.Env)
 
 	// Подключение к базе данных и создание репозитория
 	repository := connection.MustNewRepository(cfg.Database, log)
 
 	// Создание сервиса
-	service := services.New(log, repository, cfg.Auth)
+	service := services.NewService(log, repository, cfg.Auth)
 
 	// Создание экземпляра Gin
 	router := routers.GetRoutes(service)

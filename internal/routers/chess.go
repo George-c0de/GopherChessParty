@@ -1,12 +1,12 @@
 package routers
 
 import (
+	"GopherChessParty/internal/interfaces"
 	"GopherChessParty/internal/middleware"
-	"GopherChessParty/internal/services"
 	"github.com/gin-gonic/gin"
 )
 
-func addChessRoute(rg *gin.RouterGroup, service services.IService) {
+func addChessRoute(rg *gin.RouterGroup, service interfaces.IService) {
 	users := rg.Group("/chess")
 	users.Use(middleware.JWTAuthMiddleware(service))
 	users.GET("/", func(c *gin.Context) {

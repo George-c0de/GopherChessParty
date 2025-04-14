@@ -17,6 +17,7 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/google/uuid"
 )
 
@@ -447,6 +448,54 @@ func (c *UserClient) GetX(ctx context.Context, id uuid.UUID) *User {
 		panic(err)
 	}
 	return obj
+}
+
+// QueryChessesAsFirst queries the chesses_as_first edge of a User.
+func (c *UserClient) QueryChessesAsFirst(u *User) *ChessQuery {
+	query := (&ChessClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := u.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(chess.Table, chess.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.ChessesAsFirstTable, user.ChessesAsFirstColumn),
+		)
+		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryChessesAsSecond queries the chesses_as_second edge of a User.
+func (c *UserClient) QueryChessesAsSecond(u *User) *ChessQuery {
+	query := (&ChessClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := u.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(chess.Table, chess.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.ChessesAsSecondTable, user.ChessesAsSecondColumn),
+		)
+		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryChessesWon queries the chesses_won edge of a User.
+func (c *UserClient) QueryChessesWon(u *User) *ChessQuery {
+	query := (&ChessClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := u.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(chess.Table, chess.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.ChessesWonTable, user.ChessesWonColumn),
+		)
+		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
 }
 
 // Hooks returns the client hooks.

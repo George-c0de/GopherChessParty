@@ -4,13 +4,13 @@ import (
 	"net/http"
 	"strings"
 
-	"GopherChessParty/internal/services"
+	"GopherChessParty/internal/interfaces"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt"
 )
 
 // JWTAuthMiddleware проверяет валидность JWT-токена.
-func JWTAuthMiddleware(service services.IService) gin.HandlerFunc {
+func JWTAuthMiddleware(service interfaces.IService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// Извлекаем токен из заголовка Authorization
 		authHeader := c.GetHeader("Authorization")
@@ -31,9 +31,9 @@ func JWTAuthMiddleware(service services.IService) gin.HandlerFunc {
 		tokenString := parts[1]
 
 		// Парсим токен
-		token, err := service.ValidateToken(tokenString)
+		token, ok := service.IsValidateToken(tokenString)
 
-		if err != nil || !token.Valid {
+		if !ok {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
 			c.Abort()
 			return

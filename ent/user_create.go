@@ -3,6 +3,7 @@
 package ent
 
 import (
+	"GopherChessParty/ent/chess"
 	"GopherChessParty/ent/user"
 	"context"
 	"errors"
@@ -79,6 +80,51 @@ func (uc *UserCreate) SetNillableID(u *uuid.UUID) *UserCreate {
 		uc.SetID(*u)
 	}
 	return uc
+}
+
+// AddChessesAsFirstIDs adds the "chesses_as_first" edge to the Chess entity by IDs.
+func (uc *UserCreate) AddChessesAsFirstIDs(ids ...uuid.UUID) *UserCreate {
+	uc.mutation.AddChessesAsFirstIDs(ids...)
+	return uc
+}
+
+// AddChessesAsFirst adds the "chesses_as_first" edges to the Chess entity.
+func (uc *UserCreate) AddChessesAsFirst(c ...*Chess) *UserCreate {
+	ids := make([]uuid.UUID, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return uc.AddChessesAsFirstIDs(ids...)
+}
+
+// AddChessesAsSecondIDs adds the "chesses_as_second" edge to the Chess entity by IDs.
+func (uc *UserCreate) AddChessesAsSecondIDs(ids ...uuid.UUID) *UserCreate {
+	uc.mutation.AddChessesAsSecondIDs(ids...)
+	return uc
+}
+
+// AddChessesAsSecond adds the "chesses_as_second" edges to the Chess entity.
+func (uc *UserCreate) AddChessesAsSecond(c ...*Chess) *UserCreate {
+	ids := make([]uuid.UUID, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return uc.AddChessesAsSecondIDs(ids...)
+}
+
+// AddChessesWonIDs adds the "chesses_won" edge to the Chess entity by IDs.
+func (uc *UserCreate) AddChessesWonIDs(ids ...uuid.UUID) *UserCreate {
+	uc.mutation.AddChessesWonIDs(ids...)
+	return uc
+}
+
+// AddChessesWon adds the "chesses_won" edges to the Chess entity.
+func (uc *UserCreate) AddChessesWon(c ...*Chess) *UserCreate {
+	ids := make([]uuid.UUID, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return uc.AddChessesWonIDs(ids...)
 }
 
 // Mutation returns the UserMutation object of the builder.
@@ -216,6 +262,54 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 	if value, ok := uc.mutation.Password(); ok {
 		_spec.SetField(user.FieldPassword, field.TypeString, value)
 		_node.Password = value
+	}
+	if nodes := uc.mutation.ChessesAsFirstIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.ChessesAsFirstTable,
+			Columns: []string{user.ChessesAsFirstColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(chess.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := uc.mutation.ChessesAsSecondIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.ChessesAsSecondTable,
+			Columns: []string{user.ChessesAsSecondColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(chess.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := uc.mutation.ChessesWonIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.ChessesWonTable,
+			Columns: []string{user.ChessesWonColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(chess.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
 }

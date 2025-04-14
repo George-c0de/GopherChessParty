@@ -13,7 +13,6 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/google/uuid"
 )
 
 // ChessUpdate is the builder for updating Chess entities.
@@ -26,48 +25,6 @@ type ChessUpdate struct {
 // Where appends a list predicates to the ChessUpdate builder.
 func (cu *ChessUpdate) Where(ps ...predicate.Chess) *ChessUpdate {
 	cu.mutation.Where(ps...)
-	return cu
-}
-
-// SetFirstUserID sets the "first_user_id" field.
-func (cu *ChessUpdate) SetFirstUserID(u uuid.UUID) *ChessUpdate {
-	cu.mutation.SetFirstUserID(u)
-	return cu
-}
-
-// SetNillableFirstUserID sets the "first_user_id" field if the given value is not nil.
-func (cu *ChessUpdate) SetNillableFirstUserID(u *uuid.UUID) *ChessUpdate {
-	if u != nil {
-		cu.SetFirstUserID(*u)
-	}
-	return cu
-}
-
-// SetSecondUserID sets the "second_user_id" field.
-func (cu *ChessUpdate) SetSecondUserID(u uuid.UUID) *ChessUpdate {
-	cu.mutation.SetSecondUserID(u)
-	return cu
-}
-
-// SetNillableSecondUserID sets the "second_user_id" field if the given value is not nil.
-func (cu *ChessUpdate) SetNillableSecondUserID(u *uuid.UUID) *ChessUpdate {
-	if u != nil {
-		cu.SetSecondUserID(*u)
-	}
-	return cu
-}
-
-// SetWinner sets the "winner" field.
-func (cu *ChessUpdate) SetWinner(u uuid.UUID) *ChessUpdate {
-	cu.mutation.SetWinner(u)
-	return cu
-}
-
-// SetNillableWinner sets the "winner" field if the given value is not nil.
-func (cu *ChessUpdate) SetNillableWinner(u *uuid.UUID) *ChessUpdate {
-	if u != nil {
-		cu.SetWinner(*u)
-	}
 	return cu
 }
 
@@ -161,15 +118,6 @@ func (cu *ChessUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			}
 		}
 	}
-	if value, ok := cu.mutation.FirstUserID(); ok {
-		_spec.SetField(chess.FieldFirstUserID, field.TypeUUID, value)
-	}
-	if value, ok := cu.mutation.SecondUserID(); ok {
-		_spec.SetField(chess.FieldSecondUserID, field.TypeUUID, value)
-	}
-	if value, ok := cu.mutation.Winner(); ok {
-		_spec.SetField(chess.FieldWinner, field.TypeUUID, value)
-	}
 	if value, ok := cu.mutation.Status(); ok {
 		_spec.SetField(chess.FieldStatus, field.TypeUint8, value)
 	}
@@ -200,48 +148,6 @@ type ChessUpdateOne struct {
 	fields   []string
 	hooks    []Hook
 	mutation *ChessMutation
-}
-
-// SetFirstUserID sets the "first_user_id" field.
-func (cuo *ChessUpdateOne) SetFirstUserID(u uuid.UUID) *ChessUpdateOne {
-	cuo.mutation.SetFirstUserID(u)
-	return cuo
-}
-
-// SetNillableFirstUserID sets the "first_user_id" field if the given value is not nil.
-func (cuo *ChessUpdateOne) SetNillableFirstUserID(u *uuid.UUID) *ChessUpdateOne {
-	if u != nil {
-		cuo.SetFirstUserID(*u)
-	}
-	return cuo
-}
-
-// SetSecondUserID sets the "second_user_id" field.
-func (cuo *ChessUpdateOne) SetSecondUserID(u uuid.UUID) *ChessUpdateOne {
-	cuo.mutation.SetSecondUserID(u)
-	return cuo
-}
-
-// SetNillableSecondUserID sets the "second_user_id" field if the given value is not nil.
-func (cuo *ChessUpdateOne) SetNillableSecondUserID(u *uuid.UUID) *ChessUpdateOne {
-	if u != nil {
-		cuo.SetSecondUserID(*u)
-	}
-	return cuo
-}
-
-// SetWinner sets the "winner" field.
-func (cuo *ChessUpdateOne) SetWinner(u uuid.UUID) *ChessUpdateOne {
-	cuo.mutation.SetWinner(u)
-	return cuo
-}
-
-// SetNillableWinner sets the "winner" field if the given value is not nil.
-func (cuo *ChessUpdateOne) SetNillableWinner(u *uuid.UUID) *ChessUpdateOne {
-	if u != nil {
-		cuo.SetWinner(*u)
-	}
-	return cuo
 }
 
 // SetStatus sets the "status" field.
@@ -363,15 +269,6 @@ func (cuo *ChessUpdateOne) sqlSave(ctx context.Context) (_node *Chess, err error
 				ps[i](selector)
 			}
 		}
-	}
-	if value, ok := cuo.mutation.FirstUserID(); ok {
-		_spec.SetField(chess.FieldFirstUserID, field.TypeUUID, value)
-	}
-	if value, ok := cuo.mutation.SecondUserID(); ok {
-		_spec.SetField(chess.FieldSecondUserID, field.TypeUUID, value)
-	}
-	if value, ok := cuo.mutation.Winner(); ok {
-		_spec.SetField(chess.FieldWinner, field.TypeUUID, value)
 	}
 	if value, ok := cuo.mutation.Status(); ok {
 		_spec.SetField(chess.FieldStatus, field.TypeUint8, value)

@@ -27,8 +27,51 @@ type User struct {
 	// UpdatedAt holds the value of the "updated_at" field.
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
 	// Password holds the value of the "password" field.
-	Password     string `json:"password,omitempty"`
+	Password string `json:"password,omitempty"`
+	// Edges holds the relations/edges for other nodes in the graph.
+	// The values are being populated by the UserQuery when eager-loading is set.
+	Edges        UserEdges `json:"edges"`
 	selectValues sql.SelectValues
+}
+
+// UserEdges holds the relations/edges for other nodes in the graph.
+type UserEdges struct {
+	// ChessesAsFirst holds the value of the chesses_as_first edge.
+	ChessesAsFirst []*Chess `json:"chesses_as_first,omitempty"`
+	// ChessesAsSecond holds the value of the chesses_as_second edge.
+	ChessesAsSecond []*Chess `json:"chesses_as_second,omitempty"`
+	// ChessesWon holds the value of the chesses_won edge.
+	ChessesWon []*Chess `json:"chesses_won,omitempty"`
+	// loadedTypes holds the information for reporting if a
+	// type was loaded (or requested) in eager-loading or not.
+	loadedTypes [3]bool
+}
+
+// ChessesAsFirstOrErr returns the ChessesAsFirst value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) ChessesAsFirstOrErr() ([]*Chess, error) {
+	if e.loadedTypes[0] {
+		return e.ChessesAsFirst, nil
+	}
+	return nil, &NotLoadedError{edge: "chesses_as_first"}
+}
+
+// ChessesAsSecondOrErr returns the ChessesAsSecond value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) ChessesAsSecondOrErr() ([]*Chess, error) {
+	if e.loadedTypes[1] {
+		return e.ChessesAsSecond, nil
+	}
+	return nil, &NotLoadedError{edge: "chesses_as_second"}
+}
+
+// ChessesWonOrErr returns the ChessesWon value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) ChessesWonOrErr() ([]*Chess, error) {
+	if e.loadedTypes[2] {
+		return e.ChessesWon, nil
+	}
+	return nil, &NotLoadedError{edge: "chesses_won"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -104,6 +147,21 @@ func (u *User) assignValues(columns []string, values []any) error {
 // This includes values selected through modifiers, order, etc.
 func (u *User) Value(name string) (ent.Value, error) {
 	return u.selectValues.Get(name)
+}
+
+// QueryChessesAsFirst queries the "chesses_as_first" edge of the User entity.
+func (u *User) QueryChessesAsFirst() *ChessQuery {
+	return NewUserClient(u.config).QueryChessesAsFirst(u)
+}
+
+// QueryChessesAsSecond queries the "chesses_as_second" edge of the User entity.
+func (u *User) QueryChessesAsSecond() *ChessQuery {
+	return NewUserClient(u.config).QueryChessesAsSecond(u)
+}
+
+// QueryChessesWon queries the "chesses_won" edge of the User entity.
+func (u *User) QueryChessesWon() *ChessQuery {
+	return NewUserClient(u.config).QueryChessesWon(u)
 }
 
 // Update returns a builder for updating this User.

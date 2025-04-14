@@ -14,12 +14,6 @@ const (
 	Label = "chess"
 	// FieldID holds the string denoting the id field in the database.
 	FieldID = "id"
-	// FieldFirstUserID holds the string denoting the first_user_id field in the database.
-	FieldFirstUserID = "first_user_id"
-	// FieldSecondUserID holds the string denoting the second_user_id field in the database.
-	FieldSecondUserID = "second_user_id"
-	// FieldWinner holds the string denoting the winner field in the database.
-	FieldWinner = "winner"
 	// FieldStatus holds the string denoting the status field in the database.
 	FieldStatus = "status"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
@@ -33,18 +27,28 @@ const (
 // Columns holds all SQL columns for chess fields.
 var Columns = []string{
 	FieldID,
-	FieldFirstUserID,
-	FieldSecondUserID,
-	FieldWinner,
 	FieldStatus,
 	FieldCreatedAt,
 	FieldUpdatedAt,
+}
+
+// ForeignKeys holds the SQL foreign-keys that are owned by the "chesses"
+// table and are not defined as standalone fields in the schema.
+var ForeignKeys = []string{
+	"user_chesses_as_first",
+	"user_chesses_as_second",
+	"user_chesses_won",
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
 	for i := range Columns {
 		if column == Columns[i] {
+			return true
+		}
+	}
+	for i := range ForeignKeys {
+		if column == ForeignKeys[i] {
 			return true
 		}
 	}
@@ -68,21 +72,6 @@ type OrderOption func(*sql.Selector)
 // ByID orders the results by the id field.
 func ByID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldID, opts...).ToFunc()
-}
-
-// ByFirstUserID orders the results by the first_user_id field.
-func ByFirstUserID(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldFirstUserID, opts...).ToFunc()
-}
-
-// BySecondUserID orders the results by the second_user_id field.
-func BySecondUserID(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldSecondUserID, opts...).ToFunc()
-}
-
-// ByWinner orders the results by the winner field.
-func ByWinner(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldWinner, opts...).ToFunc()
 }
 
 // ByStatus orders the results by the status field.

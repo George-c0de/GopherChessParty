@@ -4,12 +4,12 @@ import (
 	"net/http"
 
 	"GopherChessParty/internal/dto"
+	"GopherChessParty/internal/interfaces"
 	"GopherChessParty/internal/middleware"
-	"GopherChessParty/internal/services"
 	"github.com/gin-gonic/gin"
 )
 
-func addUserRoutes(rg *gin.RouterGroup, service services.IService) {
+func addUserRoutes(rg *gin.RouterGroup, service interfaces.IService) {
 	users := rg.Group("/users")
 	users.Use(middleware.JWTAuthMiddleware(service))
 	users.GET("/", func(c *gin.Context) {

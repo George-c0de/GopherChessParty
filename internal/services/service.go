@@ -3,28 +3,22 @@ package services
 import (
 	"GopherChessParty/internal/config"
 	"GopherChessParty/internal/dto"
+	"GopherChessParty/internal/interfaces"
 	"GopherChessParty/internal/logger"
 	"GopherChessParty/internal/models"
-	"GopherChessParty/internal/storage/interfaces"
 	"github.com/corentings/chess/v2"
+	"github.com/golang-jwt/jwt"
 	"github.com/google/uuid"
 )
 
-type IService interface {
-	IUserService
-	IGameService
-	IAuthService
-	CreateUser(data *dto.CreateUser) (*models.User, error)
-	ValidPassword(data dto.AuthenticateUser) bool
-}
 type Service struct {
-	IUserService
-	IGameService
-	IAuthService
-	logger *logger.Logger
+	interfaces.IUserService
+	interfaces.IGameService
+	interfaces.IAuthService
+	logger interfaces.ILogger
 }
 
-func New(log *logger.Logger, repository interfaces.IRepository, cfg config.Auth) *Service {
+func NewService(log *logger.Logger, repository interfaces.IRepository, cfg config.Auth) *Service {
 	userService := UserService{log: log, repository: repository}
 	gameService := GameService{log: log, nowGames: map[uuid.UUID]*chess.Game{}}
 	authService := AuthService{log: log, jwtSecret: cfg.JwtSecret, exp: cfg.ExpTime}
@@ -36,14 +30,29 @@ func New(log *logger.Logger, repository interfaces.IRepository, cfg config.Auth)
 	}
 }
 
+func (s *Service) IsValidateToken(tokenString string) (*jwt.Token, bool) {
+	token, err := s.IAuthService.ValidateToken(tokenString)
+	if err != nil {
+		s.logger.Error(err)
+		return nil, false
+	}
+	return token, token.Valid
+}
+
 func (s *Service) CreateUser(data *dto.CreateUser) (*models.User, error) {
-	return s.IUserService.CreateUser(data)
+	hashedPassword, err := s.IAuthService.GeneratePassword(data.Password)
+	if err != nil {
+		s.logger.Error(err)
+		return nil, err
+	}
+	return s.IUserService.CreateUser(data, hashedPassword)
 }
 
 func (s *Service) ValidPassword(data dto.AuthenticateUser) bool {
-	HashedPassword, err := s.GetUserPassword(data.Email)
+	HashedPassword, err := s.IUserService.GetUserPassword(data.Email)
 	if err != nil {
-		s.logger.ErrorWithMsg("Not Found User", err)
+		s.logger.Error(err)
+		return false
 	}
 	return s.IsValidPassword(HashedPassword, data.Password)
 }

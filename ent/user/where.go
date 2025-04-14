@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/google/uuid"
 )
 
@@ -353,6 +354,75 @@ func PasswordEqualFold(v string) predicate.User {
 // PasswordContainsFold applies the ContainsFold predicate on the "password" field.
 func PasswordContainsFold(v string) predicate.User {
 	return predicate.User(sql.FieldContainsFold(FieldPassword, v))
+}
+
+// HasChessesAsFirst applies the HasEdge predicate on the "chesses_as_first" edge.
+func HasChessesAsFirst() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, ChessesAsFirstTable, ChessesAsFirstColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasChessesAsFirstWith applies the HasEdge predicate on the "chesses_as_first" edge with a given conditions (other predicates).
+func HasChessesAsFirstWith(preds ...predicate.Chess) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := newChessesAsFirstStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasChessesAsSecond applies the HasEdge predicate on the "chesses_as_second" edge.
+func HasChessesAsSecond() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, ChessesAsSecondTable, ChessesAsSecondColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasChessesAsSecondWith applies the HasEdge predicate on the "chesses_as_second" edge with a given conditions (other predicates).
+func HasChessesAsSecondWith(preds ...predicate.Chess) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := newChessesAsSecondStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasChessesWon applies the HasEdge predicate on the "chesses_won" edge.
+func HasChessesWon() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, ChessesWonTable, ChessesWonColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasChessesWonWith applies the HasEdge predicate on the "chesses_won" edge with a given conditions (other predicates).
+func HasChessesWonWith(preds ...predicate.Chess) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := newChessesWonStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
 }
 
 // And groups predicates with the AND operator between them.

@@ -33,20 +33,17 @@ const (
 // ChessMutation represents an operation that mutates the Chess nodes in the graph.
 type ChessMutation struct {
 	config
-	op             Op
-	typ            string
-	id             *uuid.UUID
-	first_user_id  *uuid.UUID
-	second_user_id *uuid.UUID
-	winner         *uuid.UUID
-	status         *uint8
-	addstatus      *int8
-	created_at     *time.Time
-	updated_at     *time.Time
-	clearedFields  map[string]struct{}
-	done           bool
-	oldValue       func(context.Context) (*Chess, error)
-	predicates     []predicate.Chess
+	op            Op
+	typ           string
+	id            *uuid.UUID
+	status        *uint8
+	addstatus     *int8
+	created_at    *time.Time
+	updated_at    *time.Time
+	clearedFields map[string]struct{}
+	done          bool
+	oldValue      func(context.Context) (*Chess, error)
+	predicates    []predicate.Chess
 }
 
 var _ ent.Mutation = (*ChessMutation)(nil)
@@ -151,114 +148,6 @@ func (m *ChessMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
 	default:
 		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
 	}
-}
-
-// SetFirstUserID sets the "first_user_id" field.
-func (m *ChessMutation) SetFirstUserID(u uuid.UUID) {
-	m.first_user_id = &u
-}
-
-// FirstUserID returns the value of the "first_user_id" field in the mutation.
-func (m *ChessMutation) FirstUserID() (r uuid.UUID, exists bool) {
-	v := m.first_user_id
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldFirstUserID returns the old "first_user_id" field's value of the Chess entity.
-// If the Chess object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *ChessMutation) OldFirstUserID(ctx context.Context) (v uuid.UUID, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldFirstUserID is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldFirstUserID requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldFirstUserID: %w", err)
-	}
-	return oldValue.FirstUserID, nil
-}
-
-// ResetFirstUserID resets all changes to the "first_user_id" field.
-func (m *ChessMutation) ResetFirstUserID() {
-	m.first_user_id = nil
-}
-
-// SetSecondUserID sets the "second_user_id" field.
-func (m *ChessMutation) SetSecondUserID(u uuid.UUID) {
-	m.second_user_id = &u
-}
-
-// SecondUserID returns the value of the "second_user_id" field in the mutation.
-func (m *ChessMutation) SecondUserID() (r uuid.UUID, exists bool) {
-	v := m.second_user_id
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldSecondUserID returns the old "second_user_id" field's value of the Chess entity.
-// If the Chess object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *ChessMutation) OldSecondUserID(ctx context.Context) (v uuid.UUID, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldSecondUserID is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldSecondUserID requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldSecondUserID: %w", err)
-	}
-	return oldValue.SecondUserID, nil
-}
-
-// ResetSecondUserID resets all changes to the "second_user_id" field.
-func (m *ChessMutation) ResetSecondUserID() {
-	m.second_user_id = nil
-}
-
-// SetWinner sets the "winner" field.
-func (m *ChessMutation) SetWinner(u uuid.UUID) {
-	m.winner = &u
-}
-
-// Winner returns the value of the "winner" field in the mutation.
-func (m *ChessMutation) Winner() (r uuid.UUID, exists bool) {
-	v := m.winner
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldWinner returns the old "winner" field's value of the Chess entity.
-// If the Chess object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *ChessMutation) OldWinner(ctx context.Context) (v *uuid.UUID, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldWinner is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldWinner requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldWinner: %w", err)
-	}
-	return oldValue.Winner, nil
-}
-
-// ResetWinner resets all changes to the "winner" field.
-func (m *ChessMutation) ResetWinner() {
-	m.winner = nil
 }
 
 // SetStatus sets the "status" field.
@@ -423,16 +312,7 @@ func (m *ChessMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *ChessMutation) Fields() []string {
-	fields := make([]string, 0, 6)
-	if m.first_user_id != nil {
-		fields = append(fields, chess.FieldFirstUserID)
-	}
-	if m.second_user_id != nil {
-		fields = append(fields, chess.FieldSecondUserID)
-	}
-	if m.winner != nil {
-		fields = append(fields, chess.FieldWinner)
-	}
+	fields := make([]string, 0, 3)
 	if m.status != nil {
 		fields = append(fields, chess.FieldStatus)
 	}
@@ -450,12 +330,6 @@ func (m *ChessMutation) Fields() []string {
 // schema.
 func (m *ChessMutation) Field(name string) (ent.Value, bool) {
 	switch name {
-	case chess.FieldFirstUserID:
-		return m.FirstUserID()
-	case chess.FieldSecondUserID:
-		return m.SecondUserID()
-	case chess.FieldWinner:
-		return m.Winner()
 	case chess.FieldStatus:
 		return m.Status()
 	case chess.FieldCreatedAt:
@@ -471,12 +345,6 @@ func (m *ChessMutation) Field(name string) (ent.Value, bool) {
 // database failed.
 func (m *ChessMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
 	switch name {
-	case chess.FieldFirstUserID:
-		return m.OldFirstUserID(ctx)
-	case chess.FieldSecondUserID:
-		return m.OldSecondUserID(ctx)
-	case chess.FieldWinner:
-		return m.OldWinner(ctx)
 	case chess.FieldStatus:
 		return m.OldStatus(ctx)
 	case chess.FieldCreatedAt:
@@ -492,27 +360,6 @@ func (m *ChessMutation) OldField(ctx context.Context, name string) (ent.Value, e
 // type.
 func (m *ChessMutation) SetField(name string, value ent.Value) error {
 	switch name {
-	case chess.FieldFirstUserID:
-		v, ok := value.(uuid.UUID)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetFirstUserID(v)
-		return nil
-	case chess.FieldSecondUserID:
-		v, ok := value.(uuid.UUID)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetSecondUserID(v)
-		return nil
-	case chess.FieldWinner:
-		v, ok := value.(uuid.UUID)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetWinner(v)
-		return nil
 	case chess.FieldStatus:
 		v, ok := value.(uint8)
 		if !ok {
@@ -598,15 +445,6 @@ func (m *ChessMutation) ClearField(name string) error {
 // It returns an error if the field is not defined in the schema.
 func (m *ChessMutation) ResetField(name string) error {
 	switch name {
-	case chess.FieldFirstUserID:
-		m.ResetFirstUserID()
-		return nil
-	case chess.FieldSecondUserID:
-		m.ResetSecondUserID()
-		return nil
-	case chess.FieldWinner:
-		m.ResetWinner()
-		return nil
 	case chess.FieldStatus:
 		m.ResetStatus()
 		return nil
@@ -671,18 +509,27 @@ func (m *ChessMutation) ResetEdge(name string) error {
 // UserMutation represents an operation that mutates the User nodes in the graph.
 type UserMutation struct {
 	config
-	op            Op
-	typ           string
-	id            *uuid.UUID
-	email         *string
-	name          *string
-	created_at    *time.Time
-	updated_at    *time.Time
-	password      *string
-	clearedFields map[string]struct{}
-	done          bool
-	oldValue      func(context.Context) (*User, error)
-	predicates    []predicate.User
+	op                       Op
+	typ                      string
+	id                       *uuid.UUID
+	email                    *string
+	name                     *string
+	created_at               *time.Time
+	updated_at               *time.Time
+	password                 *string
+	clearedFields            map[string]struct{}
+	chesses_as_first         map[uuid.UUID]struct{}
+	removedchesses_as_first  map[uuid.UUID]struct{}
+	clearedchesses_as_first  bool
+	chesses_as_second        map[uuid.UUID]struct{}
+	removedchesses_as_second map[uuid.UUID]struct{}
+	clearedchesses_as_second bool
+	chesses_won              map[uuid.UUID]struct{}
+	removedchesses_won       map[uuid.UUID]struct{}
+	clearedchesses_won       bool
+	done                     bool
+	oldValue                 func(context.Context) (*User, error)
+	predicates               []predicate.User
 }
 
 var _ ent.Mutation = (*UserMutation)(nil)
@@ -969,6 +816,168 @@ func (m *UserMutation) ResetPassword() {
 	m.password = nil
 }
 
+// AddChessesAsFirstIDs adds the "chesses_as_first" edge to the Chess entity by ids.
+func (m *UserMutation) AddChessesAsFirstIDs(ids ...uuid.UUID) {
+	if m.chesses_as_first == nil {
+		m.chesses_as_first = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		m.chesses_as_first[ids[i]] = struct{}{}
+	}
+}
+
+// ClearChessesAsFirst clears the "chesses_as_first" edge to the Chess entity.
+func (m *UserMutation) ClearChessesAsFirst() {
+	m.clearedchesses_as_first = true
+}
+
+// ChessesAsFirstCleared reports if the "chesses_as_first" edge to the Chess entity was cleared.
+func (m *UserMutation) ChessesAsFirstCleared() bool {
+	return m.clearedchesses_as_first
+}
+
+// RemoveChessesAsFirstIDs removes the "chesses_as_first" edge to the Chess entity by IDs.
+func (m *UserMutation) RemoveChessesAsFirstIDs(ids ...uuid.UUID) {
+	if m.removedchesses_as_first == nil {
+		m.removedchesses_as_first = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		delete(m.chesses_as_first, ids[i])
+		m.removedchesses_as_first[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedChessesAsFirst returns the removed IDs of the "chesses_as_first" edge to the Chess entity.
+func (m *UserMutation) RemovedChessesAsFirstIDs() (ids []uuid.UUID) {
+	for id := range m.removedchesses_as_first {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ChessesAsFirstIDs returns the "chesses_as_first" edge IDs in the mutation.
+func (m *UserMutation) ChessesAsFirstIDs() (ids []uuid.UUID) {
+	for id := range m.chesses_as_first {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetChessesAsFirst resets all changes to the "chesses_as_first" edge.
+func (m *UserMutation) ResetChessesAsFirst() {
+	m.chesses_as_first = nil
+	m.clearedchesses_as_first = false
+	m.removedchesses_as_first = nil
+}
+
+// AddChessesAsSecondIDs adds the "chesses_as_second" edge to the Chess entity by ids.
+func (m *UserMutation) AddChessesAsSecondIDs(ids ...uuid.UUID) {
+	if m.chesses_as_second == nil {
+		m.chesses_as_second = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		m.chesses_as_second[ids[i]] = struct{}{}
+	}
+}
+
+// ClearChessesAsSecond clears the "chesses_as_second" edge to the Chess entity.
+func (m *UserMutation) ClearChessesAsSecond() {
+	m.clearedchesses_as_second = true
+}
+
+// ChessesAsSecondCleared reports if the "chesses_as_second" edge to the Chess entity was cleared.
+func (m *UserMutation) ChessesAsSecondCleared() bool {
+	return m.clearedchesses_as_second
+}
+
+// RemoveChessesAsSecondIDs removes the "chesses_as_second" edge to the Chess entity by IDs.
+func (m *UserMutation) RemoveChessesAsSecondIDs(ids ...uuid.UUID) {
+	if m.removedchesses_as_second == nil {
+		m.removedchesses_as_second = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		delete(m.chesses_as_second, ids[i])
+		m.removedchesses_as_second[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedChessesAsSecond returns the removed IDs of the "chesses_as_second" edge to the Chess entity.
+func (m *UserMutation) RemovedChessesAsSecondIDs() (ids []uuid.UUID) {
+	for id := range m.removedchesses_as_second {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ChessesAsSecondIDs returns the "chesses_as_second" edge IDs in the mutation.
+func (m *UserMutation) ChessesAsSecondIDs() (ids []uuid.UUID) {
+	for id := range m.chesses_as_second {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetChessesAsSecond resets all changes to the "chesses_as_second" edge.
+func (m *UserMutation) ResetChessesAsSecond() {
+	m.chesses_as_second = nil
+	m.clearedchesses_as_second = false
+	m.removedchesses_as_second = nil
+}
+
+// AddChessesWonIDs adds the "chesses_won" edge to the Chess entity by ids.
+func (m *UserMutation) AddChessesWonIDs(ids ...uuid.UUID) {
+	if m.chesses_won == nil {
+		m.chesses_won = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		m.chesses_won[ids[i]] = struct{}{}
+	}
+}
+
+// ClearChessesWon clears the "chesses_won" edge to the Chess entity.
+func (m *UserMutation) ClearChessesWon() {
+	m.clearedchesses_won = true
+}
+
+// ChessesWonCleared reports if the "chesses_won" edge to the Chess entity was cleared.
+func (m *UserMutation) ChessesWonCleared() bool {
+	return m.clearedchesses_won
+}
+
+// RemoveChessesWonIDs removes the "chesses_won" edge to the Chess entity by IDs.
+func (m *UserMutation) RemoveChessesWonIDs(ids ...uuid.UUID) {
+	if m.removedchesses_won == nil {
+		m.removedchesses_won = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		delete(m.chesses_won, ids[i])
+		m.removedchesses_won[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedChessesWon returns the removed IDs of the "chesses_won" edge to the Chess entity.
+func (m *UserMutation) RemovedChessesWonIDs() (ids []uuid.UUID) {
+	for id := range m.removedchesses_won {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ChessesWonIDs returns the "chesses_won" edge IDs in the mutation.
+func (m *UserMutation) ChessesWonIDs() (ids []uuid.UUID) {
+	for id := range m.chesses_won {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetChessesWon resets all changes to the "chesses_won" edge.
+func (m *UserMutation) ResetChessesWon() {
+	m.chesses_won = nil
+	m.clearedchesses_won = false
+	m.removedchesses_won = nil
+}
+
 // Where appends a list predicates to the UserMutation builder.
 func (m *UserMutation) Where(ps ...predicate.User) {
 	m.predicates = append(m.predicates, ps...)
@@ -1170,48 +1179,136 @@ func (m *UserMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *UserMutation) AddedEdges() []string {
-	edges := make([]string, 0, 0)
+	edges := make([]string, 0, 3)
+	if m.chesses_as_first != nil {
+		edges = append(edges, user.EdgeChessesAsFirst)
+	}
+	if m.chesses_as_second != nil {
+		edges = append(edges, user.EdgeChessesAsSecond)
+	}
+	if m.chesses_won != nil {
+		edges = append(edges, user.EdgeChessesWon)
+	}
 	return edges
 }
 
 // AddedIDs returns all IDs (to other nodes) that were added for the given edge
 // name in this mutation.
 func (m *UserMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case user.EdgeChessesAsFirst:
+		ids := make([]ent.Value, 0, len(m.chesses_as_first))
+		for id := range m.chesses_as_first {
+			ids = append(ids, id)
+		}
+		return ids
+	case user.EdgeChessesAsSecond:
+		ids := make([]ent.Value, 0, len(m.chesses_as_second))
+		for id := range m.chesses_as_second {
+			ids = append(ids, id)
+		}
+		return ids
+	case user.EdgeChessesWon:
+		ids := make([]ent.Value, 0, len(m.chesses_won))
+		for id := range m.chesses_won {
+			ids = append(ids, id)
+		}
+		return ids
+	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *UserMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 0)
+	edges := make([]string, 0, 3)
+	if m.removedchesses_as_first != nil {
+		edges = append(edges, user.EdgeChessesAsFirst)
+	}
+	if m.removedchesses_as_second != nil {
+		edges = append(edges, user.EdgeChessesAsSecond)
+	}
+	if m.removedchesses_won != nil {
+		edges = append(edges, user.EdgeChessesWon)
+	}
 	return edges
 }
 
 // RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
 // the given name in this mutation.
 func (m *UserMutation) RemovedIDs(name string) []ent.Value {
+	switch name {
+	case user.EdgeChessesAsFirst:
+		ids := make([]ent.Value, 0, len(m.removedchesses_as_first))
+		for id := range m.removedchesses_as_first {
+			ids = append(ids, id)
+		}
+		return ids
+	case user.EdgeChessesAsSecond:
+		ids := make([]ent.Value, 0, len(m.removedchesses_as_second))
+		for id := range m.removedchesses_as_second {
+			ids = append(ids, id)
+		}
+		return ids
+	case user.EdgeChessesWon:
+		ids := make([]ent.Value, 0, len(m.removedchesses_won))
+		for id := range m.removedchesses_won {
+			ids = append(ids, id)
+		}
+		return ids
+	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *UserMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 0)
+	edges := make([]string, 0, 3)
+	if m.clearedchesses_as_first {
+		edges = append(edges, user.EdgeChessesAsFirst)
+	}
+	if m.clearedchesses_as_second {
+		edges = append(edges, user.EdgeChessesAsSecond)
+	}
+	if m.clearedchesses_won {
+		edges = append(edges, user.EdgeChessesWon)
+	}
 	return edges
 }
 
 // EdgeCleared returns a boolean which indicates if the edge with the given name
 // was cleared in this mutation.
 func (m *UserMutation) EdgeCleared(name string) bool {
+	switch name {
+	case user.EdgeChessesAsFirst:
+		return m.clearedchesses_as_first
+	case user.EdgeChessesAsSecond:
+		return m.clearedchesses_as_second
+	case user.EdgeChessesWon:
+		return m.clearedchesses_won
+	}
 	return false
 }
 
 // ClearEdge clears the value of the edge with the given name. It returns an error
 // if that edge is not defined in the schema.
 func (m *UserMutation) ClearEdge(name string) error {
+	switch name {
+	}
 	return fmt.Errorf("unknown User unique edge %s", name)
 }
 
 // ResetEdge resets all changes to the edge with the given name in this mutation.
 // It returns an error if the edge is not defined in the schema.
 func (m *UserMutation) ResetEdge(name string) error {
+	switch name {
+	case user.EdgeChessesAsFirst:
+		m.ResetChessesAsFirst()
+		return nil
+	case user.EdgeChessesAsSecond:
+		m.ResetChessesAsSecond()
+		return nil
+	case user.EdgeChessesWon:
+		m.ResetChessesWon()
+		return nil
+	}
 	return fmt.Errorf("unknown User edge %s", name)
 }

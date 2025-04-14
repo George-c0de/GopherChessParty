@@ -3,11 +3,12 @@ package routers
 import (
 	"net/http"
 
+	"GopherChessParty/internal/interfaces"
 	"GopherChessParty/internal/services"
 	"github.com/gin-gonic/gin"
 )
 
-func GetService(c *gin.Context) *services.Service {
+func GetService(c *gin.Context) interfaces.IService {
 	svc, exists := c.Get("service")
 	if !exists {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "service not found"})
