@@ -7,6 +7,6 @@ import (
 
 type IUserService interface {
 	GetUsers() ([]*models.User, error)
-	CreateUser(data *dto.CreateUser, hashedPassword string) (*models.User, error)
-	GetUserPassword(Email string) (string, error)
+	SaveUser(data *dto.CreateUser, hashedPassword string) (*models.User, error)
+	GetUserPassword(Email string) (*models.AuthUser, error)
 }

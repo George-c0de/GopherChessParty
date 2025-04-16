@@ -30,3 +30,5 @@ func (m *GameService) Move(game *chess.Game, move string) (bool, error) {
 	}
 	return true, nil
 }
+
+func (m *GameService) GetGames() {}

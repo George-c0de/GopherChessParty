@@ -69,21 +69,19 @@ func (r *Repository) GetUsers() ([]*models.User, error) {
 	return users, nil
 }
 
-func (r *Repository) GetUserPassword(email string) (string, error) {
+func (r *Repository) GetUserPassword(email string) (*models.AuthUser, error) {
 	ctx := context.Background()
 
-	var Password []string
-	err := r.client.User.
+	authUser, err := r.client.User.
 		Query().
 		Where(user.Email(email)).
-		Limit(1).
-		Select(user.FieldPassword).
-		Scan(ctx, &Password)
+		Select(user.FieldPassword, user.FieldID).
+		First(ctx)
 
-	if err != nil || len(Password) != 1 {
+	if err != nil {
 		r.log.Error(err)
-		return "", err
+		return nil, err
 	}
 
-	return Password[0], nil
+	return &models.AuthUser{UserId: authUser.ID, HashedPassword: authUser.Password}, nil
 }

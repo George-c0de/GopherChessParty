@@ -45,14 +45,18 @@ func (s *Service) CreateUser(data *dto.CreateUser) (*models.User, error) {
 		s.logger.Error(err)
 		return nil, err
 	}
-	return s.IUserService.CreateUser(data, hashedPassword)
+	return s.IUserService.SaveUser(data, hashedPassword)
 }
 
-func (s *Service) ValidPassword(data dto.AuthenticateUser) bool {
-	HashedPassword, err := s.IUserService.GetUserPassword(data.Email)
+func (s *Service) ValidPassword(data dto.AuthenticateUser) (*uuid.UUID, bool) {
+	userAuth, err := s.IUserService.GetUserPassword(data.Email)
 	if err != nil {
 		s.logger.Error(err)
-		return false
+		return nil, false
 	}
-	return s.IsValidPassword(HashedPassword, data.Password)
+	return &userAuth.UserId, s.IsValidPassword(userAuth.HashedPassword, data.Password)
+}
+
+func (s *Service) GetGames(userId uuid.UUID) {
+
 }

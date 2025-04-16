@@ -1,9 +1,9 @@
 package routers
 
 import (
+	"GopherChessParty/internal/dto"
 	"net/http"
 
-	"GopherChessParty/internal/dto"
 	"GopherChessParty/internal/interfaces"
 	"GopherChessParty/internal/middleware"
 	"github.com/gin-gonic/gin"
@@ -11,18 +11,6 @@ import (
 
 func addUserRoutes(rg *gin.RouterGroup, service interfaces.IService) {
 	users := rg.Group("/users")
-	users.Use(middleware.JWTAuthMiddleware(service))
-	users.GET("/", func(c *gin.Context) {
-		service := GetService(c)
-		users, err := service.GetUsers()
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
-
-		c.JSON(http.StatusOK, gin.H{"items": users})
-	})
-
 	users.POST("/", func(c *gin.Context) {
 		data, err := BindJSON[dto.CreateUser](c)
 		if err != nil {
@@ -39,4 +27,16 @@ func addUserRoutes(rg *gin.RouterGroup, service interfaces.IService) {
 
 		c.JSON(http.StatusOK, gin.H{"item": user})
 	})
+	users.Use(middleware.JWTAuthMiddleware(service))
+	users.GET("/", func(c *gin.Context) {
+		service := GetService(c)
+		users, err := service.GetUsers()
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{"items": users})
+	})
+
 }

@@ -1,6 +1,7 @@
 package services
 
 import (
+	"github.com/google/uuid"
 	"time"
 
 	"GopherChessParty/internal/errors"
@@ -15,11 +16,11 @@ type AuthService struct {
 	exp       time.Duration
 }
 
-func (s *AuthService) GenerateToken(email string) (string, error) {
+func (s *AuthService) GenerateToken(userId uuid.UUID) (string, error) {
 	// Создаем новый токен с методом подписи HS256
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"username": email,
-		"exp":      time.Now().Add(s.exp).Unix(),
+		"id":  userId,
+		"exp": time.Now().Add(s.exp).Unix(),
 	})
 
 	// Подписываем токен секретным ключом

@@ -12,19 +12,19 @@ func addAuthRoutes(rg *gin.RouterGroup) {
 	rg.POST("/login", func(c *gin.Context) {
 		data, err := BindJSON[dto.AuthenticateUser](c)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "json invalid"})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err})
 			return
 		}
 
 		service := GetService(c)
 
-		ok := service.ValidPassword(*data)
+		userId, ok := service.ValidPassword(*data)
 		if !ok {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Not Valid Password"})
 			return
 		}
 
-		token, err := service.GenerateToken(data.Email)
+		token, err := service.GenerateToken(*userId)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return

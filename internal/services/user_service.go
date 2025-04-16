@@ -11,7 +11,7 @@ type UserService struct {
 	log        interfaces.ILogger
 }
 
-func (m *UserService) CreateUser(
+func (m *UserService) SaveUser(
 	data *dto.CreateUser,
 	hashedPassword string,
 ) (*models.User, error) {
@@ -23,6 +23,6 @@ func (m *UserService) GetUsers() ([]*models.User, error) {
 	return m.repository.GetUsers()
 }
 
-func (m *UserService) GetUserPassword(email string) (string, error) {
+func (m *UserService) GetUserPassword(email string) (*models.AuthUser, error) {
 	return m.repository.GetUserPassword(email)
 }

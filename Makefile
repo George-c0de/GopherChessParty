@@ -15,3 +15,6 @@ revision:
   --dir "file://ent/migrate/migrations" \
   --to "ent://ent/schema" \
   --dev-url "postgres://postgres:postgres@localhost:5432/gopher_chess?search_path=public&sslmode=disable"
+
+lint:
+	golangci-lint run

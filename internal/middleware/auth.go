@@ -41,7 +41,7 @@ func JWTAuthMiddleware(service interfaces.IService) gin.HandlerFunc {
 
 		// Можно извлечь claims и положить в контекст запроса, если потребуется
 		if claims, ok := token.Claims.(jwt.MapClaims); ok {
-			c.Set("username", claims["username"])
+			c.Set("id", claims["id"])
 		}
 
 		c.Next()

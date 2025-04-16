@@ -10,7 +10,10 @@ func addChessRoute(rg *gin.RouterGroup, service interfaces.IService) {
 	users := rg.Group("/chess")
 	users.Use(middleware.JWTAuthMiddleware(service))
 	users.GET("/", func(c *gin.Context) {
-		// TODO GET ALL GAMES
+		service := GetService(c)
+		userId := *GetUserID(c)
+		service.GetGames(userId)
+
 	})
 
 	users.POST("/", func(c *gin.Context) {
