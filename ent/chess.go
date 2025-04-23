@@ -4,6 +4,7 @@ package ent
 
 import (
 	"GopherChessParty/ent/chess"
+	"GopherChessParty/ent/user"
 	"fmt"
 	"strings"
 	"time"
@@ -18,16 +19,53 @@ type Chess struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID uuid.UUID `json:"id,omitempty"`
-	// Status holds the value of the "status" field.
-	Status uint8 `json:"status,omitempty"`
 	// CreatedAt holds the value of the "created_at" field.
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
-	UpdatedAt              time.Time `json:"updated_at,omitempty"`
-	user_chesses_as_first  *uuid.UUID
-	user_chesses_as_second *uuid.UUID
-	user_chesses_won       *uuid.UUID
-	selectValues           sql.SelectValues
+	UpdatedAt time.Time `json:"updated_at,omitempty"`
+	// Status holds the value of the "status" field.
+	Status chess.Status `json:"status,omitempty"`
+	// Result holds the value of the "result" field.
+	Result chess.Result `json:"result,omitempty"`
+	// Edges holds the relations/edges for other nodes in the graph.
+	// The values are being populated by the ChessQuery when eager-loading is set.
+	Edges         ChessEdges `json:"edges"`
+	user_white_id *uuid.UUID
+	user_black_id *uuid.UUID
+	selectValues  sql.SelectValues
+}
+
+// ChessEdges holds the relations/edges for other nodes in the graph.
+type ChessEdges struct {
+	// WhiteUser holds the value of the white_user edge.
+	WhiteUser *User `json:"white_user,omitempty"`
+	// BlackUser holds the value of the black_user edge.
+	BlackUser *User `json:"black_user,omitempty"`
+	// loadedTypes holds the information for reporting if a
+	// type was loaded (or requested) in eager-loading or not.
+	loadedTypes [2]bool
+}
+
+// WhiteUserOrErr returns the WhiteUser value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e ChessEdges) WhiteUserOrErr() (*User, error) {
+	if e.WhiteUser != nil {
+		return e.WhiteUser, nil
+	} else if e.loadedTypes[0] {
+		return nil, &NotFoundError{label: user.Label}
+	}
+	return nil, &NotLoadedError{edge: "white_user"}
+}
+
+// BlackUserOrErr returns the BlackUser value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e ChessEdges) BlackUserOrErr() (*User, error) {
+	if e.BlackUser != nil {
+		return e.BlackUser, nil
+	} else if e.loadedTypes[1] {
+		return nil, &NotFoundError{label: user.Label}
+	}
+	return nil, &NotLoadedError{edge: "black_user"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -35,17 +73,15 @@ func (*Chess) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case chess.FieldStatus:
-			values[i] = new(sql.NullInt64)
+		case chess.FieldStatus, chess.FieldResult:
+			values[i] = new(sql.NullString)
 		case chess.FieldCreatedAt, chess.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
 		case chess.FieldID:
 			values[i] = new(uuid.UUID)
-		case chess.ForeignKeys[0]: // user_chesses_as_first
+		case chess.ForeignKeys[0]: // user_white_id
 			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
-		case chess.ForeignKeys[1]: // user_chesses_as_second
-			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
-		case chess.ForeignKeys[2]: // user_chesses_won
+		case chess.ForeignKeys[1]: // user_black_id
 			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
 		default:
 			values[i] = new(sql.UnknownType)
@@ -68,12 +104,6 @@ func (c *Chess) assignValues(columns []string, values []any) error {
 			} else if value != nil {
 				c.ID = *value
 			}
-		case chess.FieldStatus:
-			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for field status", values[i])
-			} else if value.Valid {
-				c.Status = uint8(value.Int64)
-			}
 		case chess.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
@@ -86,26 +116,31 @@ func (c *Chess) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				c.UpdatedAt = value.Time
 			}
+		case chess.FieldStatus:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field status", values[i])
+			} else if value.Valid {
+				c.Status = chess.Status(value.String)
+			}
+		case chess.FieldResult:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field result", values[i])
+			} else if value.Valid {
+				c.Result = chess.Result(value.String)
+			}
 		case chess.ForeignKeys[0]:
 			if value, ok := values[i].(*sql.NullScanner); !ok {
-				return fmt.Errorf("unexpected type %T for field user_chesses_as_first", values[i])
+				return fmt.Errorf("unexpected type %T for field user_white_id", values[i])
 			} else if value.Valid {
-				c.user_chesses_as_first = new(uuid.UUID)
-				*c.user_chesses_as_first = *value.S.(*uuid.UUID)
+				c.user_white_id = new(uuid.UUID)
+				*c.user_white_id = *value.S.(*uuid.UUID)
 			}
 		case chess.ForeignKeys[1]:
 			if value, ok := values[i].(*sql.NullScanner); !ok {
-				return fmt.Errorf("unexpected type %T for field user_chesses_as_second", values[i])
+				return fmt.Errorf("unexpected type %T for field user_black_id", values[i])
 			} else if value.Valid {
-				c.user_chesses_as_second = new(uuid.UUID)
-				*c.user_chesses_as_second = *value.S.(*uuid.UUID)
-			}
-		case chess.ForeignKeys[2]:
-			if value, ok := values[i].(*sql.NullScanner); !ok {
-				return fmt.Errorf("unexpected type %T for field user_chesses_won", values[i])
-			} else if value.Valid {
-				c.user_chesses_won = new(uuid.UUID)
-				*c.user_chesses_won = *value.S.(*uuid.UUID)
+				c.user_black_id = new(uuid.UUID)
+				*c.user_black_id = *value.S.(*uuid.UUID)
 			}
 		default:
 			c.selectValues.Set(columns[i], values[i])
@@ -118,6 +153,16 @@ func (c *Chess) assignValues(columns []string, values []any) error {
 // This includes values selected through modifiers, order, etc.
 func (c *Chess) Value(name string) (ent.Value, error) {
 	return c.selectValues.Get(name)
+}
+
+// QueryWhiteUser queries the "white_user" edge of the Chess entity.
+func (c *Chess) QueryWhiteUser() *UserQuery {
+	return NewChessClient(c.config).QueryWhiteUser(c)
+}
+
+// QueryBlackUser queries the "black_user" edge of the Chess entity.
+func (c *Chess) QueryBlackUser() *UserQuery {
+	return NewChessClient(c.config).QueryBlackUser(c)
 }
 
 // Update returns a builder for updating this Chess.
@@ -143,14 +188,17 @@ func (c *Chess) String() string {
 	var builder strings.Builder
 	builder.WriteString("Chess(")
 	builder.WriteString(fmt.Sprintf("id=%v, ", c.ID))
-	builder.WriteString("status=")
-	builder.WriteString(fmt.Sprintf("%v", c.Status))
-	builder.WriteString(", ")
 	builder.WriteString("created_at=")
 	builder.WriteString(c.CreatedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
 	builder.WriteString(c.UpdatedAt.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("status=")
+	builder.WriteString(fmt.Sprintf("%v", c.Status))
+	builder.WriteString(", ")
+	builder.WriteString("result=")
+	builder.WriteString(fmt.Sprintf("%v", c.Result))
 	builder.WriteByte(')')
 	return builder.String()
 }

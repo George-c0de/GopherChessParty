@@ -4,6 +4,7 @@ package ent
 
 import (
 	"GopherChessParty/ent/chess"
+	"GopherChessParty/ent/user"
 	"context"
 	"errors"
 	"fmt"
@@ -19,20 +20,6 @@ type ChessCreate struct {
 	config
 	mutation *ChessMutation
 	hooks    []Hook
-}
-
-// SetStatus sets the "status" field.
-func (cc *ChessCreate) SetStatus(u uint8) *ChessCreate {
-	cc.mutation.SetStatus(u)
-	return cc
-}
-
-// SetNillableStatus sets the "status" field if the given value is not nil.
-func (cc *ChessCreate) SetNillableStatus(u *uint8) *ChessCreate {
-	if u != nil {
-		cc.SetStatus(*u)
-	}
-	return cc
 }
 
 // SetCreatedAt sets the "created_at" field.
@@ -63,6 +50,34 @@ func (cc *ChessCreate) SetNillableUpdatedAt(t *time.Time) *ChessCreate {
 	return cc
 }
 
+// SetStatus sets the "status" field.
+func (cc *ChessCreate) SetStatus(c chess.Status) *ChessCreate {
+	cc.mutation.SetStatus(c)
+	return cc
+}
+
+// SetNillableStatus sets the "status" field if the given value is not nil.
+func (cc *ChessCreate) SetNillableStatus(c *chess.Status) *ChessCreate {
+	if c != nil {
+		cc.SetStatus(*c)
+	}
+	return cc
+}
+
+// SetResult sets the "result" field.
+func (cc *ChessCreate) SetResult(c chess.Result) *ChessCreate {
+	cc.mutation.SetResult(c)
+	return cc
+}
+
+// SetNillableResult sets the "result" field if the given value is not nil.
+func (cc *ChessCreate) SetNillableResult(c *chess.Result) *ChessCreate {
+	if c != nil {
+		cc.SetResult(*c)
+	}
+	return cc
+}
+
 // SetID sets the "id" field.
 func (cc *ChessCreate) SetID(u uuid.UUID) *ChessCreate {
 	cc.mutation.SetID(u)
@@ -75,6 +90,28 @@ func (cc *ChessCreate) SetNillableID(u *uuid.UUID) *ChessCreate {
 		cc.SetID(*u)
 	}
 	return cc
+}
+
+// SetWhiteUserID sets the "white_user" edge to the User entity by ID.
+func (cc *ChessCreate) SetWhiteUserID(id uuid.UUID) *ChessCreate {
+	cc.mutation.SetWhiteUserID(id)
+	return cc
+}
+
+// SetWhiteUser sets the "white_user" edge to the User entity.
+func (cc *ChessCreate) SetWhiteUser(u *User) *ChessCreate {
+	return cc.SetWhiteUserID(u.ID)
+}
+
+// SetBlackUserID sets the "black_user" edge to the User entity by ID.
+func (cc *ChessCreate) SetBlackUserID(id uuid.UUID) *ChessCreate {
+	cc.mutation.SetBlackUserID(id)
+	return cc
+}
+
+// SetBlackUser sets the "black_user" edge to the User entity.
+func (cc *ChessCreate) SetBlackUser(u *User) *ChessCreate {
+	return cc.SetBlackUserID(u.ID)
 }
 
 // Mutation returns the ChessMutation object of the builder.
@@ -112,10 +149,6 @@ func (cc *ChessCreate) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (cc *ChessCreate) defaults() {
-	if _, ok := cc.mutation.Status(); !ok {
-		v := chess.DefaultStatus
-		cc.mutation.SetStatus(v)
-	}
 	if _, ok := cc.mutation.CreatedAt(); !ok {
 		v := chess.DefaultCreatedAt()
 		cc.mutation.SetCreatedAt(v)
@@ -123,6 +156,14 @@ func (cc *ChessCreate) defaults() {
 	if _, ok := cc.mutation.UpdatedAt(); !ok {
 		v := chess.DefaultUpdatedAt()
 		cc.mutation.SetUpdatedAt(v)
+	}
+	if _, ok := cc.mutation.Status(); !ok {
+		v := chess.DefaultStatus
+		cc.mutation.SetStatus(v)
+	}
+	if _, ok := cc.mutation.Result(); !ok {
+		v := chess.DefaultResult
+		cc.mutation.SetResult(v)
 	}
 	if _, ok := cc.mutation.ID(); !ok {
 		v := chess.DefaultID()
@@ -132,14 +173,33 @@ func (cc *ChessCreate) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (cc *ChessCreate) check() error {
-	if _, ok := cc.mutation.Status(); !ok {
-		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "Chess.status"`)}
-	}
 	if _, ok := cc.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "Chess.created_at"`)}
 	}
 	if _, ok := cc.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "Chess.updated_at"`)}
+	}
+	if _, ok := cc.mutation.Status(); !ok {
+		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "Chess.status"`)}
+	}
+	if v, ok := cc.mutation.Status(); ok {
+		if err := chess.StatusValidator(v); err != nil {
+			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "Chess.status": %w`, err)}
+		}
+	}
+	if _, ok := cc.mutation.Result(); !ok {
+		return &ValidationError{Name: "result", err: errors.New(`ent: missing required field "Chess.result"`)}
+	}
+	if v, ok := cc.mutation.Result(); ok {
+		if err := chess.ResultValidator(v); err != nil {
+			return &ValidationError{Name: "result", err: fmt.Errorf(`ent: validator failed for field "Chess.result": %w`, err)}
+		}
+	}
+	if len(cc.mutation.WhiteUserIDs()) == 0 {
+		return &ValidationError{Name: "white_user", err: errors.New(`ent: missing required edge "Chess.white_user"`)}
+	}
+	if len(cc.mutation.BlackUserIDs()) == 0 {
+		return &ValidationError{Name: "black_user", err: errors.New(`ent: missing required edge "Chess.black_user"`)}
 	}
 	return nil
 }
@@ -176,10 +236,6 @@ func (cc *ChessCreate) createSpec() (*Chess, *sqlgraph.CreateSpec) {
 		_node.ID = id
 		_spec.ID.Value = &id
 	}
-	if value, ok := cc.mutation.Status(); ok {
-		_spec.SetField(chess.FieldStatus, field.TypeUint8, value)
-		_node.Status = value
-	}
 	if value, ok := cc.mutation.CreatedAt(); ok {
 		_spec.SetField(chess.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
@@ -187,6 +243,48 @@ func (cc *ChessCreate) createSpec() (*Chess, *sqlgraph.CreateSpec) {
 	if value, ok := cc.mutation.UpdatedAt(); ok {
 		_spec.SetField(chess.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
+	}
+	if value, ok := cc.mutation.Status(); ok {
+		_spec.SetField(chess.FieldStatus, field.TypeEnum, value)
+		_node.Status = value
+	}
+	if value, ok := cc.mutation.Result(); ok {
+		_spec.SetField(chess.FieldResult, field.TypeEnum, value)
+		_node.Result = value
+	}
+	if nodes := cc.mutation.WhiteUserIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   chess.WhiteUserTable,
+			Columns: []string{chess.WhiteUserColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.user_white_id = &nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := cc.mutation.BlackUserIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   chess.BlackUserTable,
+			Columns: []string{chess.BlackUserColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.user_black_id = &nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
 }

@@ -1,25 +1,25 @@
 package services
 
 import (
+	"GopherChessParty/ent"
 	"GopherChessParty/internal/interfaces"
 	"github.com/corentings/chess/v2"
 	"github.com/google/uuid"
 )
 
 type GameService struct {
-	log      interfaces.ILogger
-	nowGames map[uuid.UUID]*chess.Game
+	log        interfaces.ILogger
+	repository interfaces.IGameRepo
 }
 
-func (m *GameService) CreateGame() *chess.Game {
-	random, err := uuid.NewRandom()
-	if err != nil {
-		m.log.Error(err)
-		panic(err)
+func NewGameService(
+	log interfaces.ILogger,
+	repository interfaces.IGameRepo,
+) interfaces.IGameService {
+	return &GameService{
+		log:        log,
+		repository: repository,
 	}
-
-	m.nowGames[random] = chess.NewGame()
-	return m.nowGames[random]
 }
 
 func (m *GameService) Move(game *chess.Game, move string) (bool, error) {
@@ -31,4 +31,6 @@ func (m *GameService) Move(game *chess.Game, move string) (bool, error) {
 	return true, nil
 }
 
-func (m *GameService) GetGames() {}
+func (m *GameService) GetGames(userID uuid.UUID) ([]*ent.Chess, error) {
+	return m.repository.GetGames(userID)
+}

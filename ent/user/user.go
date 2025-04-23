@@ -25,35 +25,26 @@ const (
 	FieldUpdatedAt = "updated_at"
 	// FieldPassword holds the string denoting the password field in the database.
 	FieldPassword = "password"
-	// EdgeChessesAsFirst holds the string denoting the chesses_as_first edge name in mutations.
-	EdgeChessesAsFirst = "chesses_as_first"
-	// EdgeChessesAsSecond holds the string denoting the chesses_as_second edge name in mutations.
-	EdgeChessesAsSecond = "chesses_as_second"
-	// EdgeChessesWon holds the string denoting the chesses_won edge name in mutations.
-	EdgeChessesWon = "chesses_won"
+	// EdgeWhiteID holds the string denoting the white_id edge name in mutations.
+	EdgeWhiteID = "white_id"
+	// EdgeBlackID holds the string denoting the black_id edge name in mutations.
+	EdgeBlackID = "black_id"
 	// Table holds the table name of the user in the database.
 	Table = "users"
-	// ChessesAsFirstTable is the table that holds the chesses_as_first relation/edge.
-	ChessesAsFirstTable = "chesses"
-	// ChessesAsFirstInverseTable is the table name for the Chess entity.
+	// WhiteIDTable is the table that holds the white_id relation/edge.
+	WhiteIDTable = "chesses"
+	// WhiteIDInverseTable is the table name for the Chess entity.
 	// It exists in this package in order to avoid circular dependency with the "chess" package.
-	ChessesAsFirstInverseTable = "chesses"
-	// ChessesAsFirstColumn is the table column denoting the chesses_as_first relation/edge.
-	ChessesAsFirstColumn = "user_chesses_as_first"
-	// ChessesAsSecondTable is the table that holds the chesses_as_second relation/edge.
-	ChessesAsSecondTable = "chesses"
-	// ChessesAsSecondInverseTable is the table name for the Chess entity.
+	WhiteIDInverseTable = "chesses"
+	// WhiteIDColumn is the table column denoting the white_id relation/edge.
+	WhiteIDColumn = "user_white_id"
+	// BlackIDTable is the table that holds the black_id relation/edge.
+	BlackIDTable = "chesses"
+	// BlackIDInverseTable is the table name for the Chess entity.
 	// It exists in this package in order to avoid circular dependency with the "chess" package.
-	ChessesAsSecondInverseTable = "chesses"
-	// ChessesAsSecondColumn is the table column denoting the chesses_as_second relation/edge.
-	ChessesAsSecondColumn = "user_chesses_as_second"
-	// ChessesWonTable is the table that holds the chesses_won relation/edge.
-	ChessesWonTable = "chesses"
-	// ChessesWonInverseTable is the table name for the Chess entity.
-	// It exists in this package in order to avoid circular dependency with the "chess" package.
-	ChessesWonInverseTable = "chesses"
-	// ChessesWonColumn is the table column denoting the chesses_won relation/edge.
-	ChessesWonColumn = "user_chesses_won"
+	BlackIDInverseTable = "chesses"
+	// BlackIDColumn is the table column denoting the black_id relation/edge.
+	BlackIDColumn = "user_black_id"
 )
 
 // Columns holds all SQL columns for user fields.
@@ -124,65 +115,44 @@ func ByPassword(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldPassword, opts...).ToFunc()
 }
 
-// ByChessesAsFirstCount orders the results by chesses_as_first count.
-func ByChessesAsFirstCount(opts ...sql.OrderTermOption) OrderOption {
+// ByWhiteIDCount orders the results by white_id count.
+func ByWhiteIDCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newChessesAsFirstStep(), opts...)
+		sqlgraph.OrderByNeighborsCount(s, newWhiteIDStep(), opts...)
 	}
 }
 
-// ByChessesAsFirst orders the results by chesses_as_first terms.
-func ByChessesAsFirst(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+// ByWhiteID orders the results by white_id terms.
+func ByWhiteID(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newChessesAsFirstStep(), append([]sql.OrderTerm{term}, terms...)...)
+		sqlgraph.OrderByNeighborTerms(s, newWhiteIDStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
 
-// ByChessesAsSecondCount orders the results by chesses_as_second count.
-func ByChessesAsSecondCount(opts ...sql.OrderTermOption) OrderOption {
+// ByBlackIDCount orders the results by black_id count.
+func ByBlackIDCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newChessesAsSecondStep(), opts...)
+		sqlgraph.OrderByNeighborsCount(s, newBlackIDStep(), opts...)
 	}
 }
 
-// ByChessesAsSecond orders the results by chesses_as_second terms.
-func ByChessesAsSecond(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+// ByBlackID orders the results by black_id terms.
+func ByBlackID(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newChessesAsSecondStep(), append([]sql.OrderTerm{term}, terms...)...)
+		sqlgraph.OrderByNeighborTerms(s, newBlackIDStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
-
-// ByChessesWonCount orders the results by chesses_won count.
-func ByChessesWonCount(opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newChessesWonStep(), opts...)
-	}
-}
-
-// ByChessesWon orders the results by chesses_won terms.
-func ByChessesWon(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newChessesWonStep(), append([]sql.OrderTerm{term}, terms...)...)
-	}
-}
-func newChessesAsFirstStep() *sqlgraph.Step {
+func newWhiteIDStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(ChessesAsFirstInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, false, ChessesAsFirstTable, ChessesAsFirstColumn),
+		sqlgraph.To(WhiteIDInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, WhiteIDTable, WhiteIDColumn),
 	)
 }
-func newChessesAsSecondStep() *sqlgraph.Step {
+func newBlackIDStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(ChessesAsSecondInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, false, ChessesAsSecondTable, ChessesAsSecondColumn),
-	)
-}
-func newChessesWonStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(ChessesWonInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, false, ChessesWonTable, ChessesWonColumn),
+		sqlgraph.To(BlackIDInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, BlackIDTable, BlackIDColumn),
 	)
 }

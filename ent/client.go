@@ -317,6 +317,38 @@ func (c *ChessClient) GetX(ctx context.Context, id uuid.UUID) *Chess {
 	return obj
 }
 
+// QueryWhiteUser queries the white_user edge of a Chess.
+func (c *ChessClient) QueryWhiteUser(ch *Chess) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := ch.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(chess.Table, chess.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, chess.WhiteUserTable, chess.WhiteUserColumn),
+		)
+		fromV = sqlgraph.Neighbors(ch.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryBlackUser queries the black_user edge of a Chess.
+func (c *ChessClient) QueryBlackUser(ch *Chess) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := ch.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(chess.Table, chess.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, chess.BlackUserTable, chess.BlackUserColumn),
+		)
+		fromV = sqlgraph.Neighbors(ch.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *ChessClient) Hooks() []Hook {
 	return c.hooks.Chess
@@ -450,15 +482,15 @@ func (c *UserClient) GetX(ctx context.Context, id uuid.UUID) *User {
 	return obj
 }
 
-// QueryChessesAsFirst queries the chesses_as_first edge of a User.
-func (c *UserClient) QueryChessesAsFirst(u *User) *ChessQuery {
+// QueryWhiteID queries the white_id edge of a User.
+func (c *UserClient) QueryWhiteID(u *User) *ChessQuery {
 	query := (&ChessClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := u.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(user.Table, user.FieldID, id),
 			sqlgraph.To(chess.Table, chess.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, user.ChessesAsFirstTable, user.ChessesAsFirstColumn),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.WhiteIDTable, user.WhiteIDColumn),
 		)
 		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
 		return fromV, nil
@@ -466,31 +498,15 @@ func (c *UserClient) QueryChessesAsFirst(u *User) *ChessQuery {
 	return query
 }
 
-// QueryChessesAsSecond queries the chesses_as_second edge of a User.
-func (c *UserClient) QueryChessesAsSecond(u *User) *ChessQuery {
+// QueryBlackID queries the black_id edge of a User.
+func (c *UserClient) QueryBlackID(u *User) *ChessQuery {
 	query := (&ChessClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := u.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(user.Table, user.FieldID, id),
 			sqlgraph.To(chess.Table, chess.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, user.ChessesAsSecondTable, user.ChessesAsSecondColumn),
-		)
-		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryChessesWon queries the chesses_won edge of a User.
-func (c *UserClient) QueryChessesWon(u *User) *ChessQuery {
-	query := (&ChessClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := u.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(user.Table, user.FieldID, id),
-			sqlgraph.To(chess.Table, chess.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, user.ChessesWonTable, user.ChessesWonColumn),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.BlackIDTable, user.BlackIDColumn),
 		)
 		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
 		return fromV, nil

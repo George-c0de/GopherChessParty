@@ -1,6 +1,7 @@
 package interfaces
 
 import (
+	"GopherChessParty/ent"
 	"GopherChessParty/internal/dto"
 	"GopherChessParty/internal/models"
 	"github.com/golang-jwt/jwt"
@@ -14,5 +15,5 @@ type IService interface {
 	CreateUser(data *dto.CreateUser) (*models.User, error)
 	ValidPassword(data dto.AuthenticateUser) (*uuid.UUID, bool)
 	IsValidateToken(tokenString string) (*jwt.Token, bool)
-	GetGames(userId uuid.UUID)
+	GetGamesByUserID(userId uuid.UUID) ([]*ent.Chess, error)
 }

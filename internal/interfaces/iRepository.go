@@ -1,12 +1,3 @@
 package interfaces
 
-import (
-	"GopherChessParty/internal/dto"
-	"GopherChessParty/internal/models"
-)
-
-type IRepository interface {
-	CreateUser(user *dto.CreateUser) (*models.User, error)
-	GetUsers() ([]*models.User, error)
-	GetUserPassword(Email string) (*models.AuthUser, error)
-}
+type IRepository interface{}

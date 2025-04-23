@@ -2,11 +2,9 @@ package interfaces
 
 import (
 	"GopherChessParty/ent"
-	"github.com/corentings/chess/v2"
 	"github.com/google/uuid"
 )
 
-type IGameService interface {
-	Move(game *chess.Game, move string) (bool, error)
+type IGameRepo interface {
 	GetGames(userID uuid.UUID) ([]*ent.Chess, error)
 }

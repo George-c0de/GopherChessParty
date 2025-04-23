@@ -1,9 +1,9 @@
 package routers
 
 import (
-	"GopherChessParty/internal/dto"
 	"net/http"
 
+	"GopherChessParty/internal/dto"
 	"GopherChessParty/internal/interfaces"
 	"GopherChessParty/internal/middleware"
 	"github.com/gin-gonic/gin"
@@ -38,5 +38,4 @@ func addUserRoutes(rg *gin.RouterGroup, service interfaces.IService) {
 
 		c.JSON(http.StatusOK, gin.H{"items": users})
 	})
-
 }

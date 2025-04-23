@@ -1,12 +1,13 @@
 package services
 
 import (
-	"github.com/google/uuid"
 	"time"
 
+	"GopherChessParty/internal/config"
 	"GopherChessParty/internal/errors"
 	"GopherChessParty/internal/interfaces"
 	"github.com/golang-jwt/jwt"
+	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -14,6 +15,14 @@ type AuthService struct {
 	log       interfaces.ILogger
 	jwtSecret string
 	exp       time.Duration
+}
+
+func NewAuthService(log interfaces.ILogger, cfg config.Auth) interfaces.IAuthService {
+	return &AuthService{
+		log:       log,
+		jwtSecret: cfg.JwtSecret,
+		exp:       cfg.ExpTime,
+	}
 }
 
 func (s *AuthService) GenerateToken(userId uuid.UUID) (string, error) {

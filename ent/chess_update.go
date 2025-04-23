@@ -5,6 +5,7 @@ package ent
 import (
 	"GopherChessParty/ent/chess"
 	"GopherChessParty/ent/predicate"
+	"GopherChessParty/ent/user"
 	"context"
 	"errors"
 	"fmt"
@@ -13,6 +14,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/google/uuid"
 )
 
 // ChessUpdate is the builder for updating Chess entities.
@@ -25,27 +27,6 @@ type ChessUpdate struct {
 // Where appends a list predicates to the ChessUpdate builder.
 func (cu *ChessUpdate) Where(ps ...predicate.Chess) *ChessUpdate {
 	cu.mutation.Where(ps...)
-	return cu
-}
-
-// SetStatus sets the "status" field.
-func (cu *ChessUpdate) SetStatus(u uint8) *ChessUpdate {
-	cu.mutation.ResetStatus()
-	cu.mutation.SetStatus(u)
-	return cu
-}
-
-// SetNillableStatus sets the "status" field if the given value is not nil.
-func (cu *ChessUpdate) SetNillableStatus(u *uint8) *ChessUpdate {
-	if u != nil {
-		cu.SetStatus(*u)
-	}
-	return cu
-}
-
-// AddStatus adds u to the "status" field.
-func (cu *ChessUpdate) AddStatus(u int8) *ChessUpdate {
-	cu.mutation.AddStatus(u)
 	return cu
 }
 
@@ -77,9 +58,71 @@ func (cu *ChessUpdate) SetNillableUpdatedAt(t *time.Time) *ChessUpdate {
 	return cu
 }
 
+// SetStatus sets the "status" field.
+func (cu *ChessUpdate) SetStatus(c chess.Status) *ChessUpdate {
+	cu.mutation.SetStatus(c)
+	return cu
+}
+
+// SetNillableStatus sets the "status" field if the given value is not nil.
+func (cu *ChessUpdate) SetNillableStatus(c *chess.Status) *ChessUpdate {
+	if c != nil {
+		cu.SetStatus(*c)
+	}
+	return cu
+}
+
+// SetResult sets the "result" field.
+func (cu *ChessUpdate) SetResult(c chess.Result) *ChessUpdate {
+	cu.mutation.SetResult(c)
+	return cu
+}
+
+// SetNillableResult sets the "result" field if the given value is not nil.
+func (cu *ChessUpdate) SetNillableResult(c *chess.Result) *ChessUpdate {
+	if c != nil {
+		cu.SetResult(*c)
+	}
+	return cu
+}
+
+// SetWhiteUserID sets the "white_user" edge to the User entity by ID.
+func (cu *ChessUpdate) SetWhiteUserID(id uuid.UUID) *ChessUpdate {
+	cu.mutation.SetWhiteUserID(id)
+	return cu
+}
+
+// SetWhiteUser sets the "white_user" edge to the User entity.
+func (cu *ChessUpdate) SetWhiteUser(u *User) *ChessUpdate {
+	return cu.SetWhiteUserID(u.ID)
+}
+
+// SetBlackUserID sets the "black_user" edge to the User entity by ID.
+func (cu *ChessUpdate) SetBlackUserID(id uuid.UUID) *ChessUpdate {
+	cu.mutation.SetBlackUserID(id)
+	return cu
+}
+
+// SetBlackUser sets the "black_user" edge to the User entity.
+func (cu *ChessUpdate) SetBlackUser(u *User) *ChessUpdate {
+	return cu.SetBlackUserID(u.ID)
+}
+
 // Mutation returns the ChessMutation object of the builder.
 func (cu *ChessUpdate) Mutation() *ChessMutation {
 	return cu.mutation
+}
+
+// ClearWhiteUser clears the "white_user" edge to the User entity.
+func (cu *ChessUpdate) ClearWhiteUser() *ChessUpdate {
+	cu.mutation.ClearWhiteUser()
+	return cu
+}
+
+// ClearBlackUser clears the "black_user" edge to the User entity.
+func (cu *ChessUpdate) ClearBlackUser() *ChessUpdate {
+	cu.mutation.ClearBlackUser()
+	return cu
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -109,7 +152,31 @@ func (cu *ChessUpdate) ExecX(ctx context.Context) {
 	}
 }
 
+// check runs all checks and user-defined validators on the builder.
+func (cu *ChessUpdate) check() error {
+	if v, ok := cu.mutation.Status(); ok {
+		if err := chess.StatusValidator(v); err != nil {
+			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "Chess.status": %w`, err)}
+		}
+	}
+	if v, ok := cu.mutation.Result(); ok {
+		if err := chess.ResultValidator(v); err != nil {
+			return &ValidationError{Name: "result", err: fmt.Errorf(`ent: validator failed for field "Chess.result": %w`, err)}
+		}
+	}
+	if cu.mutation.WhiteUserCleared() && len(cu.mutation.WhiteUserIDs()) > 0 {
+		return errors.New(`ent: clearing a required unique edge "Chess.white_user"`)
+	}
+	if cu.mutation.BlackUserCleared() && len(cu.mutation.BlackUserIDs()) > 0 {
+		return errors.New(`ent: clearing a required unique edge "Chess.black_user"`)
+	}
+	return nil
+}
+
 func (cu *ChessUpdate) sqlSave(ctx context.Context) (n int, err error) {
+	if err := cu.check(); err != nil {
+		return n, err
+	}
 	_spec := sqlgraph.NewUpdateSpec(chess.Table, chess.Columns, sqlgraph.NewFieldSpec(chess.FieldID, field.TypeUUID))
 	if ps := cu.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
@@ -118,17 +185,75 @@ func (cu *ChessUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			}
 		}
 	}
-	if value, ok := cu.mutation.Status(); ok {
-		_spec.SetField(chess.FieldStatus, field.TypeUint8, value)
-	}
-	if value, ok := cu.mutation.AddedStatus(); ok {
-		_spec.AddField(chess.FieldStatus, field.TypeUint8, value)
-	}
 	if value, ok := cu.mutation.CreatedAt(); ok {
 		_spec.SetField(chess.FieldCreatedAt, field.TypeTime, value)
 	}
 	if value, ok := cu.mutation.UpdatedAt(); ok {
 		_spec.SetField(chess.FieldUpdatedAt, field.TypeTime, value)
+	}
+	if value, ok := cu.mutation.Status(); ok {
+		_spec.SetField(chess.FieldStatus, field.TypeEnum, value)
+	}
+	if value, ok := cu.mutation.Result(); ok {
+		_spec.SetField(chess.FieldResult, field.TypeEnum, value)
+	}
+	if cu.mutation.WhiteUserCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   chess.WhiteUserTable,
+			Columns: []string{chess.WhiteUserColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := cu.mutation.WhiteUserIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   chess.WhiteUserTable,
+			Columns: []string{chess.WhiteUserColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if cu.mutation.BlackUserCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   chess.BlackUserTable,
+			Columns: []string{chess.BlackUserColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := cu.mutation.BlackUserIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   chess.BlackUserTable,
+			Columns: []string{chess.BlackUserColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	if n, err = sqlgraph.UpdateNodes(ctx, cu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
@@ -148,27 +273,6 @@ type ChessUpdateOne struct {
 	fields   []string
 	hooks    []Hook
 	mutation *ChessMutation
-}
-
-// SetStatus sets the "status" field.
-func (cuo *ChessUpdateOne) SetStatus(u uint8) *ChessUpdateOne {
-	cuo.mutation.ResetStatus()
-	cuo.mutation.SetStatus(u)
-	return cuo
-}
-
-// SetNillableStatus sets the "status" field if the given value is not nil.
-func (cuo *ChessUpdateOne) SetNillableStatus(u *uint8) *ChessUpdateOne {
-	if u != nil {
-		cuo.SetStatus(*u)
-	}
-	return cuo
-}
-
-// AddStatus adds u to the "status" field.
-func (cuo *ChessUpdateOne) AddStatus(u int8) *ChessUpdateOne {
-	cuo.mutation.AddStatus(u)
-	return cuo
 }
 
 // SetCreatedAt sets the "created_at" field.
@@ -199,9 +303,71 @@ func (cuo *ChessUpdateOne) SetNillableUpdatedAt(t *time.Time) *ChessUpdateOne {
 	return cuo
 }
 
+// SetStatus sets the "status" field.
+func (cuo *ChessUpdateOne) SetStatus(c chess.Status) *ChessUpdateOne {
+	cuo.mutation.SetStatus(c)
+	return cuo
+}
+
+// SetNillableStatus sets the "status" field if the given value is not nil.
+func (cuo *ChessUpdateOne) SetNillableStatus(c *chess.Status) *ChessUpdateOne {
+	if c != nil {
+		cuo.SetStatus(*c)
+	}
+	return cuo
+}
+
+// SetResult sets the "result" field.
+func (cuo *ChessUpdateOne) SetResult(c chess.Result) *ChessUpdateOne {
+	cuo.mutation.SetResult(c)
+	return cuo
+}
+
+// SetNillableResult sets the "result" field if the given value is not nil.
+func (cuo *ChessUpdateOne) SetNillableResult(c *chess.Result) *ChessUpdateOne {
+	if c != nil {
+		cuo.SetResult(*c)
+	}
+	return cuo
+}
+
+// SetWhiteUserID sets the "white_user" edge to the User entity by ID.
+func (cuo *ChessUpdateOne) SetWhiteUserID(id uuid.UUID) *ChessUpdateOne {
+	cuo.mutation.SetWhiteUserID(id)
+	return cuo
+}
+
+// SetWhiteUser sets the "white_user" edge to the User entity.
+func (cuo *ChessUpdateOne) SetWhiteUser(u *User) *ChessUpdateOne {
+	return cuo.SetWhiteUserID(u.ID)
+}
+
+// SetBlackUserID sets the "black_user" edge to the User entity by ID.
+func (cuo *ChessUpdateOne) SetBlackUserID(id uuid.UUID) *ChessUpdateOne {
+	cuo.mutation.SetBlackUserID(id)
+	return cuo
+}
+
+// SetBlackUser sets the "black_user" edge to the User entity.
+func (cuo *ChessUpdateOne) SetBlackUser(u *User) *ChessUpdateOne {
+	return cuo.SetBlackUserID(u.ID)
+}
+
 // Mutation returns the ChessMutation object of the builder.
 func (cuo *ChessUpdateOne) Mutation() *ChessMutation {
 	return cuo.mutation
+}
+
+// ClearWhiteUser clears the "white_user" edge to the User entity.
+func (cuo *ChessUpdateOne) ClearWhiteUser() *ChessUpdateOne {
+	cuo.mutation.ClearWhiteUser()
+	return cuo
+}
+
+// ClearBlackUser clears the "black_user" edge to the User entity.
+func (cuo *ChessUpdateOne) ClearBlackUser() *ChessUpdateOne {
+	cuo.mutation.ClearBlackUser()
+	return cuo
 }
 
 // Where appends a list predicates to the ChessUpdate builder.
@@ -244,7 +410,31 @@ func (cuo *ChessUpdateOne) ExecX(ctx context.Context) {
 	}
 }
 
+// check runs all checks and user-defined validators on the builder.
+func (cuo *ChessUpdateOne) check() error {
+	if v, ok := cuo.mutation.Status(); ok {
+		if err := chess.StatusValidator(v); err != nil {
+			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "Chess.status": %w`, err)}
+		}
+	}
+	if v, ok := cuo.mutation.Result(); ok {
+		if err := chess.ResultValidator(v); err != nil {
+			return &ValidationError{Name: "result", err: fmt.Errorf(`ent: validator failed for field "Chess.result": %w`, err)}
+		}
+	}
+	if cuo.mutation.WhiteUserCleared() && len(cuo.mutation.WhiteUserIDs()) > 0 {
+		return errors.New(`ent: clearing a required unique edge "Chess.white_user"`)
+	}
+	if cuo.mutation.BlackUserCleared() && len(cuo.mutation.BlackUserIDs()) > 0 {
+		return errors.New(`ent: clearing a required unique edge "Chess.black_user"`)
+	}
+	return nil
+}
+
 func (cuo *ChessUpdateOne) sqlSave(ctx context.Context) (_node *Chess, err error) {
+	if err := cuo.check(); err != nil {
+		return _node, err
+	}
 	_spec := sqlgraph.NewUpdateSpec(chess.Table, chess.Columns, sqlgraph.NewFieldSpec(chess.FieldID, field.TypeUUID))
 	id, ok := cuo.mutation.ID()
 	if !ok {
@@ -270,17 +460,75 @@ func (cuo *ChessUpdateOne) sqlSave(ctx context.Context) (_node *Chess, err error
 			}
 		}
 	}
-	if value, ok := cuo.mutation.Status(); ok {
-		_spec.SetField(chess.FieldStatus, field.TypeUint8, value)
-	}
-	if value, ok := cuo.mutation.AddedStatus(); ok {
-		_spec.AddField(chess.FieldStatus, field.TypeUint8, value)
-	}
 	if value, ok := cuo.mutation.CreatedAt(); ok {
 		_spec.SetField(chess.FieldCreatedAt, field.TypeTime, value)
 	}
 	if value, ok := cuo.mutation.UpdatedAt(); ok {
 		_spec.SetField(chess.FieldUpdatedAt, field.TypeTime, value)
+	}
+	if value, ok := cuo.mutation.Status(); ok {
+		_spec.SetField(chess.FieldStatus, field.TypeEnum, value)
+	}
+	if value, ok := cuo.mutation.Result(); ok {
+		_spec.SetField(chess.FieldResult, field.TypeEnum, value)
+	}
+	if cuo.mutation.WhiteUserCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   chess.WhiteUserTable,
+			Columns: []string{chess.WhiteUserColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := cuo.mutation.WhiteUserIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   chess.WhiteUserTable,
+			Columns: []string{chess.WhiteUserColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if cuo.mutation.BlackUserCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   chess.BlackUserTable,
+			Columns: []string{chess.BlackUserColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := cuo.mutation.BlackUserIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   chess.BlackUserTable,
+			Columns: []string{chess.BlackUserColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	_node = &Chess{config: cuo.config}
 	_spec.Assign = _node.assignValues

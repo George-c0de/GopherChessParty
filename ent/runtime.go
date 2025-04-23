@@ -17,16 +17,12 @@ import (
 func init() {
 	chessFields := schema.Chess{}.Fields()
 	_ = chessFields
-	// chessDescStatus is the schema descriptor for status field.
-	chessDescStatus := chessFields[1].Descriptor()
-	// chess.DefaultStatus holds the default value on creation for the status field.
-	chess.DefaultStatus = chessDescStatus.Default.(uint8)
 	// chessDescCreatedAt is the schema descriptor for created_at field.
-	chessDescCreatedAt := chessFields[2].Descriptor()
+	chessDescCreatedAt := chessFields[1].Descriptor()
 	// chess.DefaultCreatedAt holds the default value on creation for the created_at field.
 	chess.DefaultCreatedAt = chessDescCreatedAt.Default.(func() time.Time)
 	// chessDescUpdatedAt is the schema descriptor for updated_at field.
-	chessDescUpdatedAt := chessFields[3].Descriptor()
+	chessDescUpdatedAt := chessFields[2].Descriptor()
 	// chess.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	chess.DefaultUpdatedAt = chessDescUpdatedAt.Default.(func() time.Time)
 	// chessDescID is the schema descriptor for id field.

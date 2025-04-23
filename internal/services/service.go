@@ -1,12 +1,10 @@
 package services
 
 import (
-	"GopherChessParty/internal/config"
+	"GopherChessParty/ent"
 	"GopherChessParty/internal/dto"
 	"GopherChessParty/internal/interfaces"
-	"GopherChessParty/internal/logger"
 	"GopherChessParty/internal/models"
-	"github.com/corentings/chess/v2"
 	"github.com/golang-jwt/jwt"
 	"github.com/google/uuid"
 )
@@ -18,15 +16,17 @@ type Service struct {
 	logger interfaces.ILogger
 }
 
-func NewService(log *logger.Logger, repository interfaces.IRepository, cfg config.Auth) *Service {
-	userService := UserService{log: log, repository: repository}
-	gameService := GameService{log: log, nowGames: map[uuid.UUID]*chess.Game{}}
-	authService := AuthService{log: log, jwtSecret: cfg.JwtSecret, exp: cfg.ExpTime}
+func NewService(
+	userService interfaces.IUserService,
+	gameService interfaces.IGameService,
+	authService interfaces.IAuthService,
+	logger interfaces.ILogger,
+) *Service {
 	return &Service{
-		IUserService: &userService,
-		IGameService: &gameService,
-		IAuthService: &authService,
-		logger:       log,
+		IUserService: userService,
+		IGameService: gameService,
+		IAuthService: authService,
+		logger:       logger,
 	}
 }
 
@@ -57,6 +57,6 @@ func (s *Service) ValidPassword(data dto.AuthenticateUser) (*uuid.UUID, bool) {
 	return &userAuth.UserId, s.IsValidPassword(userAuth.HashedPassword, data.Password)
 }
 
-func (s *Service) GetGames(userId uuid.UUID) {
-
+func (s *Service) GetGamesByUserID(userId uuid.UUID) ([]*ent.Chess, error) {
+	return s.IGameService.GetGames(userId)
 }

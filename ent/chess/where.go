@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/google/uuid"
 )
 
@@ -55,11 +56,6 @@ func IDLTE(id uuid.UUID) predicate.Chess {
 	return predicate.Chess(sql.FieldLTE(FieldID, id))
 }
 
-// Status applies equality check predicate on the "status" field. It's identical to StatusEQ.
-func Status(v uint8) predicate.Chess {
-	return predicate.Chess(sql.FieldEQ(FieldStatus, v))
-}
-
 // CreatedAt applies equality check predicate on the "created_at" field. It's identical to CreatedAtEQ.
 func CreatedAt(v time.Time) predicate.Chess {
 	return predicate.Chess(sql.FieldEQ(FieldCreatedAt, v))
@@ -68,46 +64,6 @@ func CreatedAt(v time.Time) predicate.Chess {
 // UpdatedAt applies equality check predicate on the "updated_at" field. It's identical to UpdatedAtEQ.
 func UpdatedAt(v time.Time) predicate.Chess {
 	return predicate.Chess(sql.FieldEQ(FieldUpdatedAt, v))
-}
-
-// StatusEQ applies the EQ predicate on the "status" field.
-func StatusEQ(v uint8) predicate.Chess {
-	return predicate.Chess(sql.FieldEQ(FieldStatus, v))
-}
-
-// StatusNEQ applies the NEQ predicate on the "status" field.
-func StatusNEQ(v uint8) predicate.Chess {
-	return predicate.Chess(sql.FieldNEQ(FieldStatus, v))
-}
-
-// StatusIn applies the In predicate on the "status" field.
-func StatusIn(vs ...uint8) predicate.Chess {
-	return predicate.Chess(sql.FieldIn(FieldStatus, vs...))
-}
-
-// StatusNotIn applies the NotIn predicate on the "status" field.
-func StatusNotIn(vs ...uint8) predicate.Chess {
-	return predicate.Chess(sql.FieldNotIn(FieldStatus, vs...))
-}
-
-// StatusGT applies the GT predicate on the "status" field.
-func StatusGT(v uint8) predicate.Chess {
-	return predicate.Chess(sql.FieldGT(FieldStatus, v))
-}
-
-// StatusGTE applies the GTE predicate on the "status" field.
-func StatusGTE(v uint8) predicate.Chess {
-	return predicate.Chess(sql.FieldGTE(FieldStatus, v))
-}
-
-// StatusLT applies the LT predicate on the "status" field.
-func StatusLT(v uint8) predicate.Chess {
-	return predicate.Chess(sql.FieldLT(FieldStatus, v))
-}
-
-// StatusLTE applies the LTE predicate on the "status" field.
-func StatusLTE(v uint8) predicate.Chess {
-	return predicate.Chess(sql.FieldLTE(FieldStatus, v))
 }
 
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.
@@ -188,6 +144,92 @@ func UpdatedAtLT(v time.Time) predicate.Chess {
 // UpdatedAtLTE applies the LTE predicate on the "updated_at" field.
 func UpdatedAtLTE(v time.Time) predicate.Chess {
 	return predicate.Chess(sql.FieldLTE(FieldUpdatedAt, v))
+}
+
+// StatusEQ applies the EQ predicate on the "status" field.
+func StatusEQ(v Status) predicate.Chess {
+	return predicate.Chess(sql.FieldEQ(FieldStatus, v))
+}
+
+// StatusNEQ applies the NEQ predicate on the "status" field.
+func StatusNEQ(v Status) predicate.Chess {
+	return predicate.Chess(sql.FieldNEQ(FieldStatus, v))
+}
+
+// StatusIn applies the In predicate on the "status" field.
+func StatusIn(vs ...Status) predicate.Chess {
+	return predicate.Chess(sql.FieldIn(FieldStatus, vs...))
+}
+
+// StatusNotIn applies the NotIn predicate on the "status" field.
+func StatusNotIn(vs ...Status) predicate.Chess {
+	return predicate.Chess(sql.FieldNotIn(FieldStatus, vs...))
+}
+
+// ResultEQ applies the EQ predicate on the "result" field.
+func ResultEQ(v Result) predicate.Chess {
+	return predicate.Chess(sql.FieldEQ(FieldResult, v))
+}
+
+// ResultNEQ applies the NEQ predicate on the "result" field.
+func ResultNEQ(v Result) predicate.Chess {
+	return predicate.Chess(sql.FieldNEQ(FieldResult, v))
+}
+
+// ResultIn applies the In predicate on the "result" field.
+func ResultIn(vs ...Result) predicate.Chess {
+	return predicate.Chess(sql.FieldIn(FieldResult, vs...))
+}
+
+// ResultNotIn applies the NotIn predicate on the "result" field.
+func ResultNotIn(vs ...Result) predicate.Chess {
+	return predicate.Chess(sql.FieldNotIn(FieldResult, vs...))
+}
+
+// HasWhiteUser applies the HasEdge predicate on the "white_user" edge.
+func HasWhiteUser() predicate.Chess {
+	return predicate.Chess(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, WhiteUserTable, WhiteUserColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasWhiteUserWith applies the HasEdge predicate on the "white_user" edge with a given conditions (other predicates).
+func HasWhiteUserWith(preds ...predicate.User) predicate.Chess {
+	return predicate.Chess(func(s *sql.Selector) {
+		step := newWhiteUserStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasBlackUser applies the HasEdge predicate on the "black_user" edge.
+func HasBlackUser() predicate.Chess {
+	return predicate.Chess(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, BlackUserTable, BlackUserColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasBlackUserWith applies the HasEdge predicate on the "black_user" edge with a given conditions (other predicates).
+func HasBlackUserWith(preds ...predicate.User) predicate.Chess {
+	return predicate.Chess(func(s *sql.Selector) {
+		step := newBlackUserStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
 }
 
 // And groups predicates with the AND operator between them.

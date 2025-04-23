@@ -3,9 +3,11 @@
 package chess
 
 import (
+	"fmt"
 	"time"
 
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/google/uuid"
 )
 
@@ -14,30 +16,50 @@ const (
 	Label = "chess"
 	// FieldID holds the string denoting the id field in the database.
 	FieldID = "id"
-	// FieldStatus holds the string denoting the status field in the database.
-	FieldStatus = "status"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
 	FieldCreatedAt = "created_at"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
 	FieldUpdatedAt = "updated_at"
+	// FieldStatus holds the string denoting the status field in the database.
+	FieldStatus = "status"
+	// FieldResult holds the string denoting the result field in the database.
+	FieldResult = "result"
+	// EdgeWhiteUser holds the string denoting the white_user edge name in mutations.
+	EdgeWhiteUser = "white_user"
+	// EdgeBlackUser holds the string denoting the black_user edge name in mutations.
+	EdgeBlackUser = "black_user"
 	// Table holds the table name of the chess in the database.
 	Table = "chesses"
+	// WhiteUserTable is the table that holds the white_user relation/edge.
+	WhiteUserTable = "chesses"
+	// WhiteUserInverseTable is the table name for the User entity.
+	// It exists in this package in order to avoid circular dependency with the "user" package.
+	WhiteUserInverseTable = "users"
+	// WhiteUserColumn is the table column denoting the white_user relation/edge.
+	WhiteUserColumn = "user_white_id"
+	// BlackUserTable is the table that holds the black_user relation/edge.
+	BlackUserTable = "chesses"
+	// BlackUserInverseTable is the table name for the User entity.
+	// It exists in this package in order to avoid circular dependency with the "user" package.
+	BlackUserInverseTable = "users"
+	// BlackUserColumn is the table column denoting the black_user relation/edge.
+	BlackUserColumn = "user_black_id"
 )
 
 // Columns holds all SQL columns for chess fields.
 var Columns = []string{
 	FieldID,
-	FieldStatus,
 	FieldCreatedAt,
 	FieldUpdatedAt,
+	FieldStatus,
+	FieldResult,
 }
 
 // ForeignKeys holds the SQL foreign-keys that are owned by the "chesses"
 // table and are not defined as standalone fields in the schema.
 var ForeignKeys = []string{
-	"user_chesses_as_first",
-	"user_chesses_as_second",
-	"user_chesses_won",
+	"user_white_id",
+	"user_black_id",
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -56,8 +78,6 @@ func ValidColumn(column string) bool {
 }
 
 var (
-	// DefaultStatus holds the default value on creation for the "status" field.
-	DefaultStatus uint8
 	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
 	DefaultCreatedAt func() time.Time
 	// DefaultUpdatedAt holds the default value on creation for the "updated_at" field.
@@ -66,17 +86,68 @@ var (
 	DefaultID func() uuid.UUID
 )
 
+// Status defines the type for the "status" enum field.
+type Status string
+
+// StatusWaiting is the default value of the Status enum.
+const DefaultStatus = StatusWaiting
+
+// Status values.
+const (
+	StatusWaiting    Status = "waiting"
+	StatusInProgress Status = "in_progress"
+	StatusFinished   Status = "finished"
+	StatusAborted    Status = "aborted"
+)
+
+func (s Status) String() string {
+	return string(s)
+}
+
+// StatusValidator is a validator for the "status" field enum values. It is called by the builders before save.
+func StatusValidator(s Status) error {
+	switch s {
+	case StatusWaiting, StatusInProgress, StatusFinished, StatusAborted:
+		return nil
+	default:
+		return fmt.Errorf("chess: invalid enum value for status field: %q", s)
+	}
+}
+
+// Result defines the type for the "result" enum field.
+type Result string
+
+// Result00 is the default value of the Result enum.
+const DefaultResult = Result00
+
+// Result values.
+const (
+	Result10 Result = "1-0"
+	Result01 Result = "0-1"
+	Result11 Result = "1-1"
+	Result00 Result = "0-0"
+)
+
+func (r Result) String() string {
+	return string(r)
+}
+
+// ResultValidator is a validator for the "result" field enum values. It is called by the builders before save.
+func ResultValidator(r Result) error {
+	switch r {
+	case Result10, Result01, Result11, Result00:
+		return nil
+	default:
+		return fmt.Errorf("chess: invalid enum value for result field: %q", r)
+	}
+}
+
 // OrderOption defines the ordering options for the Chess queries.
 type OrderOption func(*sql.Selector)
 
 // ByID orders the results by the id field.
 func ByID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldID, opts...).ToFunc()
-}
-
-// ByStatus orders the results by the status field.
-func ByStatus(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldStatus, opts...).ToFunc()
 }
 
 // ByCreatedAt orders the results by the created_at field.
@@ -87,4 +158,42 @@ func ByCreatedAt(opts ...sql.OrderTermOption) OrderOption {
 // ByUpdatedAt orders the results by the updated_at field.
 func ByUpdatedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldUpdatedAt, opts...).ToFunc()
+}
+
+// ByStatus orders the results by the status field.
+func ByStatus(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldStatus, opts...).ToFunc()
+}
+
+// ByResult orders the results by the result field.
+func ByResult(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldResult, opts...).ToFunc()
+}
+
+// ByWhiteUserField orders the results by white_user field.
+func ByWhiteUserField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newWhiteUserStep(), sql.OrderByField(field, opts...))
+	}
+}
+
+// ByBlackUserField orders the results by black_user field.
+func ByBlackUserField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newBlackUserStep(), sql.OrderByField(field, opts...))
+	}
+}
+func newWhiteUserStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(WhiteUserInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, WhiteUserTable, WhiteUserColumn),
+	)
+}
+func newBlackUserStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(BlackUserInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, BlackUserTable, BlackUserColumn),
+	)
 }

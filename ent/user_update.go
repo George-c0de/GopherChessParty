@@ -100,49 +100,34 @@ func (uu *UserUpdate) SetNillablePassword(s *string) *UserUpdate {
 	return uu
 }
 
-// AddChessesAsFirstIDs adds the "chesses_as_first" edge to the Chess entity by IDs.
-func (uu *UserUpdate) AddChessesAsFirstIDs(ids ...uuid.UUID) *UserUpdate {
-	uu.mutation.AddChessesAsFirstIDs(ids...)
+// AddWhiteIDIDs adds the "white_id" edge to the Chess entity by IDs.
+func (uu *UserUpdate) AddWhiteIDIDs(ids ...uuid.UUID) *UserUpdate {
+	uu.mutation.AddWhiteIDIDs(ids...)
 	return uu
 }
 
-// AddChessesAsFirst adds the "chesses_as_first" edges to the Chess entity.
-func (uu *UserUpdate) AddChessesAsFirst(c ...*Chess) *UserUpdate {
+// AddWhiteID adds the "white_id" edges to the Chess entity.
+func (uu *UserUpdate) AddWhiteID(c ...*Chess) *UserUpdate {
 	ids := make([]uuid.UUID, len(c))
 	for i := range c {
 		ids[i] = c[i].ID
 	}
-	return uu.AddChessesAsFirstIDs(ids...)
+	return uu.AddWhiteIDIDs(ids...)
 }
 
-// AddChessesAsSecondIDs adds the "chesses_as_second" edge to the Chess entity by IDs.
-func (uu *UserUpdate) AddChessesAsSecondIDs(ids ...uuid.UUID) *UserUpdate {
-	uu.mutation.AddChessesAsSecondIDs(ids...)
+// AddBlackIDIDs adds the "black_id" edge to the Chess entity by IDs.
+func (uu *UserUpdate) AddBlackIDIDs(ids ...uuid.UUID) *UserUpdate {
+	uu.mutation.AddBlackIDIDs(ids...)
 	return uu
 }
 
-// AddChessesAsSecond adds the "chesses_as_second" edges to the Chess entity.
-func (uu *UserUpdate) AddChessesAsSecond(c ...*Chess) *UserUpdate {
+// AddBlackID adds the "black_id" edges to the Chess entity.
+func (uu *UserUpdate) AddBlackID(c ...*Chess) *UserUpdate {
 	ids := make([]uuid.UUID, len(c))
 	for i := range c {
 		ids[i] = c[i].ID
 	}
-	return uu.AddChessesAsSecondIDs(ids...)
-}
-
-// AddChessesWonIDs adds the "chesses_won" edge to the Chess entity by IDs.
-func (uu *UserUpdate) AddChessesWonIDs(ids ...uuid.UUID) *UserUpdate {
-	uu.mutation.AddChessesWonIDs(ids...)
-	return uu
-}
-
-// AddChessesWon adds the "chesses_won" edges to the Chess entity.
-func (uu *UserUpdate) AddChessesWon(c ...*Chess) *UserUpdate {
-	ids := make([]uuid.UUID, len(c))
-	for i := range c {
-		ids[i] = c[i].ID
-	}
-	return uu.AddChessesWonIDs(ids...)
+	return uu.AddBlackIDIDs(ids...)
 }
 
 // Mutation returns the UserMutation object of the builder.
@@ -150,67 +135,46 @@ func (uu *UserUpdate) Mutation() *UserMutation {
 	return uu.mutation
 }
 
-// ClearChessesAsFirst clears all "chesses_as_first" edges to the Chess entity.
-func (uu *UserUpdate) ClearChessesAsFirst() *UserUpdate {
-	uu.mutation.ClearChessesAsFirst()
+// ClearWhiteID clears all "white_id" edges to the Chess entity.
+func (uu *UserUpdate) ClearWhiteID() *UserUpdate {
+	uu.mutation.ClearWhiteID()
 	return uu
 }
 
-// RemoveChessesAsFirstIDs removes the "chesses_as_first" edge to Chess entities by IDs.
-func (uu *UserUpdate) RemoveChessesAsFirstIDs(ids ...uuid.UUID) *UserUpdate {
-	uu.mutation.RemoveChessesAsFirstIDs(ids...)
+// RemoveWhiteIDIDs removes the "white_id" edge to Chess entities by IDs.
+func (uu *UserUpdate) RemoveWhiteIDIDs(ids ...uuid.UUID) *UserUpdate {
+	uu.mutation.RemoveWhiteIDIDs(ids...)
 	return uu
 }
 
-// RemoveChessesAsFirst removes "chesses_as_first" edges to Chess entities.
-func (uu *UserUpdate) RemoveChessesAsFirst(c ...*Chess) *UserUpdate {
+// RemoveWhiteID removes "white_id" edges to Chess entities.
+func (uu *UserUpdate) RemoveWhiteID(c ...*Chess) *UserUpdate {
 	ids := make([]uuid.UUID, len(c))
 	for i := range c {
 		ids[i] = c[i].ID
 	}
-	return uu.RemoveChessesAsFirstIDs(ids...)
+	return uu.RemoveWhiteIDIDs(ids...)
 }
 
-// ClearChessesAsSecond clears all "chesses_as_second" edges to the Chess entity.
-func (uu *UserUpdate) ClearChessesAsSecond() *UserUpdate {
-	uu.mutation.ClearChessesAsSecond()
+// ClearBlackID clears all "black_id" edges to the Chess entity.
+func (uu *UserUpdate) ClearBlackID() *UserUpdate {
+	uu.mutation.ClearBlackID()
 	return uu
 }
 
-// RemoveChessesAsSecondIDs removes the "chesses_as_second" edge to Chess entities by IDs.
-func (uu *UserUpdate) RemoveChessesAsSecondIDs(ids ...uuid.UUID) *UserUpdate {
-	uu.mutation.RemoveChessesAsSecondIDs(ids...)
+// RemoveBlackIDIDs removes the "black_id" edge to Chess entities by IDs.
+func (uu *UserUpdate) RemoveBlackIDIDs(ids ...uuid.UUID) *UserUpdate {
+	uu.mutation.RemoveBlackIDIDs(ids...)
 	return uu
 }
 
-// RemoveChessesAsSecond removes "chesses_as_second" edges to Chess entities.
-func (uu *UserUpdate) RemoveChessesAsSecond(c ...*Chess) *UserUpdate {
+// RemoveBlackID removes "black_id" edges to Chess entities.
+func (uu *UserUpdate) RemoveBlackID(c ...*Chess) *UserUpdate {
 	ids := make([]uuid.UUID, len(c))
 	for i := range c {
 		ids[i] = c[i].ID
 	}
-	return uu.RemoveChessesAsSecondIDs(ids...)
-}
-
-// ClearChessesWon clears all "chesses_won" edges to the Chess entity.
-func (uu *UserUpdate) ClearChessesWon() *UserUpdate {
-	uu.mutation.ClearChessesWon()
-	return uu
-}
-
-// RemoveChessesWonIDs removes the "chesses_won" edge to Chess entities by IDs.
-func (uu *UserUpdate) RemoveChessesWonIDs(ids ...uuid.UUID) *UserUpdate {
-	uu.mutation.RemoveChessesWonIDs(ids...)
-	return uu
-}
-
-// RemoveChessesWon removes "chesses_won" edges to Chess entities.
-func (uu *UserUpdate) RemoveChessesWon(c ...*Chess) *UserUpdate {
-	ids := make([]uuid.UUID, len(c))
-	for i := range c {
-		ids[i] = c[i].ID
-	}
-	return uu.RemoveChessesWonIDs(ids...)
+	return uu.RemoveBlackIDIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -287,12 +251,12 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := uu.mutation.Password(); ok {
 		_spec.SetField(user.FieldPassword, field.TypeString, value)
 	}
-	if uu.mutation.ChessesAsFirstCleared() {
+	if uu.mutation.WhiteIDCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   user.ChessesAsFirstTable,
-			Columns: []string{user.ChessesAsFirstColumn},
+			Table:   user.WhiteIDTable,
+			Columns: []string{user.WhiteIDColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(chess.FieldID, field.TypeUUID),
@@ -300,12 +264,12 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := uu.mutation.RemovedChessesAsFirstIDs(); len(nodes) > 0 && !uu.mutation.ChessesAsFirstCleared() {
+	if nodes := uu.mutation.RemovedWhiteIDIDs(); len(nodes) > 0 && !uu.mutation.WhiteIDCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   user.ChessesAsFirstTable,
-			Columns: []string{user.ChessesAsFirstColumn},
+			Table:   user.WhiteIDTable,
+			Columns: []string{user.WhiteIDColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(chess.FieldID, field.TypeUUID),
@@ -316,57 +280,12 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := uu.mutation.ChessesAsFirstIDs(); len(nodes) > 0 {
+	if nodes := uu.mutation.WhiteIDIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   user.ChessesAsFirstTable,
-			Columns: []string{user.ChessesAsFirstColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(chess.FieldID, field.TypeUUID),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if uu.mutation.ChessesAsSecondCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   user.ChessesAsSecondTable,
-			Columns: []string{user.ChessesAsSecondColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(chess.FieldID, field.TypeUUID),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := uu.mutation.RemovedChessesAsSecondIDs(); len(nodes) > 0 && !uu.mutation.ChessesAsSecondCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   user.ChessesAsSecondTable,
-			Columns: []string{user.ChessesAsSecondColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(chess.FieldID, field.TypeUUID),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := uu.mutation.ChessesAsSecondIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   user.ChessesAsSecondTable,
-			Columns: []string{user.ChessesAsSecondColumn},
+			Table:   user.WhiteIDTable,
+			Columns: []string{user.WhiteIDColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(chess.FieldID, field.TypeUUID),
@@ -377,12 +296,12 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if uu.mutation.ChessesWonCleared() {
+	if uu.mutation.BlackIDCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   user.ChessesWonTable,
-			Columns: []string{user.ChessesWonColumn},
+			Table:   user.BlackIDTable,
+			Columns: []string{user.BlackIDColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(chess.FieldID, field.TypeUUID),
@@ -390,12 +309,12 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := uu.mutation.RemovedChessesWonIDs(); len(nodes) > 0 && !uu.mutation.ChessesWonCleared() {
+	if nodes := uu.mutation.RemovedBlackIDIDs(); len(nodes) > 0 && !uu.mutation.BlackIDCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   user.ChessesWonTable,
-			Columns: []string{user.ChessesWonColumn},
+			Table:   user.BlackIDTable,
+			Columns: []string{user.BlackIDColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(chess.FieldID, field.TypeUUID),
@@ -406,12 +325,12 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := uu.mutation.ChessesWonIDs(); len(nodes) > 0 {
+	if nodes := uu.mutation.BlackIDIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   user.ChessesWonTable,
-			Columns: []string{user.ChessesWonColumn},
+			Table:   user.BlackIDTable,
+			Columns: []string{user.BlackIDColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(chess.FieldID, field.TypeUUID),
@@ -512,49 +431,34 @@ func (uuo *UserUpdateOne) SetNillablePassword(s *string) *UserUpdateOne {
 	return uuo
 }
 
-// AddChessesAsFirstIDs adds the "chesses_as_first" edge to the Chess entity by IDs.
-func (uuo *UserUpdateOne) AddChessesAsFirstIDs(ids ...uuid.UUID) *UserUpdateOne {
-	uuo.mutation.AddChessesAsFirstIDs(ids...)
+// AddWhiteIDIDs adds the "white_id" edge to the Chess entity by IDs.
+func (uuo *UserUpdateOne) AddWhiteIDIDs(ids ...uuid.UUID) *UserUpdateOne {
+	uuo.mutation.AddWhiteIDIDs(ids...)
 	return uuo
 }
 
-// AddChessesAsFirst adds the "chesses_as_first" edges to the Chess entity.
-func (uuo *UserUpdateOne) AddChessesAsFirst(c ...*Chess) *UserUpdateOne {
+// AddWhiteID adds the "white_id" edges to the Chess entity.
+func (uuo *UserUpdateOne) AddWhiteID(c ...*Chess) *UserUpdateOne {
 	ids := make([]uuid.UUID, len(c))
 	for i := range c {
 		ids[i] = c[i].ID
 	}
-	return uuo.AddChessesAsFirstIDs(ids...)
+	return uuo.AddWhiteIDIDs(ids...)
 }
 
-// AddChessesAsSecondIDs adds the "chesses_as_second" edge to the Chess entity by IDs.
-func (uuo *UserUpdateOne) AddChessesAsSecondIDs(ids ...uuid.UUID) *UserUpdateOne {
-	uuo.mutation.AddChessesAsSecondIDs(ids...)
+// AddBlackIDIDs adds the "black_id" edge to the Chess entity by IDs.
+func (uuo *UserUpdateOne) AddBlackIDIDs(ids ...uuid.UUID) *UserUpdateOne {
+	uuo.mutation.AddBlackIDIDs(ids...)
 	return uuo
 }
 
-// AddChessesAsSecond adds the "chesses_as_second" edges to the Chess entity.
-func (uuo *UserUpdateOne) AddChessesAsSecond(c ...*Chess) *UserUpdateOne {
+// AddBlackID adds the "black_id" edges to the Chess entity.
+func (uuo *UserUpdateOne) AddBlackID(c ...*Chess) *UserUpdateOne {
 	ids := make([]uuid.UUID, len(c))
 	for i := range c {
 		ids[i] = c[i].ID
 	}
-	return uuo.AddChessesAsSecondIDs(ids...)
-}
-
-// AddChessesWonIDs adds the "chesses_won" edge to the Chess entity by IDs.
-func (uuo *UserUpdateOne) AddChessesWonIDs(ids ...uuid.UUID) *UserUpdateOne {
-	uuo.mutation.AddChessesWonIDs(ids...)
-	return uuo
-}
-
-// AddChessesWon adds the "chesses_won" edges to the Chess entity.
-func (uuo *UserUpdateOne) AddChessesWon(c ...*Chess) *UserUpdateOne {
-	ids := make([]uuid.UUID, len(c))
-	for i := range c {
-		ids[i] = c[i].ID
-	}
-	return uuo.AddChessesWonIDs(ids...)
+	return uuo.AddBlackIDIDs(ids...)
 }
 
 // Mutation returns the UserMutation object of the builder.
@@ -562,67 +466,46 @@ func (uuo *UserUpdateOne) Mutation() *UserMutation {
 	return uuo.mutation
 }
 
-// ClearChessesAsFirst clears all "chesses_as_first" edges to the Chess entity.
-func (uuo *UserUpdateOne) ClearChessesAsFirst() *UserUpdateOne {
-	uuo.mutation.ClearChessesAsFirst()
+// ClearWhiteID clears all "white_id" edges to the Chess entity.
+func (uuo *UserUpdateOne) ClearWhiteID() *UserUpdateOne {
+	uuo.mutation.ClearWhiteID()
 	return uuo
 }
 
-// RemoveChessesAsFirstIDs removes the "chesses_as_first" edge to Chess entities by IDs.
-func (uuo *UserUpdateOne) RemoveChessesAsFirstIDs(ids ...uuid.UUID) *UserUpdateOne {
-	uuo.mutation.RemoveChessesAsFirstIDs(ids...)
+// RemoveWhiteIDIDs removes the "white_id" edge to Chess entities by IDs.
+func (uuo *UserUpdateOne) RemoveWhiteIDIDs(ids ...uuid.UUID) *UserUpdateOne {
+	uuo.mutation.RemoveWhiteIDIDs(ids...)
 	return uuo
 }
 
-// RemoveChessesAsFirst removes "chesses_as_first" edges to Chess entities.
-func (uuo *UserUpdateOne) RemoveChessesAsFirst(c ...*Chess) *UserUpdateOne {
+// RemoveWhiteID removes "white_id" edges to Chess entities.
+func (uuo *UserUpdateOne) RemoveWhiteID(c ...*Chess) *UserUpdateOne {
 	ids := make([]uuid.UUID, len(c))
 	for i := range c {
 		ids[i] = c[i].ID
 	}
-	return uuo.RemoveChessesAsFirstIDs(ids...)
+	return uuo.RemoveWhiteIDIDs(ids...)
 }
 
-// ClearChessesAsSecond clears all "chesses_as_second" edges to the Chess entity.
-func (uuo *UserUpdateOne) ClearChessesAsSecond() *UserUpdateOne {
-	uuo.mutation.ClearChessesAsSecond()
+// ClearBlackID clears all "black_id" edges to the Chess entity.
+func (uuo *UserUpdateOne) ClearBlackID() *UserUpdateOne {
+	uuo.mutation.ClearBlackID()
 	return uuo
 }
 
-// RemoveChessesAsSecondIDs removes the "chesses_as_second" edge to Chess entities by IDs.
-func (uuo *UserUpdateOne) RemoveChessesAsSecondIDs(ids ...uuid.UUID) *UserUpdateOne {
-	uuo.mutation.RemoveChessesAsSecondIDs(ids...)
+// RemoveBlackIDIDs removes the "black_id" edge to Chess entities by IDs.
+func (uuo *UserUpdateOne) RemoveBlackIDIDs(ids ...uuid.UUID) *UserUpdateOne {
+	uuo.mutation.RemoveBlackIDIDs(ids...)
 	return uuo
 }
 
-// RemoveChessesAsSecond removes "chesses_as_second" edges to Chess entities.
-func (uuo *UserUpdateOne) RemoveChessesAsSecond(c ...*Chess) *UserUpdateOne {
+// RemoveBlackID removes "black_id" edges to Chess entities.
+func (uuo *UserUpdateOne) RemoveBlackID(c ...*Chess) *UserUpdateOne {
 	ids := make([]uuid.UUID, len(c))
 	for i := range c {
 		ids[i] = c[i].ID
 	}
-	return uuo.RemoveChessesAsSecondIDs(ids...)
-}
-
-// ClearChessesWon clears all "chesses_won" edges to the Chess entity.
-func (uuo *UserUpdateOne) ClearChessesWon() *UserUpdateOne {
-	uuo.mutation.ClearChessesWon()
-	return uuo
-}
-
-// RemoveChessesWonIDs removes the "chesses_won" edge to Chess entities by IDs.
-func (uuo *UserUpdateOne) RemoveChessesWonIDs(ids ...uuid.UUID) *UserUpdateOne {
-	uuo.mutation.RemoveChessesWonIDs(ids...)
-	return uuo
-}
-
-// RemoveChessesWon removes "chesses_won" edges to Chess entities.
-func (uuo *UserUpdateOne) RemoveChessesWon(c ...*Chess) *UserUpdateOne {
-	ids := make([]uuid.UUID, len(c))
-	for i := range c {
-		ids[i] = c[i].ID
-	}
-	return uuo.RemoveChessesWonIDs(ids...)
+	return uuo.RemoveBlackIDIDs(ids...)
 }
 
 // Where appends a list predicates to the UserUpdate builder.
@@ -729,12 +612,12 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 	if value, ok := uuo.mutation.Password(); ok {
 		_spec.SetField(user.FieldPassword, field.TypeString, value)
 	}
-	if uuo.mutation.ChessesAsFirstCleared() {
+	if uuo.mutation.WhiteIDCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   user.ChessesAsFirstTable,
-			Columns: []string{user.ChessesAsFirstColumn},
+			Table:   user.WhiteIDTable,
+			Columns: []string{user.WhiteIDColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(chess.FieldID, field.TypeUUID),
@@ -742,12 +625,12 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := uuo.mutation.RemovedChessesAsFirstIDs(); len(nodes) > 0 && !uuo.mutation.ChessesAsFirstCleared() {
+	if nodes := uuo.mutation.RemovedWhiteIDIDs(); len(nodes) > 0 && !uuo.mutation.WhiteIDCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   user.ChessesAsFirstTable,
-			Columns: []string{user.ChessesAsFirstColumn},
+			Table:   user.WhiteIDTable,
+			Columns: []string{user.WhiteIDColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(chess.FieldID, field.TypeUUID),
@@ -758,57 +641,12 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := uuo.mutation.ChessesAsFirstIDs(); len(nodes) > 0 {
+	if nodes := uuo.mutation.WhiteIDIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   user.ChessesAsFirstTable,
-			Columns: []string{user.ChessesAsFirstColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(chess.FieldID, field.TypeUUID),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if uuo.mutation.ChessesAsSecondCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   user.ChessesAsSecondTable,
-			Columns: []string{user.ChessesAsSecondColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(chess.FieldID, field.TypeUUID),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := uuo.mutation.RemovedChessesAsSecondIDs(); len(nodes) > 0 && !uuo.mutation.ChessesAsSecondCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   user.ChessesAsSecondTable,
-			Columns: []string{user.ChessesAsSecondColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(chess.FieldID, field.TypeUUID),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := uuo.mutation.ChessesAsSecondIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   user.ChessesAsSecondTable,
-			Columns: []string{user.ChessesAsSecondColumn},
+			Table:   user.WhiteIDTable,
+			Columns: []string{user.WhiteIDColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(chess.FieldID, field.TypeUUID),
@@ -819,12 +657,12 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if uuo.mutation.ChessesWonCleared() {
+	if uuo.mutation.BlackIDCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   user.ChessesWonTable,
-			Columns: []string{user.ChessesWonColumn},
+			Table:   user.BlackIDTable,
+			Columns: []string{user.BlackIDColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(chess.FieldID, field.TypeUUID),
@@ -832,12 +670,12 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := uuo.mutation.RemovedChessesWonIDs(); len(nodes) > 0 && !uuo.mutation.ChessesWonCleared() {
+	if nodes := uuo.mutation.RemovedBlackIDIDs(); len(nodes) > 0 && !uuo.mutation.BlackIDCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   user.ChessesWonTable,
-			Columns: []string{user.ChessesWonColumn},
+			Table:   user.BlackIDTable,
+			Columns: []string{user.BlackIDColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(chess.FieldID, field.TypeUUID),
@@ -848,12 +686,12 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := uuo.mutation.ChessesWonIDs(); len(nodes) > 0 {
+	if nodes := uuo.mutation.BlackIDIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   user.ChessesWonTable,
-			Columns: []string{user.ChessesWonColumn},
+			Table:   user.BlackIDTable,
+			Columns: []string{user.BlackIDColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(chess.FieldID, field.TypeUUID),

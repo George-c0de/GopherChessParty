@@ -16,10 +16,18 @@ func main() {
 	log := logger.NewLogger(cfg.Env)
 
 	// Подключение к базе данных и создание репозитория
-	repository := connection.MustNewRepository(cfg.Database, log)
+	repository := connection.MustNewRepository(cfg.Database)
+
+	// Создание репозиториев
+	userRepo := connection.NewUserRepository(log, repository)
+	gameRepo := connection.NewGameRepository(log, repository)
 
 	// Создание сервиса
-	service := services.NewService(log, repository, cfg.Auth)
+	userService := services.NewUserService(log, userRepo)
+	gameService := services.NewGameService(log, gameRepo)
+	authService := services.NewAuthService(log, cfg.Auth)
+
+	service := services.NewService(userService, gameService, authService, log)
 
 	// Создание экземпляра Gin
 	router := routers.GetRoutes(service)

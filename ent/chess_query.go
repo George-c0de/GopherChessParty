@@ -5,6 +5,7 @@ package ent
 import (
 	"GopherChessParty/ent/chess"
 	"GopherChessParty/ent/predicate"
+	"GopherChessParty/ent/user"
 	"context"
 	"fmt"
 	"math"
@@ -19,11 +20,13 @@ import (
 // ChessQuery is the builder for querying Chess entities.
 type ChessQuery struct {
 	config
-	ctx        *QueryContext
-	order      []chess.OrderOption
-	inters     []Interceptor
-	predicates []predicate.Chess
-	withFKs    bool
+	ctx           *QueryContext
+	order         []chess.OrderOption
+	inters        []Interceptor
+	predicates    []predicate.Chess
+	withWhiteUser *UserQuery
+	withBlackUser *UserQuery
+	withFKs       bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -58,6 +61,50 @@ func (cq *ChessQuery) Unique(unique bool) *ChessQuery {
 func (cq *ChessQuery) Order(o ...chess.OrderOption) *ChessQuery {
 	cq.order = append(cq.order, o...)
 	return cq
+}
+
+// QueryWhiteUser chains the current query on the "white_user" edge.
+func (cq *ChessQuery) QueryWhiteUser() *UserQuery {
+	query := (&UserClient{config: cq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := cq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := cq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(chess.Table, chess.FieldID, selector),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, chess.WhiteUserTable, chess.WhiteUserColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(cq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryBlackUser chains the current query on the "black_user" edge.
+func (cq *ChessQuery) QueryBlackUser() *UserQuery {
+	query := (&UserClient{config: cq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := cq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := cq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(chess.Table, chess.FieldID, selector),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, chess.BlackUserTable, chess.BlackUserColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(cq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
 }
 
 // First returns the first Chess entity from the query.
@@ -247,15 +294,39 @@ func (cq *ChessQuery) Clone() *ChessQuery {
 		return nil
 	}
 	return &ChessQuery{
-		config:     cq.config,
-		ctx:        cq.ctx.Clone(),
-		order:      append([]chess.OrderOption{}, cq.order...),
-		inters:     append([]Interceptor{}, cq.inters...),
-		predicates: append([]predicate.Chess{}, cq.predicates...),
+		config:        cq.config,
+		ctx:           cq.ctx.Clone(),
+		order:         append([]chess.OrderOption{}, cq.order...),
+		inters:        append([]Interceptor{}, cq.inters...),
+		predicates:    append([]predicate.Chess{}, cq.predicates...),
+		withWhiteUser: cq.withWhiteUser.Clone(),
+		withBlackUser: cq.withBlackUser.Clone(),
 		// clone intermediate query.
 		sql:  cq.sql.Clone(),
 		path: cq.path,
 	}
+}
+
+// WithWhiteUser tells the query-builder to eager-load the nodes that are connected to
+// the "white_user" edge. The optional arguments are used to configure the query builder of the edge.
+func (cq *ChessQuery) WithWhiteUser(opts ...func(*UserQuery)) *ChessQuery {
+	query := (&UserClient{config: cq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	cq.withWhiteUser = query
+	return cq
+}
+
+// WithBlackUser tells the query-builder to eager-load the nodes that are connected to
+// the "black_user" edge. The optional arguments are used to configure the query builder of the edge.
+func (cq *ChessQuery) WithBlackUser(opts ...func(*UserQuery)) *ChessQuery {
+	query := (&UserClient{config: cq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	cq.withBlackUser = query
+	return cq
 }
 
 // GroupBy is used to group vertices by one or more fields/columns.
@@ -264,12 +335,12 @@ func (cq *ChessQuery) Clone() *ChessQuery {
 // Example:
 //
 //	var v []struct {
-//		Status uint8 `json:"status,omitempty"`
+//		CreatedAt time.Time `json:"created_at,omitempty"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
 //	client.Chess.Query().
-//		GroupBy(chess.FieldStatus).
+//		GroupBy(chess.FieldCreatedAt).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
 func (cq *ChessQuery) GroupBy(field string, fields ...string) *ChessGroupBy {
@@ -287,11 +358,11 @@ func (cq *ChessQuery) GroupBy(field string, fields ...string) *ChessGroupBy {
 // Example:
 //
 //	var v []struct {
-//		Status uint8 `json:"status,omitempty"`
+//		CreatedAt time.Time `json:"created_at,omitempty"`
 //	}
 //
 //	client.Chess.Query().
-//		Select(chess.FieldStatus).
+//		Select(chess.FieldCreatedAt).
 //		Scan(ctx, &v)
 func (cq *ChessQuery) Select(fields ...string) *ChessSelect {
 	cq.ctx.Fields = append(cq.ctx.Fields, fields...)
@@ -334,10 +405,17 @@ func (cq *ChessQuery) prepareQuery(ctx context.Context) error {
 
 func (cq *ChessQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Chess, error) {
 	var (
-		nodes   = []*Chess{}
-		withFKs = cq.withFKs
-		_spec   = cq.querySpec()
+		nodes       = []*Chess{}
+		withFKs     = cq.withFKs
+		_spec       = cq.querySpec()
+		loadedTypes = [2]bool{
+			cq.withWhiteUser != nil,
+			cq.withBlackUser != nil,
+		}
 	)
+	if cq.withWhiteUser != nil || cq.withBlackUser != nil {
+		withFKs = true
+	}
 	if withFKs {
 		_spec.Node.Columns = append(_spec.Node.Columns, chess.ForeignKeys...)
 	}
@@ -347,6 +425,7 @@ func (cq *ChessQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Chess,
 	_spec.Assign = func(columns []string, values []any) error {
 		node := &Chess{config: cq.config}
 		nodes = append(nodes, node)
+		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
 	}
 	for i := range hooks {
@@ -358,7 +437,84 @@ func (cq *ChessQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Chess,
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
+	if query := cq.withWhiteUser; query != nil {
+		if err := cq.loadWhiteUser(ctx, query, nodes, nil,
+			func(n *Chess, e *User) { n.Edges.WhiteUser = e }); err != nil {
+			return nil, err
+		}
+	}
+	if query := cq.withBlackUser; query != nil {
+		if err := cq.loadBlackUser(ctx, query, nodes, nil,
+			func(n *Chess, e *User) { n.Edges.BlackUser = e }); err != nil {
+			return nil, err
+		}
+	}
 	return nodes, nil
+}
+
+func (cq *ChessQuery) loadWhiteUser(ctx context.Context, query *UserQuery, nodes []*Chess, init func(*Chess), assign func(*Chess, *User)) error {
+	ids := make([]uuid.UUID, 0, len(nodes))
+	nodeids := make(map[uuid.UUID][]*Chess)
+	for i := range nodes {
+		if nodes[i].user_white_id == nil {
+			continue
+		}
+		fk := *nodes[i].user_white_id
+		if _, ok := nodeids[fk]; !ok {
+			ids = append(ids, fk)
+		}
+		nodeids[fk] = append(nodeids[fk], nodes[i])
+	}
+	if len(ids) == 0 {
+		return nil
+	}
+	query.Where(user.IDIn(ids...))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nodeids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected foreign-key "user_white_id" returned %v`, n.ID)
+		}
+		for i := range nodes {
+			assign(nodes[i], n)
+		}
+	}
+	return nil
+}
+func (cq *ChessQuery) loadBlackUser(ctx context.Context, query *UserQuery, nodes []*Chess, init func(*Chess), assign func(*Chess, *User)) error {
+	ids := make([]uuid.UUID, 0, len(nodes))
+	nodeids := make(map[uuid.UUID][]*Chess)
+	for i := range nodes {
+		if nodes[i].user_black_id == nil {
+			continue
+		}
+		fk := *nodes[i].user_black_id
+		if _, ok := nodeids[fk]; !ok {
+			ids = append(ids, fk)
+		}
+		nodeids[fk] = append(nodeids[fk], nodes[i])
+	}
+	if len(ids) == 0 {
+		return nil
+	}
+	query.Where(user.IDIn(ids...))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nodeids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected foreign-key "user_black_id" returned %v`, n.ID)
+		}
+		for i := range nodes {
+			assign(nodes[i], n)
+		}
+	}
+	return nil
 }
 
 func (cq *ChessQuery) sqlCount(ctx context.Context) (int, error) {

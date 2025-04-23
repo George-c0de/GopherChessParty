@@ -4,9 +4,11 @@ import (
 	"net/http"
 	"strings"
 
+	"GopherChessParty/internal/errors"
 	"GopherChessParty/internal/interfaces"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt"
+	"github.com/google/uuid"
 )
 
 // JWTAuthMiddleware проверяет валидность JWT-токена.
@@ -46,4 +48,18 @@ func JWTAuthMiddleware(service interfaces.IService) gin.HandlerFunc {
 
 		c.Next()
 	}
+}
+
+func GetUserID(c *gin.Context) (uuid.UUID, error) {
+	id, exists := c.Get("id")
+	if !exists {
+		return uuid.UUID{}, errors.ErrUserNotFound
+	}
+
+	userId, err := uuid.Parse(id.(string))
+	if err != nil {
+		return uuid.UUID{}, errors.ErrType
+	}
+
+	return userId, nil
 }

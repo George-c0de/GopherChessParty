@@ -29,8 +29,7 @@ func (User) Fields() []ent.Field {
 // Edges of the User.
 func (User) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.To("player_first_id", Chess.Type),
-		edge.To("player_second_id", Chess.Type),
-		edge.To("winner_id", Chess.Type),
+		edge.To("white_id", Chess.Type),
+		edge.To("black_id", Chess.Type),
 	}
 }

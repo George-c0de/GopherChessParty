@@ -3,6 +3,8 @@ package logger
 import (
 	"log/slog"
 	"os"
+
+	"GopherChessParty/internal/interfaces"
 )
 
 const (
@@ -29,7 +31,7 @@ func (logger *Logger) ErrorWithMsg(msg string, err error) {
 	logger.log.Error(msg, slog.String("error", err.Error()))
 }
 
-func NewLogger(env string) *Logger {
+func NewLogger(env string) interfaces.ILogger {
 	var log *slog.Logger
 
 	switch env {

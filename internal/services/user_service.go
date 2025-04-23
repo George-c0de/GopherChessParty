@@ -7,8 +7,15 @@ import (
 )
 
 type UserService struct {
-	repository interfaces.IRepository
+	repository interfaces.IUserRepo
 	log        interfaces.ILogger
+}
+
+func NewUserService(
+	logger interfaces.ILogger,
+	repository interfaces.IUserRepo,
+) interfaces.IUserService {
+	return &UserService{repository: repository, log: logger}
 }
 
 func (m *UserService) SaveUser(

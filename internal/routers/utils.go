@@ -1,12 +1,12 @@
 package routers
 
 import (
-	uuid "github.com/jackc/pgtype/ext/gofrs-uuid"
 	"net/http"
 
 	"GopherChessParty/internal/interfaces"
 	"GopherChessParty/internal/services"
 	"github.com/gin-gonic/gin"
+	uuid "github.com/jackc/pgtype/ext/gofrs-uuid"
 )
 
 func GetService(c *gin.Context) interfaces.IService {
@@ -18,14 +18,15 @@ func GetService(c *gin.Context) interfaces.IService {
 	// Приводим к нужному типу
 	return svc.(*services.Service)
 }
-func GetUserID(c *gin.Context) *uuid.UUID {
+
+func GetUserID(c *gin.Context) (uuid.UUID, bool) {
 	userId, exists := c.Get("id")
 	if !exists {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "User ID not found"})
-		return nil
+		return uuid.UUID{}, false
 	}
-	return userId.(*uuid.UUID)
+	return userId.(uuid.UUID), true
 }
+
 func BindJSON[T any](c *gin.Context) (*T, error) {
 	var data T
 	if err := c.BindJSON(&data); err != nil {

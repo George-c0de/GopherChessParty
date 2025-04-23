@@ -356,21 +356,21 @@ func PasswordContainsFold(v string) predicate.User {
 	return predicate.User(sql.FieldContainsFold(FieldPassword, v))
 }
 
-// HasChessesAsFirst applies the HasEdge predicate on the "chesses_as_first" edge.
-func HasChessesAsFirst() predicate.User {
+// HasWhiteID applies the HasEdge predicate on the "white_id" edge.
+func HasWhiteID() predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, ChessesAsFirstTable, ChessesAsFirstColumn),
+			sqlgraph.Edge(sqlgraph.O2M, false, WhiteIDTable, WhiteIDColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
 }
 
-// HasChessesAsFirstWith applies the HasEdge predicate on the "chesses_as_first" edge with a given conditions (other predicates).
-func HasChessesAsFirstWith(preds ...predicate.Chess) predicate.User {
+// HasWhiteIDWith applies the HasEdge predicate on the "white_id" edge with a given conditions (other predicates).
+func HasWhiteIDWith(preds ...predicate.Chess) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
-		step := newChessesAsFirstStep()
+		step := newWhiteIDStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)
@@ -379,44 +379,21 @@ func HasChessesAsFirstWith(preds ...predicate.Chess) predicate.User {
 	})
 }
 
-// HasChessesAsSecond applies the HasEdge predicate on the "chesses_as_second" edge.
-func HasChessesAsSecond() predicate.User {
+// HasBlackID applies the HasEdge predicate on the "black_id" edge.
+func HasBlackID() predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, ChessesAsSecondTable, ChessesAsSecondColumn),
+			sqlgraph.Edge(sqlgraph.O2M, false, BlackIDTable, BlackIDColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
 }
 
-// HasChessesAsSecondWith applies the HasEdge predicate on the "chesses_as_second" edge with a given conditions (other predicates).
-func HasChessesAsSecondWith(preds ...predicate.Chess) predicate.User {
+// HasBlackIDWith applies the HasEdge predicate on the "black_id" edge with a given conditions (other predicates).
+func HasBlackIDWith(preds ...predicate.Chess) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
-		step := newChessesAsSecondStep()
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
-}
-
-// HasChessesWon applies the HasEdge predicate on the "chesses_won" edge.
-func HasChessesWon() predicate.User {
-	return predicate.User(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, ChessesWonTable, ChessesWonColumn),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasChessesWonWith applies the HasEdge predicate on the "chesses_won" edge with a given conditions (other predicates).
-func HasChessesWonWith(preds ...predicate.Chess) predicate.User {
-	return predicate.User(func(s *sql.Selector) {
-		step := newChessesWonStep()
+		step := newBlackIDStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

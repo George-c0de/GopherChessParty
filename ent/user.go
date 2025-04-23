@@ -36,42 +36,31 @@ type User struct {
 
 // UserEdges holds the relations/edges for other nodes in the graph.
 type UserEdges struct {
-	// ChessesAsFirst holds the value of the chesses_as_first edge.
-	ChessesAsFirst []*Chess `json:"chesses_as_first,omitempty"`
-	// ChessesAsSecond holds the value of the chesses_as_second edge.
-	ChessesAsSecond []*Chess `json:"chesses_as_second,omitempty"`
-	// ChessesWon holds the value of the chesses_won edge.
-	ChessesWon []*Chess `json:"chesses_won,omitempty"`
+	// WhiteID holds the value of the white_id edge.
+	WhiteID []*Chess `json:"white_id,omitempty"`
+	// BlackID holds the value of the black_id edge.
+	BlackID []*Chess `json:"black_id,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [3]bool
+	loadedTypes [2]bool
 }
 
-// ChessesAsFirstOrErr returns the ChessesAsFirst value or an error if the edge
+// WhiteIDOrErr returns the WhiteID value or an error if the edge
 // was not loaded in eager-loading.
-func (e UserEdges) ChessesAsFirstOrErr() ([]*Chess, error) {
+func (e UserEdges) WhiteIDOrErr() ([]*Chess, error) {
 	if e.loadedTypes[0] {
-		return e.ChessesAsFirst, nil
+		return e.WhiteID, nil
 	}
-	return nil, &NotLoadedError{edge: "chesses_as_first"}
+	return nil, &NotLoadedError{edge: "white_id"}
 }
 
-// ChessesAsSecondOrErr returns the ChessesAsSecond value or an error if the edge
+// BlackIDOrErr returns the BlackID value or an error if the edge
 // was not loaded in eager-loading.
-func (e UserEdges) ChessesAsSecondOrErr() ([]*Chess, error) {
+func (e UserEdges) BlackIDOrErr() ([]*Chess, error) {
 	if e.loadedTypes[1] {
-		return e.ChessesAsSecond, nil
+		return e.BlackID, nil
 	}
-	return nil, &NotLoadedError{edge: "chesses_as_second"}
-}
-
-// ChessesWonOrErr returns the ChessesWon value or an error if the edge
-// was not loaded in eager-loading.
-func (e UserEdges) ChessesWonOrErr() ([]*Chess, error) {
-	if e.loadedTypes[2] {
-		return e.ChessesWon, nil
-	}
-	return nil, &NotLoadedError{edge: "chesses_won"}
+	return nil, &NotLoadedError{edge: "black_id"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -149,19 +138,14 @@ func (u *User) Value(name string) (ent.Value, error) {
 	return u.selectValues.Get(name)
 }
 
-// QueryChessesAsFirst queries the "chesses_as_first" edge of the User entity.
-func (u *User) QueryChessesAsFirst() *ChessQuery {
-	return NewUserClient(u.config).QueryChessesAsFirst(u)
+// QueryWhiteID queries the "white_id" edge of the User entity.
+func (u *User) QueryWhiteID() *ChessQuery {
+	return NewUserClient(u.config).QueryWhiteID(u)
 }
 
-// QueryChessesAsSecond queries the "chesses_as_second" edge of the User entity.
-func (u *User) QueryChessesAsSecond() *ChessQuery {
-	return NewUserClient(u.config).QueryChessesAsSecond(u)
-}
-
-// QueryChessesWon queries the "chesses_won" edge of the User entity.
-func (u *User) QueryChessesWon() *ChessQuery {
-	return NewUserClient(u.config).QueryChessesWon(u)
+// QueryBlackID queries the "black_id" edge of the User entity.
+func (u *User) QueryBlackID() *ChessQuery {
+	return NewUserClient(u.config).QueryBlackID(u)
 }
 
 // Update returns a builder for updating this User.
