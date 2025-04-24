@@ -26,3 +26,8 @@ lint:
 
 format:
 	golangci-lint fmt
+
+push:
+	atlas migrate push app \
+  --dev-url "docker://postgres/15/dev?search_path=public" \
+  --dir "file://ent/migrate/migrations"

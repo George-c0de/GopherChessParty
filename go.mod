@@ -3,13 +3,12 @@ module GopherChessParty
 go 1.24.0
 
 require (
-	ariga.io/atlas v0.31.1-0.20250212144724-069be8033e83
 	entgo.io/ent v0.14.4
 	github.com/corentings/chess/v2 v2.0.5
 	github.com/gin-gonic/gin v1.10.0
-	github.com/go-sql-driver/mysql v1.8.1
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/google/uuid v1.6.0
+	github.com/gorilla/websocket v1.5.3
 	github.com/ilyakaznacheev/cleanenv v1.5.0
 	github.com/jackc/pgtype v1.14.0
 	github.com/jackc/pgx/v4 v4.18.3
@@ -19,7 +18,7 @@ require (
 )
 
 require (
-	filippo.io/edwards25519 v1.1.0 // indirect
+	ariga.io/atlas v0.31.1-0.20250212144724-069be8033e83 // indirect
 	github.com/BurntSushi/toml v1.2.1 // indirect
 	github.com/agext/levenshtein v1.2.1 // indirect
 	github.com/apparentlymart/go-textseg/v13 v13.0.0 // indirect

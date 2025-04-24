@@ -12,6 +12,10 @@ type GameService struct {
 	repository interfaces.IGameRepo
 }
 
+func (m *GameService) CreateGame(userID uuid.UUID) (*ent.Chess, error) {
+	panic("implement me")
+}
+
 func NewGameService(
 	log interfaces.ILogger,
 	repository interfaces.IGameRepo,
@@ -33,4 +37,8 @@ func (m *GameService) Move(game *chess.Game, move string) (bool, error) {
 
 func (m *GameService) GetGames(userID uuid.UUID) ([]*ent.Chess, error) {
 	return m.repository.GetGames(userID)
+}
+
+func (m *GameService) SearchGame(gameID uuid.UUID) (*ent.Chess, error) {
+	panic("implement me")
 }

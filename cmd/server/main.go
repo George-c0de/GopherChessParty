@@ -30,7 +30,7 @@ func main() {
 	service := services.NewService(userService, gameService, authService, log)
 
 	// Создание экземпляра Gin
-	router := routers.GetRoutes(service)
+	router := routers.GetRoutes(service, log)
 
 	err := router.Run(":8000")
 	if err != nil {
