@@ -1,12 +1,19 @@
 package routers
 
 import (
+	"github.com/gorilla/websocket"
 	"net/http"
+	"time"
 
 	"GopherChessParty/internal/interfaces"
 	"GopherChessParty/internal/services"
 	"github.com/gin-gonic/gin"
 	uuid "github.com/jackc/pgtype/ext/gofrs-uuid"
+)
+
+const (
+	pongWait   = 60 * time.Second
+	pingPeriod = 30 * time.Second
 )
 
 func GetService(c *gin.Context) interfaces.IService {
@@ -33,4 +40,19 @@ func BindJSON[T any](c *gin.Context) (*T, error) {
 		return nil, err
 	}
 	return &data, nil
+}
+
+func CreateWebSocket(c *gin.Context) (*websocket.Conn, error) {
+	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
+	if err != nil {
+		return nil, err
+	}
+	err = conn.SetReadDeadline(time.Now().Add(pongWait))
+	if err != nil {
+		return nil, err
+	}
+	conn.SetPongHandler(func(string) error {
+		return conn.SetReadDeadline(time.Now().Add(pongWait))
+	})
+	return conn, nil
 }

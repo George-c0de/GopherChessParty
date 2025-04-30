@@ -13,6 +13,7 @@ type Service struct {
 	interfaces.IUserService
 	interfaces.IGameService
 	interfaces.IAuthService
+	interfaces.IMatchService
 	logger interfaces.ILogger
 }
 
@@ -20,13 +21,15 @@ func NewService(
 	userService interfaces.IUserService,
 	gameService interfaces.IGameService,
 	authService interfaces.IAuthService,
+	matchService interfaces.IMatchService,
 	logger interfaces.ILogger,
 ) *Service {
 	return &Service{
-		IUserService: userService,
-		IGameService: gameService,
-		IAuthService: authService,
-		logger:       logger,
+		IUserService:  userService,
+		IGameService:  gameService,
+		IAuthService:  authService,
+		IMatchService: matchService,
+		logger:        logger,
 	}
 }
 

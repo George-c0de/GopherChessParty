@@ -28,11 +28,6 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
-const (
-	pongWait   = 60 * time.Second
-	pingPeriod = 30 * time.Second
-)
-
 // AddWebSocket регистрирует эндпоинт поиска соперника по WebSocket
 func AddWebSocket(rg *gin.RouterGroup, service interfaces.IService, log interfaces.ILogger) {
 	// Важно: не доверяйте всем прокси (см. https://pkg.go.dev/github.com/gin-gonic/gin#readme-don-t-trust-all-proxies)
@@ -43,24 +38,18 @@ func AddWebSocket(rg *gin.RouterGroup, service interfaces.IService, log interfac
 // SearchMatchHandler — обработчик WebSocket для матчмейкинга
 func SearchMatchHandler(logger interfaces.ILogger) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
+		conn, err := CreateWebSocket(c)
 		if err != nil {
 			logger.Error(err)
-			return
 		}
 		defer conn.Close()
 
+		// Получение пользователя
 		userId, err := middleware.GetUserID(c)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 			return
 		}
-
-		conn.SetReadDeadline(time.Now().Add(pongWait))
-		conn.SetPongHandler(func(string) error {
-			conn.SetReadDeadline(time.Now().Add(pongWait))
-			return nil
-		})
 
 		// Канал и once для сигнализации о закрытии
 		done := make(chan struct{})
@@ -90,6 +79,55 @@ func SearchMatchHandler(logger interfaces.ILogger) gin.HandlerFunc {
 		<-done
 	}
 }
+
+//	return func(c *gin.Context) {
+//		conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
+//		if err != nil {
+//			logger.Error(err)
+//			return
+//		}
+//		defer conn.Close()
+//
+//		userId, err := middleware.GetUserID(c)
+//		if err != nil {
+//			c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+//			return
+//		}
+//
+//		conn.SetReadDeadline(time.Now().Add(pongWait))
+//		conn.SetPongHandler(func(string) error {
+//			conn.SetReadDeadline(time.Now().Add(pongWait))
+//			return nil
+//		})
+//
+//		// Канал и once для сигнализации о закрытии
+//		done := make(chan struct{})
+//		var closeOnce sync.Once
+//
+//		// Отправка ping
+//		go keepAlivePing(conn, pingPeriod, done)
+//
+//		player := &PlayerConn{UserID: userId, Conn: conn}
+//
+//		defer dequeueByID(player.UserID)
+//
+//		if opponent, found := enqueue(player); found {
+//			logger.Info("Матч найден: %s vs %s", player.UserID, opponent.UserID)
+//			message := gin.H{
+//				"type": "match_found",
+//				"data": gin.H{"opponent": opponent.UserID},
+//			}
+//			notifyBoth(player, opponent, message)
+//			dequeueByID(opponent.UserID)
+//			opponent.Conn.Close()
+//			closeOnce.Do(func() { close(done) })
+//			return
+//		}
+//
+//		// Если соперник ещё не найден — ждём сигнала о завершении
+//		<-done
+//	}
+//}
 
 // enqueue — добавляет игрока в очередь или возвращает готового соперника
 func enqueue(p *PlayerConn) (*PlayerConn, bool) {

@@ -26,8 +26,9 @@ func main() {
 	userService := services.NewUserService(log, userRepo)
 	gameService := services.NewGameService(log, gameRepo)
 	authService := services.NewAuthService(log, cfg.Auth)
+	matchService := services.NewMatchService(log)
 
-	service := services.NewService(userService, gameService, authService, log)
+	service := services.NewService(userService, gameService, authService, matchService, log)
 
 	// Создание экземпляра Gin
 	router := routers.GetRoutes(service, log)
