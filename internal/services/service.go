@@ -110,16 +110,6 @@ func (s *Service) SearchPlayerConn() {
 				s.logger.Error(err)
 				continue
 			}
-			//err = s.IMatchService.CloseConnection(player1)
-			//if err != nil {
-			//	s.logger.Error(err)
-			//	continue
-			//}
-			//err = s.IMatchService.CloseConnection(player2)
-			//if err != nil {
-			//	s.logger.Error(err)
-			//	continue
-			//}
 		}
 	}
 }
