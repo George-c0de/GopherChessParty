@@ -5,6 +5,7 @@ import (
 	"GopherChessParty/internal/dto"
 	"GopherChessParty/internal/interfaces"
 	"GopherChessParty/internal/models"
+
 	"github.com/golang-jwt/jwt"
 	"github.com/google/uuid"
 )
@@ -24,13 +25,15 @@ func NewService(
 	matchService interfaces.IMatchService,
 	logger interfaces.ILogger,
 ) *Service {
-	return &Service{
+	service := &Service{
 		IUserService:  userService,
 		IGameService:  gameService,
 		IAuthService:  authService,
 		IMatchService: matchService,
 		logger:        logger,
 	}
+	go service.SearchPlayerConn()
+	return service
 }
 
 func (s *Service) IsValidateToken(tokenString string) (*jwt.Token, bool) {
@@ -51,6 +54,15 @@ func (s *Service) CreateUser(data *dto.CreateUser) (*models.User, error) {
 	return s.IUserService.SaveUser(data, hashedPassword)
 }
 
+func (s *Service) RegisterUser(data *dto.CreateUser) (*models.User, error) {
+	hashedPassword, err := s.IAuthService.GeneratePassword(data.Password)
+	if err != nil {
+		s.logger.Error(err)
+		return nil, err
+	}
+	return s.IUserService.SaveUser(data, hashedPassword)
+}
+
 func (s *Service) ValidPassword(data dto.AuthenticateUser) (*uuid.UUID, bool) {
 	userAuth, err := s.IUserService.GetUserPassword(data.Email)
 	if err != nil {
@@ -62,4 +74,52 @@ func (s *Service) ValidPassword(data dto.AuthenticateUser) (*uuid.UUID, bool) {
 
 func (s *Service) GetGamesByUserID(userId uuid.UUID) ([]*ent.Chess, error) {
 	return s.IGameService.GetGames(userId)
+}
+
+// CreateMatch создает пару игроков из очереди
+func (s *Service) CreateMatch(playerID1, playerID2 uuid.UUID) (*ent.Chess, error) {
+	game, err := s.CreateGame(playerID1, playerID2)
+	if err != nil {
+		s.logger.Error(err)
+		return nil, err
+	}
+	return game, nil
+}
+
+// SearchPlayerConn ищет пары игроков в очереди
+func (s *Service) SearchPlayerConn() {
+	for range s.IMatchService.GetExistsChannel() {
+		if s.IMatchService.CheckPair() {
+			player1, player2, err := s.IMatchService.ReturnPlayerID()
+			if err != nil {
+				s.logger.Error(err)
+				continue
+			}
+			game, err := s.CreateMatch(player1.UserID, player2.UserID)
+			if err != nil {
+				s.logger.Error(err)
+				continue
+			}
+			err = s.IMatchService.SendGemID(player1, game.ID)
+			if err != nil {
+				s.logger.Error(err)
+				continue
+			}
+			err = s.IMatchService.SendGemID(player2, game.ID)
+			if err != nil {
+				s.logger.Error(err)
+				continue
+			}
+			//err = s.IMatchService.CloseConnection(player1)
+			//if err != nil {
+			//	s.logger.Error(err)
+			//	continue
+			//}
+			//err = s.IMatchService.CloseConnection(player2)
+			//if err != nil {
+			//	s.logger.Error(err)
+			//	continue
+			//}
+		}
+	}
 }

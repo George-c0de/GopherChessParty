@@ -6,7 +6,10 @@ import (
 )
 
 type IMatchService interface {
-	AddUser(player dto.PlayerConn)
-	CreatePair() (uuid.UUID, uuid.UUID)
-	SearchPlayerConn()
+	CheckPair() bool
+	GetExistsChannel() <-chan struct{}
+	AddUser(player *dto.PlayerConn)
+	ReturnPlayerID() (*dto.PlayerConn, *dto.PlayerConn, error)
+	SendGemID(player *dto.PlayerConn, gameID uuid.UUID) error
+	CloseConnection(player *dto.PlayerConn) error
 }

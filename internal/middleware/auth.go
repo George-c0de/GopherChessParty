@@ -6,6 +6,7 @@ import (
 
 	"GopherChessParty/internal/errors"
 	"GopherChessParty/internal/interfaces"
+
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt"
 	"github.com/google/uuid"
@@ -62,4 +63,29 @@ func GetUserID(c *gin.Context) (uuid.UUID, error) {
 	}
 
 	return userId, nil
+}
+
+// WebSocketTokenMiddleware извлекает токен из query-параметра ?token=Bearer%20...
+func WebSocketTokenMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		tokenParam := c.Query("token")
+		if tokenParam == "" {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Missing token query parameter"})
+			c.Abort()
+			return
+		}
+
+		// Ожидается формат "Bearer <token>"
+		parts := strings.SplitN(tokenParam, " ", 2)
+		if len(parts) != 2 || parts[0] != "Bearer" {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token format"})
+			c.Abort()
+			return
+		}
+
+		// Кладём токен в заголовок Authorization для совместимости с остальными middlewares
+		c.Request.Header.Set("Authorization", tokenParam)
+
+		c.Next()
+	}
 }

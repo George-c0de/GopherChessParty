@@ -92,8 +92,29 @@ function updateCaptured() {
     blackList.textContent = blackCaptures.join(' ');
 }
 
-// Обработка клика по клетке
-function cellClick(e) {
+// Функция для получения заголовков с токеном авторизации
+function getAuthHeaders() {
+    const token = localStorage.getItem('authToken');
+    return {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+    };
+}
+
+// Функция для проверки авторизации
+async function checkAuth() {
+    const token = localStorage.getItem('authToken');
+    if (!token) {
+        window.location.href = '/login.html';
+        return false;
+    }
+    return true;
+}
+
+// Модифицируем функцию cellClick для работы с API
+async function cellClick(e) {
+    if (!await checkAuth()) return;
+
     let row = parseInt(e.currentTarget.dataset.row);
     let col = parseInt(e.currentTarget.dataset.col);
     let cell = e.currentTarget;
@@ -107,32 +128,53 @@ function cellClick(e) {
     } else {
         // Клетка назначения выбрана, выполняем ход
         let from = selectedCell;
-        // Если в клетке назначения находится фигура
-        if (board[row][col]) {
-            // Если фигура принадлежит противнику, фиксируем захват
-            if (board[row][col].color !== currentTurn) {
-                let capturedPiece = board[row][col];
-                if (currentTurn === 'white') {
-                    whiteCaptures.push(pieces[capturedPiece.color][capturedPiece.type]);
-                } else {
-                    blackCaptures.push(pieces[capturedPiece.color][capturedPiece.type]);
-                }
-            } else {
-                // Если фигура своей стороны – отменяем ход
-                clearSelection();
-                return;
+        
+        try {
+            // Отправляем ход на сервер
+            const response = await fetch(`${config.apiBaseUrl}/api/game/move`, {
+                method: 'POST',
+                headers: getAuthHeaders(),
+                body: JSON.stringify({
+                    from: from,
+                    to: {row, col}
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error('Ошибка при выполнении хода');
             }
+
+            // Если в клетке назначения находится фигура
+            if (board[row][col]) {
+                // Если фигура принадлежит противнику, фиксируем захват
+                if (board[row][col].color !== currentTurn) {
+                    let capturedPiece = board[row][col];
+                    if (currentTurn === 'white') {
+                        whiteCaptures.push(pieces[capturedPiece.color][capturedPiece.type]);
+                    } else {
+                        blackCaptures.push(pieces[capturedPiece.color][capturedPiece.type]);
+                    }
+                } else {
+                    // Если фигура своей стороны – отменяем ход
+                    clearSelection();
+                    return;
+                }
+            }
+
+            // Перемещаем фигуру
+            board[row][col] = board[from.row][from.col];
+            board[from.row][from.col] = null;
+
+            // Меняем ход
+            currentTurn = currentTurn === 'white' ? 'black' : 'white';
+
+            clearSelection();
+            updateCaptured();
+            renderBoard();
+        } catch (error) {
+            console.error('Ошибка:', error);
+            clearSelection();
         }
-        // Перемещаем фигуру
-        board[row][col] = board[from.row][from.col];
-        board[from.row][from.col] = null;
-
-        // Меняем ход
-        currentTurn = currentTurn === 'white' ? 'black' : 'white';
-
-        clearSelection();
-        updateCaptured();
-        renderBoard();
     }
 }
 
@@ -145,4 +187,3 @@ function clearSelection() {
 initBoard();
 renderBoard();
 updateCaptured();
-``

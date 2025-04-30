@@ -46,3 +46,11 @@ func (g *GameRepository) GetGames(userID uuid.UUID) ([]*ent.Chess, error) {
 	}
 	return games, nil
 }
+func (g *GameRepository) Create(playerID1, playerID2 uuid.UUID) (*ent.Chess, error) {
+	ctx := context.Background()
+	game, err := g.client.Chess.Create().SetWhiteUserID(playerID1).SetBlackUserID(playerID2).Save(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return game, nil
+}

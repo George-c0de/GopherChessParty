@@ -17,4 +17,7 @@ type IService interface {
 	ValidPassword(data dto.AuthenticateUser) (*uuid.UUID, bool)
 	IsValidateToken(tokenString string) (*jwt.Token, bool)
 	GetGamesByUserID(userId uuid.UUID) ([]*ent.Chess, error)
+	SearchPlayerConn()
+	CreateMatch(playerID1, playerID2 uuid.UUID) (*ent.Chess, error)
+	RegisterUser(data *dto.CreateUser) (*models.User, error)
 }

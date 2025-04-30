@@ -52,3 +52,26 @@ td {
     padding: 10px;
     min-width: 200px;
 }
+
+#userInfo {
+    width: 100%;
+    max-width: 500px;
+    margin-bottom: 20px;
+    text-align: right;
+    padding: 10px;
+}
+
+#logoutBtn {
+    padding: 8px 16px;
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.2s;
+}
+
+#logoutBtn:hover {
+    background-color: #c82333;
+}
