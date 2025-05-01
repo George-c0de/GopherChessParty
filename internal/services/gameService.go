@@ -25,31 +25,29 @@ type Game struct {
 	currentMotion int
 	GameID        uuid.UUID
 }
+
+// GameService логика для работы с игрой
 type GameService struct {
 	log        interfaces.ILogger
 	repository interfaces.IGameRepo
 	games      map[uuid.UUID]*Game
 }
 
-func (m *GameService) CreateGame(playerID1, playerID2 uuid.UUID) (*ent.Chess, error) {
-	game, err := m.repository.Create(playerID1, playerID2)
-	if err != nil {
-		m.log.Error(err)
-		return nil, err
-	}
-	m.startGame(game.ID, playerID1, playerID2)
-	return game, nil
-}
-
-func NewGameService(
-	log interfaces.ILogger,
-	repository interfaces.IGameRepo,
-) interfaces.IGameService {
+func NewGameService(log interfaces.ILogger, repository interfaces.IGameRepo) interfaces.IGameService {
 	return &GameService{
 		log:        log,
 		repository: repository,
 		games:      make(map[uuid.UUID]*Game),
 	}
+}
+
+func (m *GameService) CreateGame(playerID1, playerID2 uuid.UUID) (*ent.Chess, error) {
+	game, err := m.repository.Create(playerID1, playerID2)
+	if err != nil {
+		return nil, err
+	}
+	m.startGame(game.ID, playerID1, playerID2)
+	return game, nil
 }
 
 func (m *GameService) GetGames(userID uuid.UUID) ([]*ent.Chess, error) {
@@ -74,23 +72,17 @@ func (m *GameService) GetStatusGame(GameID uuid.UUID) chess.Status {
 	return m.repository.GetStatus(GameID)
 }
 
-func (m *GameService) GetGame(GameID uuid.UUID, player *dto.PlayerConn) (*Game, error) {
-
+func (m *GameService) GetGame(GameID uuid.UUID) (*Game, error) {
 	if m.games[GameID] == nil {
 		status := m.repository.GetStatus(GameID)
 		if status != chess.StatusInProgress {
 			m.log.Error(errors.ErrGameEnd)
 			return nil, errors.ErrGameEnd
 		}
-		m.GetStatusGame(GameID)
+		m.log.Error(errors.ErrGameEnd)
+		return nil, errors.ErrGameDeleteFailed
 	}
-	game := m.games[GameID]
-	if player.UserID == game.WhitePlayer.UserID && game.WhitePlayer.Conn == nil {
-		game.WhitePlayer = player
-	} else if player.UserID == game.BlackPlayer.UserID && game.BlackPlayer.Conn == nil {
-		game.BlackPlayer = player
-	}
-	return game, nil
+	return m.games[GameID], nil
 }
 
 func (m *GameService) UpdateStatus(
@@ -116,8 +108,7 @@ func (m *GameService) UpdateStatus(
 }
 
 func (m *GameService) MoveGame(GameID uuid.UUID, move string, player *dto.PlayerConn) error {
-	var err error
-	game, err := m.GetGame(GameID, player)
+	game, err := m.GetGame(GameID)
 	if err != nil {
 		return err
 	}
@@ -125,16 +116,16 @@ func (m *GameService) MoveGame(GameID uuid.UUID, move string, player *dto.Player
 		return errors.ErrMoveEmpty
 	}
 	var currentMotionUser *dto.PlayerConn
-	var oponentMotionUser *dto.PlayerConn
-	var oponentMotion int
+	var opponentMotionUser *dto.PlayerConn
+	var opponentMotion int
 	if game.currentMotion == WhiteMotion {
 		currentMotionUser = game.WhitePlayer
-		oponentMotionUser = game.BlackPlayer
-		oponentMotion = BlackMotion
+		opponentMotionUser = game.BlackPlayer
+		opponentMotion = BlackMotion
 	} else {
 		currentMotionUser = game.BlackPlayer
-		oponentMotionUser = game.WhitePlayer
-		oponentMotion = WhiteMotion
+		opponentMotionUser = game.WhitePlayer
+		opponentMotion = WhiteMotion
 	}
 
 	if currentMotionUser.UserID != player.UserID {
@@ -154,14 +145,14 @@ func (m *GameService) MoveGame(GameID uuid.UUID, move string, player *dto.Player
 		}
 		return errors.ErrGameEnd
 	}
-	if oponentMotionUser.Conn != nil {
-		err = m.sendMove(oponentMotionUser, move)
+	if opponentMotionUser.Conn != nil {
+		err = m.sendMove(opponentMotionUser, move)
 		if err != nil {
 			return err
 		}
 	}
 
-	game.currentMotion = oponentMotion
+	game.currentMotion = opponentMotion
 	return nil
 }
 
@@ -183,6 +174,15 @@ func (m *GameService) sendMove(player *dto.PlayerConn, move string) error {
 	return nil
 }
 
-func (m *GameService) SetPlayer(GameID uuid.UUID, player *dto.PlayerConn) {
-	m.GetGame(GameID, player)
+func (m *GameService) SetPlayer(GameID uuid.UUID, player *dto.PlayerConn) error {
+	game := m.games[GameID]
+	if game == nil {
+		return errors.ErrGameNotFound
+	}
+	if player.UserID == game.WhitePlayer.UserID && game.WhitePlayer.Conn == nil {
+		game.WhitePlayer.Conn = player.Conn
+	} else if player.UserID == game.BlackPlayer.UserID && game.BlackPlayer.Conn == nil {
+		game.BlackPlayer.Conn = player.Conn
+	}
+	return nil
 }

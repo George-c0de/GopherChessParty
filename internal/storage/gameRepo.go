@@ -52,6 +52,7 @@ func (g *GameRepository) Create(playerID1, playerID2 uuid.UUID) (*ent.Chess, err
 	ctx := context.Background()
 	game, err := g.client.Chess.Create().SetWhiteUserID(playerID1).SetBlackUserID(playerID2).Save(ctx)
 	if err != nil {
+		g.log.Error(err)
 		return nil, err
 	}
 	return game, nil
