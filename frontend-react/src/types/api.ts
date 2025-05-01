@@ -11,6 +11,9 @@ export interface RegisterRequest {
 
 export interface AuthResponse {
     token: string;
+    userId?: string;
+    id?: string;
+    user_id?: string;
 }
 
 export interface ErrorResponse {

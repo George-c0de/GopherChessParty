@@ -10,21 +10,45 @@ import {
     ErrorMessage,
     LinkContainer
 } from './styled';
+import { jwtDecode } from "jwt-decode";
 
 export const Login: React.FC = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const navigate = useNavigate();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        
+        if (isSubmitting) return;
+        
+        setIsSubmitting(true);
+        setError('');
+
         try {
             const response = await authApi.login({ email, password });
-            localStorage.setItem('authToken', response.token);
+            let token = response.token;
+            if (token && token.startsWith('Bearer ')) {
+                token = token.slice(7);
+            }
+            localStorage.setItem('authToken', token);
+
+            try {
+                const payload: any = jwtDecode(token);
+                if (payload && payload.id) {
+                    localStorage.setItem('userId', payload.id);
+                }
+            } catch (e) {
+                console.error('Error decoding token:', e);
+            }
+
             navigate('/game');
         } catch (err: any) {
             setError(err.response?.data?.error || 'Ошибка авторизации');
+        } finally {
+            setIsSubmitting(false);
         }
     };
 

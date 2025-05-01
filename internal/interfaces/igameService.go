@@ -2,12 +2,14 @@ package interfaces
 
 import (
 	"GopherChessParty/ent"
-	"github.com/corentings/chess/v2"
+	"GopherChessParty/internal/dto"
 	"github.com/google/uuid"
 )
 
 type IGameService interface {
-	Move(game *chess.Game, move string) (bool, error)
 	GetGames(userID uuid.UUID) ([]*ent.Chess, error)
 	CreateGame(playerID1, playerID2 uuid.UUID) (*ent.Chess, error)
+	GetGameByID(gameID uuid.UUID) (*dto.Match, error)
+	MoveGame(GameID uuid.UUID, move string, player *dto.PlayerConn) error
+	SetPlayer(GameID uuid.UUID, player *dto.PlayerConn)
 }

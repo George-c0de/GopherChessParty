@@ -17,27 +17,40 @@ export const Register: React.FC = () => {
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [error, setError] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const navigate = useNavigate();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         
+        if (isSubmitting) return;
+        
+        setIsSubmitting(true);
+        setError('');
+        
         if (password !== confirmPassword) {
             setError('Пароли не совпадают');
+            setIsSubmitting(false);
             return;
         }
 
         if (password.length < 6) {
             setError('Пароль должен содержать минимум 6 символов');
+            setIsSubmitting(false);
             return;
         }
 
         try {
             const response = await authApi.register({ name, email, password });
             localStorage.setItem('authToken', response.token);
+            if (response.userId) {
+                localStorage.setItem('userId', response.userId);
+            }
             navigate('/game');
         } catch (err: any) {
             setError(err.response?.data?.error || 'Ошибка регистрации');
+        } finally {
+            setIsSubmitting(false);
         }
     };
 

@@ -3,8 +3,11 @@ package services
 import (
 	"GopherChessParty/ent"
 	"GopherChessParty/internal/dto"
+	custErr "GopherChessParty/internal/errors"
 	"GopherChessParty/internal/interfaces"
 	"GopherChessParty/internal/models"
+	"GopherChessParty/internal/utils"
+	"errors"
 
 	"github.com/golang-jwt/jwt"
 	"github.com/google/uuid"
@@ -110,6 +113,28 @@ func (s *Service) SearchPlayerConn() {
 				s.logger.Error(err)
 				continue
 			}
+			player1.Conn.Close()
+			player2.Conn.Close()
 		}
 	}
+}
+
+func (s *Service) GetGameByID(gameID uuid.UUID) (*dto.Match, error) {
+	return s.IGameService.GetGameByID(gameID)
+}
+
+func (s *Service) MoveGameStr(gameID uuid.UUID, move string, player *dto.PlayerConn) (int, bool) {
+	err := s.IGameService.MoveGame(gameID, move, player)
+	if err != nil {
+		s.logger.Error(err)
+		if errors.Is(err, custErr.ErrGameEnd) {
+			return utils.GameFinished, false
+		}
+		return utils.GameInProgress, false
+	}
+	return utils.GameInProgress, true
+}
+
+func (s *Service) SetConnGame(GameID uuid.UUID, player *dto.PlayerConn) {
+	s.IGameService.SetPlayer(GameID, player)
 }

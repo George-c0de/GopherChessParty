@@ -17,8 +17,8 @@ func GetRoutes(service interfaces.IService, log interfaces.ILogger) *gin.Engine 
 	router.Use(middleware.ServiceMiddleware(service))
 	v1 := router.Group("/v1")
 	addAuthRoutes(v1)
-	AddWebSocket(v1, service, log)
 	addUserRoutes(v1, service)
 	addChessRoute(v1, service)
+	AddWebSocket(v1, service, log)
 	return router
 }

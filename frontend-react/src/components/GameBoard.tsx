@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import styled from 'styled-components';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { config } from '../config';
 
 const pieces = {
@@ -78,16 +78,129 @@ const CapturesContainer = styled.div`
 
 export const GameBoard: React.FC = () => {
     const { gameId } = useParams();
+    const navigate = useNavigate();
     const [board, setBoard] = useState<(Piece | null)[][]>([]);
     const [selectedCell, setSelectedCell] = useState<Position | null>(null);
     const [currentTurn, setCurrentTurn] = useState<'white' | 'black'>('white');
     const [whiteCaptures, setWhiteCaptures] = useState<string[]>([]);
     const [blackCaptures, setBlackCaptures] = useState<string[]>([]);
+    const [ws, setWs] = useState<WebSocket | null>(null);
+    const [isConnected, setIsConnected] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
+    // Добавляем функции для конвертации нотации
+    const convertNotationToPosition = (notation: string): [number, number] => {
+        const col = notation.charCodeAt(0) - 'a'.charCodeAt(0);
+        const row = 8 - parseInt(notation[1]);
+        return [row, col];
+    };
+
+    const convertPositionToNotation = (row: number, col: number): string => {
+        const colChar = String.fromCharCode('a'.charCodeAt(0) + col);
+        const rowNum = 8 - row;
+        return `${colChar}${rowNum}`;
+    };
+
+    // Refs для управления WebSocket соединением
+    const wsRef = useRef<WebSocket | null>(null);
+    const isConnectingRef = useRef(false);
+
+    // Функция для очистки WebSocket соединения
+    const cleanupWebSocket = useCallback(() => {
+        if (wsRef.current) {
+            wsRef.current.close();
+            wsRef.current = null;
+        }
+        setIsConnected(false);
+        isConnectingRef.current = false;
+    }, []);
+
+    // Инициализация WebSocket соединения
+    useEffect(() => {
+        if (!gameId) return;
+
+        const token = localStorage.getItem('authToken');
+        if (!token) {
+            setError('Нет токена авторизации');
+            navigate('/login');
+            return;
+        }
+
+        if (isConnectingRef.current) return;
+        isConnectingRef.current = true;
+
+        const wsUrl = `${config.wsBaseUrl}${config.endpoints.game.play}/${gameId}?token=${encodeURIComponent('Bearer ' + token)}`;
+        const socket = new WebSocket(wsUrl);
+
+        socket.onopen = () => {
+            console.log('WebSocket соединение установлено');
+            setIsConnected(true);
+            setError(null);
+            isConnectingRef.current = false;
+        };
+
+        socket.onmessage = (event) => {
+            try {
+                const data = JSON.parse(event.data);
+                console.log('Received WebSocket message:', data);
+                
+                if (data.move) {
+                    const move = data.move;
+                    if (typeof move === 'string' && move.length === 4) {
+                        const fromNotation = move.slice(0, 2);
+                        const toNotation = move.slice(2, 4);
+                        const [fromRow, fromCol] = convertNotationToPosition(fromNotation);
+                        const [toRow, toCol] = convertNotationToPosition(toNotation);
+                        const newBoard = [...board];
+                        newBoard[toRow][toCol] = newBoard[fromRow][fromCol];
+                        newBoard[fromRow][fromCol] = null;
+                        setBoard(newBoard);
+                        setCurrentTurn(prevTurn => prevTurn === 'white' ? 'black' : 'white');
+                        setError(null);
+                    }
+                }
+            } catch (error) {
+                console.error('Ошибка при обработке сообщения:', error);
+                setError('Ошибка при обработке сообщения от сервера');
+            }
+        };
+
+        socket.onclose = () => {
+            console.log('WebSocket соединение закрыто');
+            cleanupWebSocket();
+        };
+
+        socket.onerror = (error) => {
+            console.error('WebSocket ошибка:', error);
+            setError('Ошибка соединения с сервером');
+            cleanupWebSocket();
+        };
+
+        wsRef.current = socket;
+        setWs(socket);
+
+        return () => {
+            cleanupWebSocket();
+        };
+    }, [gameId, navigate, cleanupWebSocket]);
+
+    // Очистка при размонтировании компонента
+    useEffect(() => {
+        return () => {
+            cleanupWebSocket();
+        };
+    }, [cleanupWebSocket]);
+
+    const handleLogout = () => {
+        cleanupWebSocket();
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('userId');
+        navigate('/login');
+    };
 
     useEffect(() => {
         initBoard();
-        // Здесь можно добавить подключение к игровому WebSocket по gameId
-    }, [gameId]);
+    }, []);
 
     const initBoard = () => {
         const newBoard: (Piece | null)[][] = Array(8).fill(null).map(() => Array(8).fill(null));
@@ -172,6 +285,23 @@ export const GameBoard: React.FC = () => {
 
     return (
         <BoardContainer>
+            <button
+                style={{
+                    position: 'absolute',
+                    top: 20,
+                    left: 20,
+                    padding: '10px 20px',
+                    background: '#e74c3c',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: '5px',
+                    cursor: 'pointer',
+                    zIndex: 2
+                }}
+                onClick={handleLogout}
+            >
+                Выйти
+            </button>
             <Board>
                 <tbody>
                     {board.map((row, i) => (

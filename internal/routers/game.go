@@ -1,6 +1,7 @@
 package routers
 
 import (
+	"github.com/google/uuid"
 	"net/http"
 
 	"GopherChessParty/internal/interfaces"
@@ -26,7 +27,21 @@ func addChessRoute(rg *gin.RouterGroup, service interfaces.IService) {
 		}
 		c.JSON(http.StatusOK, games)
 	})
-
+	users.GET("/:game_id", func(c *gin.Context) {
+		service := GetService(c)
+		_, err := middleware.GetUserID(c)
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+			return
+		}
+		gameID, err := uuid.Parse(c.Param("game_id"))
+		games, err := service.GetGameByID(gameID)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, games)
+	})
 	users.POST("/", func(c *gin.Context) {
 		// TODO CREATE GAME
 	})
