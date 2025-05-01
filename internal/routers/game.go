@@ -35,6 +35,10 @@ func addChessRoute(rg *gin.RouterGroup, service interfaces.IService) {
 			return
 		}
 		gameID, err := uuid.Parse(c.Param("game_id"))
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
 		games, err := service.GetGameByID(gameID)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

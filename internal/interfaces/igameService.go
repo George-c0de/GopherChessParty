@@ -12,4 +12,6 @@ type IGameService interface {
 	GetGameByID(gameID uuid.UUID) (*dto.Match, error)
 	MoveGame(GameID uuid.UUID, move string, player *dto.PlayerConn) error
 	SetPlayer(GameID uuid.UUID, player *dto.PlayerConn) error
+	IsConnectPlayers(GameID uuid.UUID) bool
+	GetOpponent(gameID uuid.UUID) *dto.PlayerConn
 }

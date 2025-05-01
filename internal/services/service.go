@@ -116,13 +116,21 @@ func (s *Service) GetGameByID(gameID uuid.UUID) (*dto.Match, error) {
 }
 
 func (s *Service) MoveGameStr(gameID uuid.UUID, move string, player *dto.PlayerConn) (int, bool) {
-	err := s.IGameService.MoveGame(gameID, move, player)
-	// TODO(GEORGE): Сделать красивее
-	if err != nil {
-		s.logger.Error(err)
-		if errors.Is(err, custErr.ErrGameEnd) {
+	if !s.IGameService.IsConnectPlayers(gameID) {
+		return utils.PlayersNotConnected, false
+	}
+
+	opponentMotionUser := s.IGameService.GetOpponent(gameID)
+	errMove := s.IGameService.MoveGame(gameID, move, player)
+	if errMove != nil {
+		if errors.Is(errMove, custErr.ErrGameEnd) {
 			return utils.GameFinished, false
 		}
+		return utils.GameInProgress, false
+	}
+
+	err := s.IMatchService.SendMove(opponentMotionUser, move)
+	if err != nil {
 		return utils.GameInProgress, false
 	}
 	return utils.GameInProgress, true

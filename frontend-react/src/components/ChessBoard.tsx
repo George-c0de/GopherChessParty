@@ -486,7 +486,17 @@ export const ChessBoard: React.FC = () => {
             }
         };
 
-        fetchGameInfo();
+        // Проверяем, не в режиме ли разработки
+        const isDev = process.env.NODE_ENV === 'development';
+        if (!isDev) {
+            fetchGameInfo();
+        } else {
+            // В режиме разработки используем setTimeout для предотвращения дублирования запросов
+            const timeoutId = setTimeout(() => {
+                fetchGameInfo();
+            }, 0);
+            return () => clearTimeout(timeoutId);
+        }
     }, [gameId, navigate, determinePlayerColor]);
 
     // Функция для очистки всех WebSocket ресурсов
@@ -520,17 +530,19 @@ export const ChessBoard: React.FC = () => {
         cleanupWebSocket();
         isConnectingRef.current = true;
         
-        const wsUrl = `${config.wsBaseUrl}${config.endpoints.game.play}/${gameId}?token=${encodeURIComponent('Bearer ' + token)}`;
+        // Исправляем URL на правильный формат v1/ws/game/gameID
+        const wsUrl = `${config.wsBaseUrl}/ws/game/${gameId}?token=${encodeURIComponent('Bearer ' + token)}`;
         console.log('Connecting to WebSocket:', wsUrl);
         
         const socket = new WebSocket(wsUrl);
 
-        // Устанавливаем таймаут для соединения
+        // Увеличиваем таймаут соединения
         connectionTimeoutRef.current = setTimeout(() => {
             if (socket.readyState !== WebSocket.OPEN) {
                 console.log('WebSocket connection timeout');
                 socket.close(1000, "Connection timeout");
                 cleanupWebSocket();
+                setError('Не удалось установить соединение с сервером');
             }
         }, CONNECTION_TIMEOUT);
 
@@ -541,6 +553,7 @@ export const ChessBoard: React.FC = () => {
                 connectionTimeoutRef.current = null;
             }
             setIsConnected(true);
+            setIsGameStarted(true); // Устанавливаем флаг начала игры
             setError(null);
             setReconnectAttempts(0);
             isConnectingRef.current = false;
@@ -552,7 +565,6 @@ export const ChessBoard: React.FC = () => {
             pingIntervalRef.current = setInterval(() => {
                 if (socket.readyState === WebSocket.OPEN) {
                     try {
-                        // Отправляем пустой ход для пинга
                         socket.send("0000");
                     } catch (error) {
                         console.error('Ошибка отправки пинга:', error);
@@ -561,84 +573,29 @@ export const ChessBoard: React.FC = () => {
             }, 30000);
         };
 
-        socket.onmessage = (event) => {
-            try {
-                const data = JSON.parse(event.data);
-                console.log('Received WebSocket message:', data);
-                
-                // Игнорируем ответы на пинги
-                if (data.move === "0000") return;
-                
-                if (data.move) {
-                    const move = data.move;
-                    if (typeof move === 'string' && move.length === 4) {
-                        const fromNotation = move.slice(0, 2);
-                        const toNotation = move.slice(2, 4);
-                        const [fromRow, fromCol] = convertNotationToPosition(fromNotation);
-                        const [toRow, toCol] = convertNotationToPosition(toNotation);
-                        const newBoard = [...boardRef.current];
-                        newBoard[toRow][toCol] = newBoard[fromRow][fromCol];
-                        newBoard[fromRow][fromCol] = null;
-                        setBoard(newBoard);
-                        setCurrentTurn(prevTurn => prevTurn === 'white' ? 'black' : 'white');
-                        setError(null);
-                    }
-                }
-                
-                if (data.ok === false) {
-                    if (data.status === 'GameFinished') {
-                        setShowGameStatus(true);
-                        const currentGameInfo = gameInfoRef.current;
-                        if (currentGameInfo) {
-                            setGameInfo({
-                                ...currentGameInfo,
-                                Status: 'finished',
-                                Result: data.result || '1-1'
-                            });
-                        }
-                    } else {
-                        setError(data.message || 'Недопустимый ход');
-                        const currentSelectedCell = selectedCellRef.current;
-                        if (currentSelectedCell) {
-                            const newBoard = [...boardRef.current];
-                            newBoard[currentSelectedCell.row][currentSelectedCell.col] = boardRef.current[currentSelectedCell.row][currentSelectedCell.col];
-                            setBoard(newBoard);
-                        }
-                        fetchGameStatus();
-                    }
-                } else if (data.ok === true) {
-                    setCurrentTurn(prevTurn => prevTurn === 'white' ? 'black' : 'white');
-                    setError(null);
-                }
-            } catch (error) {
-                console.error('Ошибка при обработке сообщения:', error);
-                setError('Ошибка при обработке сообщения от сервера');
-            }
+        socket.onerror = (error) => {
+            console.error('WebSocket error:', error);
+            setError('Ошибка соединения с сервером');
+            cleanupWebSocket();
         };
 
         socket.onclose = (event) => {
-            console.log('WebSocket соединение закрыто:', event.code, event.reason);
+            console.log('WebSocket closed:', event.code, event.reason);
             cleanupWebSocket();
             
-            if (event.code !== 1000 && reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
-                setError('Соединение потеряно. Попытка переподключения...');
-                reconnectTimeoutRef.current = setTimeout(() => {
-                    setReconnectAttempts(prev => prev + 1);
-                    const newSocket = createWebSocket(token);
-                    if (newSocket) {
-                        wsRef.current = newSocket;
-                        setWs(newSocket);
-                    }
-                }, RECONNECT_DELAY);
-            } else if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
-                setError('Не удалось установить соединение после нескольких попыток');
+            if (event.code !== 1000) { // Если соединение закрыто не нормально
+                setError('Соединение с сервером потеряно');
+                
+                // Пробуем переподключиться
+                if (reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
+                    reconnectTimeoutRef.current = setTimeout(() => {
+                        setReconnectAttempts(prev => prev + 1);
+                        createWebSocket(token);
+                    }, RECONNECT_DELAY);
+                } else {
+                    setError('Не удалось восстановить соединение');
+                }
             }
-        };
-
-        socket.onerror = (error) => {
-            console.error('WebSocket ошибка:', error);
-            setError('Ошибка соединения с сервером');
-            cleanupWebSocket();
         };
 
         return socket;
@@ -654,10 +611,24 @@ export const ChessBoard: React.FC = () => {
             return;
         }
 
-        const socket = createWebSocket(token);
-        if (socket) {
-            wsRef.current = socket;
-            setWs(socket);
+        // Проверяем, не в режиме ли разработки
+        const isDev = process.env.NODE_ENV === 'development';
+        if (!isDev) {
+            const socket = createWebSocket(token);
+            if (socket) {
+                wsRef.current = socket;
+                setWs(socket);
+            }
+        } else {
+            // В режиме разработки используем setTimeout для предотвращения дублирования соединений
+            const timeoutId = setTimeout(() => {
+                const socket = createWebSocket(token);
+                if (socket) {
+                    wsRef.current = socket;
+                    setWs(socket);
+                }
+            }, 0);
+            return () => clearTimeout(timeoutId);
         }
 
         return () => {
@@ -735,12 +706,13 @@ export const ChessBoard: React.FC = () => {
             };
 
             ws.onmessage = (event) => {
-                console.log('Получено сообщение от WebSocket:', event.data);
                 try {
                     const data = JSON.parse(event.data);
                     console.log('Received WebSocket message:', data);
                     
-                    // Если пришел ход оппонента
+                    // Игнорируем ответы на пинги
+                    if (data.move === "0000") return;
+                    
                     if (data.move) {
                         const move = data.move;
                         if (typeof move === 'string' && move.length === 4) {
@@ -748,11 +720,23 @@ export const ChessBoard: React.FC = () => {
                             const toNotation = move.slice(2, 4);
                             const [fromRow, fromCol] = convertNotationToPosition(fromNotation);
                             const [toRow, toCol] = convertNotationToPosition(toNotation);
-                            const newBoard = [...board];
+                            
+                            // Создаем глубокую копию доски
+                            const newBoard = boardRef.current.map(row => [...row]);
+                            
+                            // Перемещаем фигуру
                             newBoard[toRow][toCol] = newBoard[fromRow][fromCol];
                             newBoard[fromRow][fromCol] = null;
+                            
+                            // Обновляем состояние доски
                             setBoard(newBoard);
-                            setCurrentTurn(prevTurn => prevTurn === 'white' ? 'black' : 'white');
+                            
+                            // Обновляем чей ход после получения хода
+                            setCurrentTurn(prevTurn => {
+                                const nextTurn = prevTurn === 'white' ? 'black' : 'white';
+                                console.log('Turn changed to:', nextTurn);
+                                return nextTurn;
+                            });
                             setError(null);
                         }
                     }
@@ -760,9 +744,10 @@ export const ChessBoard: React.FC = () => {
                     if (data.ok === false) {
                         if (data.status === 'GameFinished') {
                             setShowGameStatus(true);
-                            if (gameInfo) {
+                            const currentGameInfo = gameInfoRef.current;
+                            if (currentGameInfo) {
                                 setGameInfo({
-                                    ...gameInfo,
+                                    ...currentGameInfo,
                                     Status: 'finished',
                                     Result: data.result || '1-1'
                                 });
@@ -770,16 +755,20 @@ export const ChessBoard: React.FC = () => {
                         } else {
                             setError(data.message || 'Недопустимый ход');
                             // Возвращаем фигуру на исходную позицию
-                            const newBoard = [...board];
-                            if (selectedCell) {
-                                newBoard[selectedCell.row][selectedCell.col] = board[selectedCell.row][selectedCell.col];
+                            const currentSelectedCell = selectedCellRef.current;
+                            if (currentSelectedCell) {
+                                const newBoard = boardRef.current.map(row => [...row]);
                                 setBoard(newBoard);
                             }
-                            // Запрашиваем актуальный статус игры
                             fetchGameStatus();
                         }
                     } else if (data.ok === true) {
-                        setCurrentTurn(prevTurn => prevTurn === 'white' ? 'black' : 'white');
+                        // Обновляем чей ход после успешного хода
+                        setCurrentTurn(prevTurn => {
+                            const nextTurn = prevTurn === 'white' ? 'black' : 'white';
+                            console.log('Turn changed to:', nextTurn);
+                            return nextTurn;
+                        });
                         setError(null);
                     }
                 } catch (error) {
@@ -982,18 +971,34 @@ export const ChessBoard: React.FC = () => {
     const convertNotationToPosition = (notation: string): [number, number] => {
         const col = notation.charCodeAt(0) - 'a'.charCodeAt(0);
         const row = 8 - parseInt(notation[1]);
+        // Если игрок играет черными, переворачиваем координаты
+        if (playerColor === 'black') {
+            return [7 - row, 7 - col];
+        }
         return [row, col];
     };
 
     const convertPositionToNotation = (row: number, col: number): string => {
-        const colChar = String.fromCharCode('a'.charCodeAt(0) + col);
-        const rowNum = 8 - row;
+        // Если игрок играет черными, переворачиваем координаты
+        let displayRow = row;
+        let displayCol = col;
+        if (playerColor === 'black') {
+            displayRow = 7 - row;
+            displayCol = 7 - col;
+        }
+        const colChar = String.fromCharCode('a'.charCodeAt(0) + displayCol);
+        const rowNum = 8 - displayRow;
         return `${colChar}${rowNum}`;
     };
 
     const handleCellClick = async (row: number, col: number) => {
-        if (!isGameStarted || !gameId || !isConnected) {
-            setError('Нет подключения к игре');
+        if (!gameId) {
+            setError('Игра не найдена');
+            return;
+        }
+
+        if (!isConnected) {
+            setError('Нет подключения к серверу');
             return;
         }
 
@@ -1020,12 +1025,13 @@ export const ChessBoard: React.FC = () => {
 
             try {
                 if (ws && ws.readyState === WebSocket.OPEN) {
-                    const newBoard = [...board];
-                    newBoard[row][col] = newBoard[from.row][from.col];
-                    newBoard[from.row][from.col] = null;
-                    setBoard(newBoard);
+                    // Создаем временную копию доски для предварительного отображения хода
+                    const tempBoard = board.map(row => [...row]);
+                    tempBoard[row][col] = tempBoard[from.row][from.col];
+                    tempBoard[from.row][from.col] = null;
+                    setBoard(tempBoard);
+                    
                     setSelectedCell(null);
-
                     console.log('Sending move:', moveNotation);
                     ws.send(moveNotation);
                 } else {
@@ -1034,6 +1040,9 @@ export const ChessBoard: React.FC = () => {
             } catch (error) {
                 console.error('Ошибка при выполнении хода:', error);
                 setError('Ошибка при выполнении хода');
+                // Возвращаем доску в исходное состояние при ошибке
+                const originalBoard = board.map(row => [...row]);
+                setBoard(originalBoard);
                 setSelectedCell(null);
             }
         }
@@ -1192,27 +1201,35 @@ export const ChessBoard: React.FC = () => {
             )}
             <Board>
                 <tbody>
-                    {board.map((row, i) => (
-                        <tr key={i}>
-                            <SideNumber>{8 - i}</SideNumber>
-                            {row.map((cell, j) => (
-                                <AnimatedCell
-                                    key={`${i}-${j}`}
-                                    isLight={(i + j) % 2 === 0}
-                                    isSelected={selectedCell?.row === i && selectedCell?.col === j}
-                                    onClick={() => handleCellClick(i, j)}
-                                    isMoving={animatingPiece?.from.row === i && animatingPiece?.from.col === j}
-                                    moveX={animatingPiece ? (animatingPiece.to.col - animatingPiece.from.col) * 60 : 0}
-                                    moveY={animatingPiece ? (animatingPiece.to.row - animatingPiece.from.row) * 60 : 0}
-                                    data-row={i}
-                                    data-col={j}
-                                    data-piece={cell ? pieces[cell.color][cell.type] : ''}
-                                >
-                                    {cell && pieces[cell.color][cell.type]}
-                                </AnimatedCell>
-                            ))}
-                        </tr>
-                    ))}
+                    {board.map((row, i) => {
+                        // Если игрок играет черными, переворачиваем доску
+                        const displayRow = playerColor === 'black' ? 7 - i : i;
+                        return (
+                            <tr key={i}>
+                                <SideNumber>{playerColor === 'black' ? i + 1 : 8 - i}</SideNumber>
+                                {row.map((cell, j) => {
+                                    // Если игрок играет черными, переворачиваем колонки
+                                    const displayCol = playerColor === 'black' ? 7 - j : j;
+                                    return (
+                                        <AnimatedCell
+                                            key={`${i}-${j}`}
+                                            isLight={(displayRow + displayCol) % 2 === 0}
+                                            isSelected={selectedCell?.row === i && selectedCell?.col === j}
+                                            onClick={() => handleCellClick(i, j)}
+                                            isMoving={animatingPiece?.from.row === i && animatingPiece?.from.col === j}
+                                            moveX={animatingPiece ? (animatingPiece.to.col - animatingPiece.from.col) * 60 : 0}
+                                            moveY={animatingPiece ? (animatingPiece.to.row - animatingPiece.from.row) * 60 : 0}
+                                            data-row={i}
+                                            data-col={j}
+                                            data-piece={cell ? pieces[cell.color][cell.type] : ''}
+                                        >
+                                            {cell && pieces[cell.color][cell.type]}
+                                        </AnimatedCell>
+                                    );
+                                })}
+                            </tr>
+                        );
+                    })}
                 </tbody>
             </Board>
             <CapturesContainer>

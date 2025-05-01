@@ -12,4 +12,5 @@ type IMatchService interface {
 	ReturnPlayerID() (*dto.PlayerConn, *dto.PlayerConn, error)
 	SendGemID(player *dto.PlayerConn, gameID uuid.UUID) error
 	CloseConnection(player *dto.PlayerConn) error
+	SendMove(player *dto.PlayerConn, move string) error
 }

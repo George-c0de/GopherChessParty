@@ -127,3 +127,20 @@ func (m *MatchService) CloseConnection(player *dto.PlayerConn) error {
 	}
 	return nil
 }
+
+func (m *MatchService) SendMove(player *dto.PlayerConn, move string) error {
+	answer := map[string]interface{}{
+		"move": move,
+	}
+	response, err := json.Marshal(answer)
+	if err != nil {
+		m.log.Error(err)
+		return err
+	}
+	errSend := player.Conn.WriteMessage(websocket.TextMessage, response)
+	if errSend != nil {
+		m.log.Error(err)
+		return err
+	}
+	return nil
+}

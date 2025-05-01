@@ -1,9 +1,6 @@
 package services
 
 import (
-	"encoding/json"
-	"fmt"
-
 	"GopherChessParty/ent"
 	"GopherChessParty/ent/chess"
 	"GopherChessParty/internal/dto"
@@ -11,7 +8,6 @@ import (
 	"GopherChessParty/internal/interfaces"
 	chesslib "github.com/corentings/chess/v2"
 	"github.com/google/uuid"
-	"github.com/gorilla/websocket"
 )
 
 const (
@@ -25,6 +21,28 @@ type Game struct {
 	BlackPlayer   *dto.PlayerConn
 	currentMotion int
 	GameID        uuid.UUID
+}
+
+func (game *Game) getOpponentUser() *dto.PlayerConn {
+	if game.currentMotion == WhiteMotion {
+		return game.BlackPlayer
+	} else {
+		return game.WhitePlayer
+	}
+}
+func (game *Game) getCurrentUser() *dto.PlayerConn {
+	if game.currentMotion == WhiteMotion {
+		return game.WhitePlayer
+	} else {
+		return game.BlackPlayer
+	}
+}
+func (game *Game) setMove() {
+	if game.currentMotion == WhiteMotion {
+		game.currentMotion = BlackMotion
+	} else {
+		game.currentMotion = WhiteMotion
+	}
 }
 
 // GameService логика для работы с игрой
@@ -118,18 +136,7 @@ func (m *GameService) MoveGame(GameID uuid.UUID, move string, player *dto.Player
 	if move == "" {
 		return errors.ErrMoveEmpty
 	}
-	var currentMotionUser *dto.PlayerConn
-	var opponentMotionUser *dto.PlayerConn
-	var opponentMotion int
-	if game.currentMotion == WhiteMotion {
-		currentMotionUser = game.WhitePlayer
-		opponentMotionUser = game.BlackPlayer
-		opponentMotion = BlackMotion
-	} else {
-		currentMotionUser = game.BlackPlayer
-		opponentMotionUser = game.WhitePlayer
-		opponentMotion = WhiteMotion
-	}
+	currentMotionUser := game.getCurrentUser()
 
 	if currentMotionUser.UserID != player.UserID {
 		return errors.ErrCurrentUserMotion
@@ -143,8 +150,6 @@ func (m *GameService) MoveGame(GameID uuid.UUID, move string, player *dto.Player
 		m.log.Error(err)
 		return err
 	}
-	fmt.Printf(game.Match.CurrentPosition().Board().Draw())
-	fmt.Println(game.Match.Outcome())
 	if game.Match.Outcome() != chesslib.NoOutcome {
 		err := m.UpdateStatus(GameID, game.Match.Outcome())
 		if err != nil {
@@ -152,32 +157,7 @@ func (m *GameService) MoveGame(GameID uuid.UUID, move string, player *dto.Player
 		}
 		return errors.ErrGameEnd
 	}
-	if opponentMotionUser.Conn != nil {
-		err = m.sendMove(opponentMotionUser, move)
-		if err != nil {
-			return err
-		}
-	}
-
-	game.currentMotion = opponentMotion
-	return nil
-}
-
-// sendMove отправляет сообщение игроку через WebSocket
-func (m *GameService) sendMove(player *dto.PlayerConn, move string) error {
-	answer := map[string]interface{}{
-		"move": move,
-	}
-	response, err := json.Marshal(answer)
-	if err != nil {
-		m.log.Error(err)
-		return err
-	}
-	err = player.Conn.WriteMessage(websocket.TextMessage, response)
-	if err != nil {
-		m.log.Error(err)
-		return err
-	}
+	game.setMove()
 	return nil
 }
 
@@ -192,4 +172,17 @@ func (m *GameService) SetPlayer(GameID uuid.UUID, player *dto.PlayerConn) error 
 		game.BlackPlayer.Conn = player.Conn
 	}
 	return nil
+}
+
+func (m *GameService) IsConnectPlayers(GameID uuid.UUID) bool {
+	game := m.games[GameID]
+	if game == nil {
+		return false
+	}
+	return game.BlackPlayer != nil && game.BlackPlayer.Conn != nil && game.WhitePlayer != nil && game.WhitePlayer.Conn != nil
+}
+
+func (m *GameService) GetOpponent(gameID uuid.UUID) *dto.PlayerConn {
+	game := m.games[gameID]
+	return game.getOpponentUser()
 }
