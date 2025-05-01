@@ -359,6 +359,25 @@ interface GameState {
     result?: string;
 }
 
+const NewDesignButton = styled.button`
+    position: fixed;
+    top: 20px;
+    left: 140px;
+    padding: 10px 20px;
+    background-color: #28a745;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.2s;
+    z-index: 2;
+
+    &:hover {
+        background-color: #218838;
+    }
+`;
+
 export const ChessBoard: React.FC = () => {
     const { gameId } = useParams();
     const [board, setBoard] = useState<(Piece | null)[][]>([]);
@@ -1179,6 +1198,7 @@ export const ChessBoard: React.FC = () => {
     return (
         <BoardContainer>
             <LogoutButton onClick={handleLogout}>Выйти</LogoutButton>
+            <NewDesignButton onClick={() => navigate('/new-design')}>New Design</NewDesignButton>
             <LogoutButton style={{ left: 160, backgroundColor: '#3498db' }} onClick={handleGoHome}>На главную</LogoutButton>
             {error && <ErrorMessage>{error}</ErrorMessage>}
             {gameInfo && (

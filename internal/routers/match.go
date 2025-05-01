@@ -1,13 +1,12 @@
 package routers
 
 import (
-	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"GopherChessParty/internal/dto"
 	"GopherChessParty/internal/interfaces"
 	"GopherChessParty/internal/middleware"
-	chesslib "github.com/corentings/chess/v2"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
@@ -15,7 +14,7 @@ import (
 
 // AddWebSocket регистрирует эндпоинт поиска соперника по WebSocket
 func AddWebSocket(rg *gin.RouterGroup, service interfaces.IService, log interfaces.ILogger) {
-	// Важно: не доверяйте всем прокси (см. https://pkg.go.dev/github.com/gin-gonic/gin#readme-don-t-trust-all-proxies)
+	// Важно: https://pkg.go.dev/github.com/gin-gonic/gin#readme-don-t-trust-all-proxies
 	rg.Use(middleware.WebSocketTokenMiddleware())
 	rg.Use(middleware.JWTAuthMiddleware(service))
 	rg.GET("/ws/search", SearchMatchHandler(log))
@@ -50,7 +49,6 @@ func MoveGame(logger interfaces.ILogger) gin.HandlerFunc {
 			logger.Error(err)
 			return
 		}
-		defer conn.Close()
 
 		gameID, err := uuid.Parse(c.Param("game_id"))
 		if err != nil {
@@ -68,49 +66,91 @@ func MoveGame(logger interfaces.ILogger) gin.HandlerFunc {
 		player := &dto.PlayerConn{UserID: userID, Conn: conn}
 
 		service := GetService(c)
-		game := chesslib.NewGame()
 		service.SetConnGame(gameID, player)
+		logger.Info(
+			fmt.Sprintf(
+				"open gameID: %v, userID: %v, Address: %s",
+				gameID,
+				userID,
+				player.Conn.RemoteAddr().String(),
+			),
+		)
+
 		// Запускаем горутину для чтения сообщений
 		go func() {
+			defer func() {
+				logger.Info(
+					fmt.Sprintf(
+						"close gameID: %v, userID: %v, Address: %s",
+						gameID,
+						userID,
+						player.Conn.RemoteAddr().String(),
+					),
+				)
+				err := conn.Close()
+				if err != nil {
+					logger.Error(fmt.Errorf("error closing connection: %v", err))
+					return
+				}
+			}()
+
 			for {
 				messageType, message, err := conn.ReadMessage()
 				if err != nil {
-					logger.Error(err)
+					if websocket.IsUnexpectedCloseError(
+						err,
+						websocket.CloseGoingAway,
+						websocket.CloseAbnormalClosure,
+					) {
+						logger.Error(fmt.Errorf("WebSocket closed unexpectedly: %v", err))
+					}
 					return
 				}
 
 				if messageType == websocket.TextMessage {
 					// Обрабатываем ход
 					move := string(message)
-					status, ok := service.MoveGameStr(gameID, move, player)
-
-					if ok {
-						// Выводим текущее состояние доски
-						logger.Info("\n" + game.CurrentPosition().Board().Draw())
-					}
-
-					// Отправляем ответ
-					answer := map[string]interface{}{
-						"ok":     ok,
-						"status": status,
-					}
-					if !ok {
-						answer["message"] = "Недопустимый ход"
-					}
-
-					response, err := json.Marshal(answer)
-					if err != nil {
-						logger.Error(err)
+					errMove := service.MoveGameStr(gameID, move, player)
+					var ok bool
+					if errMove != nil {
+						ok = false
+						messageOp := map[string]interface{}{
+							"error": "Недопустимый ход",
+						}
+						_ = service.SendMessage(player, messageOp)
 						continue
 					}
-
-					if err := conn.WriteMessage(websocket.TextMessage, response); err != nil {
-						logger.Error(err)
+					response, err := service.GetGameInfoMemory(gameID, ok)
+					if err != nil {
+						mesGameErr := map[string]interface{}{
+							"error": "Ошибка при получении информации об игре",
+						}
+						_ = service.SendMessage(player, mesGameErr)
+						continue
+					}
+					errSend := service.SendMessage(player, response)
+					if errSend != nil {
+						return
+					}
+				} else if messageType == websocket.PingMessage {
+					err := conn.WriteMessage(websocket.PongMessage, message)
+					if err != nil {
+						logger.Error(fmt.Errorf("error sending pong: %v", err))
 						return
 					}
 				}
 			}
 		}()
+
+		// Отправляем начальное состояние игры
+		response, err := service.GetGameInfoMemory(gameID, true)
+		if err != nil {
+			return
+		}
+		errSend := service.SendMessage(player, response)
+		if errSend != nil {
+			return
+		}
 
 		// Держим соединение открытым
 		select {}

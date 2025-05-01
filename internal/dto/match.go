@@ -4,8 +4,14 @@ import (
 	"time"
 
 	"GopherChessParty/ent/chess"
+	chess2 "github.com/corentings/chess/v2"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
+)
+
+const (
+	WhiteMotion = iota
+	BlackMotion
 )
 
 type PlayerConn struct {
@@ -20,4 +26,39 @@ type Match struct {
 	Status    chess.Status
 	WhiteUser *GetUser
 	BlackUser *GetUser
+}
+
+type Game struct {
+	Match         *chess2.Game
+	WhitePlayer   *PlayerConn
+	BlackPlayer   *PlayerConn
+	CurrentMotion int
+	GameID        uuid.UUID
+	HistoryMove   []string
+	Status        chess.Status
+}
+
+func (game *Game) GetOpponentUser() *PlayerConn {
+	if game.CurrentMotion == WhiteMotion {
+		return game.BlackPlayer
+	} else {
+		return game.WhitePlayer
+	}
+}
+
+func (game *Game) GetCurrentUser() *PlayerConn {
+	if game.CurrentMotion == WhiteMotion {
+		return game.WhitePlayer
+	} else {
+		return game.BlackPlayer
+	}
+}
+
+func (game *Game) SetMove(move string) {
+	if game.CurrentMotion == WhiteMotion {
+		game.CurrentMotion = BlackMotion
+	} else {
+		game.CurrentMotion = WhiteMotion
+	}
+	game.HistoryMove = append(game.HistoryMove, move)
 }

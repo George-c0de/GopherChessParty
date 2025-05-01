@@ -12,7 +12,8 @@ import (
 )
 
 const (
-	pongWait = 60 * time.Second
+	pongWait   = 60 * time.Second
+	pingPeriod = (pongWait * 9) / 10
 )
 
 var upgrader = websocket.Upgrader{
@@ -59,5 +60,15 @@ func CreateWebSocket(c *gin.Context) (*websocket.Conn, error) {
 	conn.SetPongHandler(func(string) error {
 		return conn.SetReadDeadline(time.Now().Add(pongWait))
 	})
+	// Тикер для отправки ping
+	go func() {
+		ticker := time.NewTicker(pingPeriod)
+		defer ticker.Stop()
+		for range ticker.C {
+			if err := conn.WriteMessage(websocket.PingMessage, nil); err != nil {
+				return // соединение закрыто или ошибка
+			}
+		}
+	}()
 	return conn, nil
 }

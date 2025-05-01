@@ -1,14 +1,12 @@
 package services
 
 import (
-	"errors"
-
 	"GopherChessParty/ent"
+	"GopherChessParty/ent/chess"
 	"GopherChessParty/internal/dto"
-	custErr "GopherChessParty/internal/errors"
+	"GopherChessParty/internal/errors"
 	"GopherChessParty/internal/interfaces"
 	"GopherChessParty/internal/models"
-	"GopherChessParty/internal/utils"
 	"github.com/golang-jwt/jwt"
 	"github.com/google/uuid"
 )
@@ -115,30 +113,66 @@ func (s *Service) GetGameByID(gameID uuid.UUID) (*dto.Match, error) {
 	return s.IGameService.GetGameByID(gameID)
 }
 
-func (s *Service) MoveGameStr(gameID uuid.UUID, move string, player *dto.PlayerConn) (int, bool) {
+func (s *Service) MoveGameStr(gameID uuid.UUID, move string, player *dto.PlayerConn) error {
 	if !s.IGameService.IsConnectPlayers(gameID) {
-		return utils.PlayersNotConnected, false
+		s.logger.Error(errors.ErrPlayersNotConn)
+		return errors.ErrPlayersNotConn
 	}
 
 	opponentMotionUser := s.IGameService.GetOpponent(gameID)
-	errMove := s.IGameService.MoveGame(gameID, move, player)
-	if errMove != nil {
-		if errors.Is(errMove, custErr.ErrGameEnd) {
-			return utils.GameFinished, false
-		}
-		return utils.GameInProgress, false
+
+	err := s.ValidationMove(gameID, move)
+	if err != nil {
+		return err
 	}
 
-	err := s.IMatchService.SendMove(opponentMotionUser, move)
-	if err != nil {
-		return utils.GameInProgress, false
+	errMove := s.IGameService.MoveGame(gameID, move, player)
+	if errMove != nil {
+		return errMove
 	}
-	return utils.GameInProgress, true
+
+	errSend := s.IMatchService.SendMove(opponentMotionUser, move)
+	if errSend != nil {
+		return errSend
+	}
+	return nil
 }
 
 func (s *Service) SetConnGame(GameID uuid.UUID, player *dto.PlayerConn) {
 	err := s.IGameService.SetPlayer(GameID, player)
 	if err != nil {
+		s.logger.Error(err)
 		return
 	}
+}
+
+func (s *Service) GetStatusMemory(GameID uuid.UUID) (chess.Status, error) {
+	return s.IGameService.GetStatusMemory(GameID)
+}
+
+func (s *Service) GetHistoryMove(GameID uuid.UUID) []string {
+	return s.IGameService.GetHistoryMove(GameID)
+}
+
+func (s *Service) GetGameInfoMemory(GameID uuid.UUID, ok bool) (map[string]interface{}, error) {
+	game := s.IGameService.GetGameMemory(GameID)
+	if game == nil {
+		s.logger.Error(errors.ErrGameNotFound)
+		return nil, errors.ErrGameNotFound
+	}
+	answer := map[string]interface{}{
+		"ok":          ok,
+		"status":      game.Status,
+		"historyMove": game.HistoryMove,
+		"currentMove": game.CurrentMotion,
+	}
+	if !ok {
+		answer["message"] = "Недопустимый ход"
+	}
+
+	return answer, nil
+}
+
+func (s *Service) ValidationMove(GameID uuid.UUID, move string) error {
+	return s.IGameService.MoveValid(GameID, move)
 }

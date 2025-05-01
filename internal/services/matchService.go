@@ -1,23 +1,12 @@
 package services
 
 import (
-	"encoding/json"
-	"fmt"
-	"sync"
-	"time"
-
 	"GopherChessParty/internal/dto"
 	"GopherChessParty/internal/interfaces"
+	"encoding/json"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
-)
-
-// Константы для настройки WebSocket соединения
-const (
-	// Интервал отправки пинг-сообщений для поддержания соединения активным
-	pingPeriod = 30 * time.Second
-	// Максимальное время ожидания ответа на пинг перед закрытием соединения
-	pongWait = 60 * time.Second
+	"sync"
 )
 
 // MatchService управляет поиском и созданием пар для игры
@@ -49,42 +38,12 @@ func (m *MatchService) GetExistsChannel() <-chan struct{} {
 	return m.exists
 }
 
-// setupPing настраивает механизм поддержания WebSocket соединения активным
-func (m *MatchService) setupPing(conn *websocket.Conn) {
-	// Обработчик входящих пинг-сообщений
-	conn.SetPingHandler(func(string) error {
-		// Отправляем понг в ответ на пинг
-		return conn.WriteControl(websocket.PongMessage, []byte{}, time.Now().Add(pongWait))
-	})
-
-	// Обработчик входящих понг-сообщений
-	conn.SetPongHandler(func(string) error {
-		// Обновляем таймаут чтения при получении понга
-		return conn.SetReadDeadline(time.Now().Add(pongWait))
-	})
-
-	// Запускаем горутину для периодической отправки пингов
-	go func() {
-		ticker := time.NewTicker(pingPeriod)
-		defer ticker.Stop()
-
-		// Каждые pingPeriod отправляем пинг
-		for range ticker.C {
-			if err := conn.WriteControl(websocket.PingMessage, []byte{}, time.Now().Add(pongWait)); err != nil {
-				m.log.Error(fmt.Errorf("ошибка отправки пинга: %w", err))
-				return
-			}
-		}
-	}()
-}
-
 // AddUser добавляет нового игрока в очередь ожидания
 func (m *MatchService) AddUser(player *dto.PlayerConn) {
 	m.queueMu.Lock()
 	defer m.queueMu.Unlock()
 	m.queue = append(m.queue, player)
-	m.setupPing(player.Conn) // Настраиваем пинг для нового соединения
-	m.exists <- struct{}{}   // Сигнализируем о новом игроке
+	m.exists <- struct{}{} // Сигнализируем о новом игроке
 }
 
 // sendMessage отправляет сообщение игроку через WebSocket
@@ -132,15 +91,23 @@ func (m *MatchService) SendMove(player *dto.PlayerConn, move string) error {
 	answer := map[string]interface{}{
 		"move": move,
 	}
-	response, err := json.Marshal(answer)
+	err := m.SendMessage(player, answer)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (m *MatchService) SendMessage(player *dto.PlayerConn, message map[string]interface{}) error {
+	response, err := json.Marshal(message)
 	if err != nil {
 		m.log.Error(err)
 		return err
 	}
 	errSend := player.Conn.WriteMessage(websocket.TextMessage, response)
 	if errSend != nil {
-		m.log.Error(err)
-		return err
+		m.log.Error(errSend)
+		return errSend
 	}
 	return nil
 }

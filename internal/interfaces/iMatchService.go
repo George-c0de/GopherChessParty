@@ -13,4 +13,5 @@ type IMatchService interface {
 	SendGemID(player *dto.PlayerConn, gameID uuid.UUID) error
 	CloseConnection(player *dto.PlayerConn) error
 	SendMove(player *dto.PlayerConn, move string) error
+	SendMessage(player *dto.PlayerConn, message map[string]interface{}) error
 }

@@ -2,7 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Login } from './components/Login';
 import { Register } from './components/Register';
-import { ChessBoard } from './components/ChessBoard';
+import ChessBoardPage from './components/ChessBoardPage';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const token = localStorage.getItem('authToken');
@@ -22,7 +22,7 @@ const App: React.FC = () => {
                     path="/game"
                     element={
                         <ProtectedRoute>
-                            <ChessBoard />
+                            <ChessBoardPage />
                         </ProtectedRoute>
                     }
                 />
@@ -30,7 +30,7 @@ const App: React.FC = () => {
                     path="/game/:gameId"
                     element={
                         <ProtectedRoute>
-                            <ChessBoard />
+                            <ChessBoardPage />
                         </ProtectedRoute>
                     }
                 />
