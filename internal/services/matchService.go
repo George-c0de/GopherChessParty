@@ -31,7 +31,6 @@ type MatchService struct {
 
 // NewMatchService создает новый сервис матчмейкинга
 func NewMatchService(log interfaces.ILogger) *MatchService {
-
 	return &MatchService{
 		log:     log,
 		channel: make(chan dto.PlayerConn, 100), // Буферизованный канал на 100 подключений

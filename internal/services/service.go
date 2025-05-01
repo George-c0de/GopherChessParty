@@ -42,7 +42,6 @@ func NewService(
 func (s *Service) IsValidateToken(tokenString string) (*jwt.Token, bool) {
 	token, err := s.IAuthService.ValidateToken(tokenString)
 	if err != nil {
-		s.logger.Error(err)
 		return nil, false
 	}
 	return token, token.Valid
@@ -51,7 +50,6 @@ func (s *Service) IsValidateToken(tokenString string) (*jwt.Token, bool) {
 func (s *Service) CreateUser(data *dto.CreateUser) (*models.User, error) {
 	hashedPassword, err := s.IAuthService.GeneratePassword(data.Password)
 	if err != nil {
-		s.logger.Error(err)
 		return nil, err
 	}
 	return s.IUserService.SaveUser(data, hashedPassword)
@@ -60,7 +58,6 @@ func (s *Service) CreateUser(data *dto.CreateUser) (*models.User, error) {
 func (s *Service) RegisterUser(data *dto.CreateUser) (*models.User, error) {
 	hashedPassword, err := s.IAuthService.GeneratePassword(data.Password)
 	if err != nil {
-		s.logger.Error(err)
 		return nil, err
 	}
 	return s.IUserService.SaveUser(data, hashedPassword)
@@ -69,7 +66,6 @@ func (s *Service) RegisterUser(data *dto.CreateUser) (*models.User, error) {
 func (s *Service) ValidPassword(data dto.AuthenticateUser) (*uuid.UUID, bool) {
 	userAuth, err := s.IUserService.GetUserPassword(data.Email)
 	if err != nil {
-		s.logger.Error(err)
 		return nil, false
 	}
 	return &userAuth.UserId, s.IsValidPassword(userAuth.HashedPassword, data.Password)
@@ -81,12 +77,7 @@ func (s *Service) GetGamesByUserID(userId uuid.UUID) ([]*ent.Chess, error) {
 
 // CreateMatch создает пару игроков из очереди
 func (s *Service) CreateMatch(playerID1, playerID2 uuid.UUID) (*ent.Chess, error) {
-	game, err := s.CreateGame(playerID1, playerID2)
-	if err != nil {
-		s.logger.Error(err)
-		return nil, err
-	}
-	return game, nil
+	return s.CreateGame(playerID1, playerID2)
 }
 
 // SearchPlayerConn ищет пары игроков в очереди
@@ -113,6 +104,7 @@ func (s *Service) SearchPlayerConn() {
 				s.logger.Error(err)
 				continue
 			}
+			// TODO(GEORGE): Сделать красивее
 			player1.Conn.Close()
 			player2.Conn.Close()
 		}
@@ -125,6 +117,7 @@ func (s *Service) GetGameByID(gameID uuid.UUID) (*dto.Match, error) {
 
 func (s *Service) MoveGameStr(gameID uuid.UUID, move string, player *dto.PlayerConn) (int, bool) {
 	err := s.IGameService.MoveGame(gameID, move, player)
+	// TODO(GEORGE): Сделать красивее
 	if err != nil {
 		s.logger.Error(err)
 		if errors.Is(err, custErr.ErrGameEnd) {

@@ -40,6 +40,7 @@ func (s *AuthService) ValidateToken(tokenString string) (*jwt.Token, error) {
 	return jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		// Проверяем, что метод подписи соответствует ожиданиям
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			s.log.Error(errors.ErrValidateToken)
 			return nil, errors.ErrValidateToken
 		}
 		return []byte(s.jwtSecret), nil

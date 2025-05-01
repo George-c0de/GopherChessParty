@@ -1,4 +1,4 @@
-package connection
+package storage
 
 import (
 	"GopherChessParty/internal/dto"

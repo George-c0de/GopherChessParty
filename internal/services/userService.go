@@ -18,10 +18,7 @@ func NewUserService(
 	return &UserService{repository: repository, log: logger}
 }
 
-func (m *UserService) SaveUser(
-	data *dto.CreateUser,
-	hashedPassword string,
-) (*models.User, error) {
+func (m *UserService) SaveUser(data *dto.CreateUser, hashedPassword string) (*models.User, error) {
 	data.Password = hashedPassword
 	return m.repository.CreateUser(data)
 }
