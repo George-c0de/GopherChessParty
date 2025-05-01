@@ -1,13 +1,13 @@
 package routers
 
 import (
-	"github.com/gorilla/websocket"
 	"net/http"
 	"time"
 
 	"GopherChessParty/internal/interfaces"
 	"GopherChessParty/internal/services"
 	"github.com/gin-gonic/gin"
+	"github.com/gorilla/websocket"
 	uuid "github.com/jackc/pgtype/ext/gofrs-uuid"
 )
 

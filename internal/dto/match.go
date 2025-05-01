@@ -1,10 +1,11 @@
 package dto
 
 import (
+	"time"
+
 	"GopherChessParty/ent/chess"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
-	"time"
 )
 
 type PlayerConn struct {

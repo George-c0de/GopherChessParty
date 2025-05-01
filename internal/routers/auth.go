@@ -4,7 +4,6 @@ import (
 	"net/http"
 
 	"GopherChessParty/internal/dto"
-
 	"github.com/gin-gonic/gin"
 )
 

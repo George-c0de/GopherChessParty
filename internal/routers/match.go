@@ -1,18 +1,16 @@
 package routers
 
 import (
-	"GopherChessParty/internal/dto"
-	"GopherChessParty/internal/interfaces"
-	"GopherChessParty/internal/middleware"
 	"encoding/json"
 	"net/http"
 
+	"GopherChessParty/internal/dto"
+	"GopherChessParty/internal/interfaces"
+	"GopherChessParty/internal/middleware"
 	chesslib "github.com/corentings/chess/v2"
-
+	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
-
-	"github.com/gin-gonic/gin"
 )
 
 // AddWebSocket регистрирует эндпоинт поиска соперника по WebSocket

@@ -3,7 +3,6 @@ package routers
 import (
 	"GopherChessParty/internal/interfaces"
 	"GopherChessParty/internal/middleware"
-
 	"github.com/gin-gonic/gin"
 )
 

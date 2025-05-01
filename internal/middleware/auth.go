@@ -6,7 +6,6 @@ import (
 
 	"GopherChessParty/internal/errors"
 	"GopherChessParty/internal/interfaces"
-
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt"
 	"github.com/google/uuid"

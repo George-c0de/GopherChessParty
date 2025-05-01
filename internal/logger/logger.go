@@ -69,8 +69,10 @@ func NewLogger(env string) interfaces.ILogger {
 					if a.Key == slog.SourceKey {
 						source := a.Value.Any().(*slog.Source)
 						return slog.Attr{
-							Key:   slog.SourceKey,
-							Value: slog.StringValue(fmt.Sprintf("%s:%d", filepath.Base(source.File), source.Line)),
+							Key: slog.SourceKey,
+							Value: slog.StringValue(
+								fmt.Sprintf("%s:%d", filepath.Base(source.File), source.Line),
+							),
 						}
 					}
 					return a
@@ -86,8 +88,10 @@ func NewLogger(env string) interfaces.ILogger {
 					if a.Key == slog.SourceKey {
 						source := a.Value.Any().(*slog.Source)
 						return slog.Attr{
-							Key:   slog.SourceKey,
-							Value: slog.StringValue(fmt.Sprintf("%s:%d", filepath.Base(source.File), source.Line)),
+							Key: slog.SourceKey,
+							Value: slog.StringValue(
+								fmt.Sprintf("%s:%d", filepath.Base(source.File), source.Line),
+							),
 						}
 					}
 					return a
@@ -103,8 +107,10 @@ func NewLogger(env string) interfaces.ILogger {
 					if a.Key == slog.SourceKey {
 						source := a.Value.Any().(*slog.Source)
 						return slog.Attr{
-							Key:   slog.SourceKey,
-							Value: slog.StringValue(fmt.Sprintf("%s:%d", filepath.Base(source.File), source.Line)),
+							Key: slog.SourceKey,
+							Value: slog.StringValue(
+								fmt.Sprintf("%s:%d", filepath.Base(source.File), source.Line),
+							),
 						}
 					}
 					return a

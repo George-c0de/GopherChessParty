@@ -1,13 +1,14 @@
 package services
 
 import (
+	"encoding/json"
+	"fmt"
+
 	"GopherChessParty/ent"
 	"GopherChessParty/ent/chess"
 	"GopherChessParty/internal/dto"
 	"GopherChessParty/internal/errors"
 	"GopherChessParty/internal/interfaces"
-	"encoding/json"
-	"fmt"
 	chesslib "github.com/corentings/chess/v2"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
@@ -33,7 +34,10 @@ type GameService struct {
 	games      map[uuid.UUID]*Game
 }
 
-func NewGameService(log interfaces.ILogger, repository interfaces.IGameRepo) interfaces.IGameService {
+func NewGameService(
+	log interfaces.ILogger,
+	repository interfaces.IGameRepo,
+) interfaces.IGameService {
 	return &GameService{
 		log:        log,
 		repository: repository,
@@ -104,7 +108,6 @@ func (m *GameService) UpdateStatus(
 	}
 
 	return m.repository.UpdateGameResult(gameID, status, result)
-
 }
 
 func (m *GameService) MoveGame(GameID uuid.UUID, move string, player *dto.PlayerConn) error {
@@ -131,7 +134,11 @@ func (m *GameService) MoveGame(GameID uuid.UUID, move string, player *dto.Player
 	if currentMotionUser.UserID != player.UserID {
 		return errors.ErrCurrentUserMotion
 	}
-	err = game.Match.PushNotationMove(move, chesslib.UCINotation{}, &chesslib.PushMoveOptions{ForceMainline: true})
+	err = game.Match.PushNotationMove(
+		move,
+		chesslib.UCINotation{},
+		&chesslib.PushMoveOptions{ForceMainline: true},
+	)
 	if err != nil {
 		m.log.Error(err)
 		return err

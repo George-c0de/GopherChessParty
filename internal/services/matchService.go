@@ -1,14 +1,14 @@
 package services
 
 import (
-	"GopherChessParty/internal/dto"
-	"GopherChessParty/internal/interfaces"
 	"encoding/json"
 	"fmt"
-	"github.com/google/uuid"
 	"sync"
 	"time"
 
+	"GopherChessParty/internal/dto"
+	"GopherChessParty/internal/interfaces"
+	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 )
 

@@ -1,12 +1,12 @@
 package routers
 
 import (
-	"github.com/google/uuid"
 	"net/http"
 
 	"GopherChessParty/internal/interfaces"
 	"GopherChessParty/internal/middleware"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 func addChessRoute(rg *gin.RouterGroup, service interfaces.IService) {

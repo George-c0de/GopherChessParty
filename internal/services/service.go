@@ -1,14 +1,14 @@
 package services
 
 import (
+	"errors"
+
 	"GopherChessParty/ent"
 	"GopherChessParty/internal/dto"
 	custErr "GopherChessParty/internal/errors"
 	"GopherChessParty/internal/interfaces"
 	"GopherChessParty/internal/models"
 	"GopherChessParty/internal/utils"
-	"errors"
-
 	"github.com/golang-jwt/jwt"
 	"github.com/google/uuid"
 )
@@ -129,5 +129,8 @@ func (s *Service) MoveGameStr(gameID uuid.UUID, move string, player *dto.PlayerC
 }
 
 func (s *Service) SetConnGame(GameID uuid.UUID, player *dto.PlayerConn) {
-	s.IGameService.SetPlayer(GameID, player)
+	err := s.IGameService.SetPlayer(GameID, player)
+	if err != nil {
+		return
+	}
 }
