@@ -1,0 +1,68 @@
+# Используем многоэтапную сборку
+FROM golang:1.24-bullseye AS builder
+
+# Устанавливаем необходимые инструменты
+RUN apt-get update && apt-get install -y \
+    git \
+    gcc \
+    sqlite3 \
+    libsqlite3-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Устанавливаем Atlas для миграций
+RUN CGO_ENABLED=1 go install ariga.io/atlas/cmd/atlas@latest
+
+# Устанавливаем ent для генерации кода
+RUN go install entgo.io/ent/cmd/ent@latest
+
+# Устанавливаем golangci-lint
+RUN go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+
+# Создаем рабочую директорию
+WORKDIR /app
+
+# Копируем файлы проекта
+COPY . .
+
+# Собираем приложение
+RUN go mod download
+RUN CGO_ENABLED=1 go build -o main cmd/server/main.go
+
+# Финальный образ
+FROM debian:bullseye-slim
+
+WORKDIR /app
+
+# Устанавливаем необходимые инструменты
+RUN apt-get update && apt-get install -y \
+    postgresql-client \
+    sqlite3 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Копируем бинарный файл из builder
+COPY --from=builder /app/main .
+COPY --from=builder /app/ent/migrate/migrations ./ent/migrate/migrations
+COPY --from=builder /app/config/dev.yaml ./config/dev.yaml
+
+# Копируем инструменты
+COPY --from=builder /go/bin/atlas /usr/local/bin/atlas
+COPY --from=builder /go/bin/ent /usr/local/bin/ent
+COPY --from=builder /go/bin/golangci-lint /usr/local/bin/golangci-lint
+
+# Создаем скрипт для запуска миграций
+RUN echo '#!/bin/bash\n\
+until pg_isready -h postgres -p 5432 -U postgres; do\n\
+  echo "Waiting for PostgreSQL..."\n\
+  sleep 1\n\
+done\n\
+\n\
+echo "Running migrations..."\n\
+atlas migrate apply --dir "file://ent/migrate/migrations" \\\n\
+  --url "postgres://postgres:postgres@postgres:5432/gopher_chess?search_path=public&sslmode=disable" \\\n\
+  --revisions-schema public\n\
+\n\
+echo "Starting application..."\n\
+./main --config config/dev.yaml' > /app/start.sh && chmod +x /app/start.sh
+
+# Запускаем приложение
+CMD ["/app/start.sh"] 

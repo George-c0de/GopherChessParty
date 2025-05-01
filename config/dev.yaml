@@ -1,0 +1,11 @@
+env: "local"
+storagePath: "./connection/chess.db"
+database:
+  dbHost: "postgres"
+  dbPort: 5432
+  dbUser: "postgres"
+  dbPassword: "postgres"
+  dbDatabase: "gopher_chess"
+auth:
+  jwtSecret: "secret_key"
+  expTime: "24h"

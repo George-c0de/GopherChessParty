@@ -110,28 +110,9 @@ func MoveGame(logger interfaces.ILogger) gin.HandlerFunc {
 				if messageType == websocket.TextMessage {
 					// Обрабатываем ход
 					move := string(message)
-					errMove := service.MoveGameStr(gameID, move, player)
-					var ok bool
-					if errMove != nil {
-						ok = false
-						messageOp := map[string]interface{}{
-							"error": "Недопустимый ход",
-						}
-						_ = service.SendMessage(player, messageOp)
-						continue
-					}
-					response, err := service.GetGameInfoMemory(gameID, ok)
-					if err != nil {
-						mesGameErr := map[string]interface{}{
-							"error": "Ошибка при получении информации об игре",
-						}
-						_ = service.SendMessage(player, mesGameErr)
-						continue
-					}
-					errSend := service.SendMessage(player, response)
-					if errSend != nil {
-						return
-					}
+					ok := service.MoveGameStr(gameID, move, player)
+					response, _ := service.GetGameInfoMemory(gameID, ok, "")
+					_ = service.SendMessage(player, response)
 				} else if messageType == websocket.PingMessage {
 					err := conn.WriteMessage(websocket.PongMessage, message)
 					if err != nil {
@@ -143,7 +124,7 @@ func MoveGame(logger interfaces.ILogger) gin.HandlerFunc {
 		}()
 
 		// Отправляем начальное состояние игры
-		response, err := service.GetGameInfoMemory(gameID, true)
+		response, err := service.GetGameInfoMemory(gameID, true, "")
 		if err != nil {
 			return
 		}

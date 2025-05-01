@@ -7,6 +7,7 @@ import (
 	"GopherChessParty/internal/errors"
 	"GopherChessParty/internal/interfaces"
 	"GopherChessParty/internal/models"
+	exc "errors"
 	"github.com/golang-jwt/jwt"
 	"github.com/google/uuid"
 )
@@ -113,29 +114,34 @@ func (s *Service) GetGameByID(gameID uuid.UUID) (*dto.Match, error) {
 	return s.IGameService.GetGameByID(gameID)
 }
 
-func (s *Service) MoveGameStr(gameID uuid.UUID, move string, player *dto.PlayerConn) error {
+func (s *Service) MoveGameStr(gameID uuid.UUID, move string, player *dto.PlayerConn) bool {
 	if !s.IGameService.IsConnectPlayers(gameID) {
 		s.logger.Error(errors.ErrPlayersNotConn)
-		return errors.ErrPlayersNotConn
+		return false
 	}
 
 	opponentMotionUser := s.IGameService.GetOpponent(gameID)
 
 	err := s.ValidationMove(gameID, move)
 	if err != nil {
-		return err
+		return false
 	}
 
 	errMove := s.IGameService.MoveGame(gameID, move, player)
-	if errMove != nil {
-		return errMove
+	if errMove != nil && !exc.Is(errMove, errors.ErrGameEnd) {
+		return false
 	}
 
-	errSend := s.IMatchService.SendMove(opponentMotionUser, move)
+	response, errSend := s.GetGameInfoMemory(gameID, false, move)
 	if errSend != nil {
-		return errSend
+		return false
 	}
-	return nil
+	err = s.SendMessage(opponentMotionUser, response)
+	if err != nil {
+		s.logger.Error(err)
+		return false
+	}
+	return true
 }
 
 func (s *Service) SetConnGame(GameID uuid.UUID, player *dto.PlayerConn) {
@@ -154,7 +160,7 @@ func (s *Service) GetHistoryMove(GameID uuid.UUID) []string {
 	return s.IGameService.GetHistoryMove(GameID)
 }
 
-func (s *Service) GetGameInfoMemory(GameID uuid.UUID, ok bool) (map[string]interface{}, error) {
+func (s *Service) GetGameInfoMemory(GameID uuid.UUID, ok bool, move string) (map[string]interface{}, error) {
 	game := s.IGameService.GetGameMemory(GameID)
 	if game == nil {
 		s.logger.Error(errors.ErrGameNotFound)
@@ -165,9 +171,13 @@ func (s *Service) GetGameInfoMemory(GameID uuid.UUID, ok bool) (map[string]inter
 		"status":      game.Status,
 		"historyMove": game.HistoryMove,
 		"currentMove": game.CurrentMotion,
+		"result":      game.Result,
 	}
 	if !ok {
 		answer["message"] = "Недопустимый ход"
+	}
+	if move != "" {
+		answer["move"] = move
 	}
 
 	return answer, nil

@@ -36,6 +36,7 @@ type Game struct {
 	GameID        uuid.UUID
 	HistoryMove   []string
 	Status        chess.Status
+	Result        chess.Result
 }
 
 func (game *Game) GetOpponentUser() *PlayerConn {

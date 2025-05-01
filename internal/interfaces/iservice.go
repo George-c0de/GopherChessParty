@@ -21,10 +21,10 @@ type IService interface {
 	SearchPlayerConn()
 	CreateMatch(playerID1, playerID2 uuid.UUID) (*ent.Chess, error)
 	RegisterUser(data *dto.CreateUser) (*models.User, error)
-	MoveGameStr(gameID uuid.UUID, move string, player *dto.PlayerConn) error
+	MoveGameStr(gameID uuid.UUID, move string, player *dto.PlayerConn) bool
 	SetConnGame(GameID uuid.UUID, player *dto.PlayerConn)
 	GetStatusMemory(GameID uuid.UUID) (chess.Status, error)
 	GetHistoryMove(id uuid.UUID) []string
-	GetGameInfoMemory(GameID uuid.UUID, ok bool) (map[string]interface{}, error)
+	GetGameInfoMemory(GameID uuid.UUID, ok bool, move string) (map[string]interface{}, error)
 	MoveValid(GameID uuid.UUID, move string) error
 }

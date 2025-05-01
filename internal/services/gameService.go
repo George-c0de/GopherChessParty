@@ -1,8 +1,6 @@
 package services
 
 import (
-	"fmt"
-
 	"GopherChessParty/ent"
 	"GopherChessParty/ent/chess"
 	"GopherChessParty/internal/dto"
@@ -56,6 +54,7 @@ func (m *GameService) startGame(GameID uuid.UUID, whiteUserID, blackUserID uuid.
 		BlackPlayer:   &dto.PlayerConn{UserID: blackUserID},
 		HistoryMove:   make([]string, 0),
 		Status:        chess.StatusInProgress,
+		Result:        chess.Result00,
 	}
 }
 
@@ -99,6 +98,7 @@ func (m *GameService) UpdateStatus(
 		return err
 	}
 	game.Status = status
+	game.Result = result
 	return m.repository.UpdateGameResult(gameID, status, result)
 }
 
@@ -126,52 +126,25 @@ func (m *GameService) MoveValid(GameID uuid.UUID, move string) error {
 func (m *GameService) MoveGame(GameID uuid.UUID, move string, player *dto.PlayerConn) error {
 	game, err := m.GetGame(GameID)
 	if err != nil {
-		m.log.Error(err)
 		return err
 	}
-	if move == "" {
-		m.log.Error(errors.ErrMoveEmpty)
-		return errors.ErrMoveEmpty
-	}
-	currentMotionUser := game.GetCurrentUser()
 
+	currentMotionUser := game.GetCurrentUser()
 	if currentMotionUser.UserID != player.UserID {
 		m.log.Error(errors.ErrCurrentUserMotion)
 		return errors.ErrCurrentUserMotion
 	}
-	before := game.Match.FEN()
-	wanted, err := chesslib.UCINotation{}.Decode(game.Match.Position(), move)
-	if err != nil {
-		m.log.Error(err)
-		return err
-	}
-	flag := false
-	for _, move := range game.Match.ValidMoves() {
-		if wanted.S1() == move.S1() && wanted.S2() == move.S2() {
-			flag = true
-			break
-		}
-	}
-	if !flag {
-		m.log.Error(errors.ErrMoveEmpty)
-		return errors.ErrMoveEmpty
-	}
+
 	err = game.Match.PushNotationMove(
 		move,
 		chesslib.UCINotation{},
 		&chesslib.PushMoveOptions{},
 	)
-
-	after := game.Match.FEN()
 	if err != nil {
 		m.log.Error(err)
 		return err
 	}
-	fmt.Println(game.Match.Moves())
-	if before == after {
-		// Decode прошло, но pos.Update вернуло nil — ход не применился
-		return fmt.Errorf("ход %q невалиден в позиции %s", move, before)
-	}
+	game.SetMove(move)
 	if game.Match.Outcome() != chesslib.NoOutcome {
 		err := m.UpdateStatus(GameID, game.Match.Outcome())
 		if err != nil {
@@ -180,7 +153,6 @@ func (m *GameService) MoveGame(GameID uuid.UUID, move string, player *dto.Player
 		}
 		return errors.ErrGameEnd
 	}
-	game.SetMove(move)
 	return nil
 }
 
