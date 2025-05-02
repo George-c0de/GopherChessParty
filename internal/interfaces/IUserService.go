@@ -2,11 +2,12 @@ package interfaces
 
 import (
 	"GopherChessParty/internal/dto"
-	"GopherChessParty/internal/models"
+	"github.com/google/uuid"
 )
 
 type IUserService interface {
-	GetUsers() ([]*models.User, error)
-	SaveUser(data *dto.CreateUser, hashedPassword string) (*models.User, error)
-	GetUserPassword(Email string) (*models.AuthUser, error)
+	GetUsers() ([]*dto.User, error)
+	SaveUser(data *dto.CreateUser, hashedPassword string) (*dto.User, error)
+	GetUserPassword(Email string) (*dto.AuthUser, error)
+	GetUserByID(UserID uuid.UUID) (*dto.User, error)
 }

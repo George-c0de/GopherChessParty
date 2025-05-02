@@ -1,12 +1,9 @@
 package services
 
 import (
-	"GopherChessParty/ent"
-	"GopherChessParty/ent/chess"
 	"GopherChessParty/internal/dto"
 	"GopherChessParty/internal/errors"
 	"GopherChessParty/internal/interfaces"
-	"GopherChessParty/internal/models"
 	exc "errors"
 	"github.com/golang-jwt/jwt"
 	"github.com/google/uuid"
@@ -46,7 +43,7 @@ func (s *Service) IsValidateToken(tokenString string) (*jwt.Token, bool) {
 	return token, token.Valid
 }
 
-func (s *Service) CreateUser(data *dto.CreateUser) (*models.User, error) {
+func (s *Service) CreateUser(data *dto.CreateUser) (*dto.User, error) {
 	hashedPassword, err := s.IAuthService.GeneratePassword(data.Password)
 	if err != nil {
 		return nil, err
@@ -54,7 +51,7 @@ func (s *Service) CreateUser(data *dto.CreateUser) (*models.User, error) {
 	return s.IUserService.SaveUser(data, hashedPassword)
 }
 
-func (s *Service) RegisterUser(data *dto.CreateUser) (*models.User, error) {
+func (s *Service) RegisterUser(data *dto.CreateUser) (*dto.User, error) {
 	hashedPassword, err := s.IAuthService.GeneratePassword(data.Password)
 	if err != nil {
 		return nil, err
@@ -70,48 +67,23 @@ func (s *Service) ValidPassword(data dto.AuthenticateUser) (*uuid.UUID, bool) {
 	return &userAuth.UserId, s.IsValidPassword(userAuth.HashedPassword, data.Password)
 }
 
-func (s *Service) GetGamesByUserID(userId uuid.UUID) ([]*ent.Chess, error) {
-	return s.IGameService.GetGames(userId)
-}
-
-// CreateMatch создает пару игроков из очереди
-func (s *Service) CreateMatch(playerID1, playerID2 uuid.UUID) (*ent.Chess, error) {
-	return s.CreateGame(playerID1, playerID2)
-}
-
 // SearchPlayerConn ищет пары игроков в очереди
 func (s *Service) SearchPlayerConn() {
 	for range s.IMatchService.GetExistsChannel() {
 		if s.IMatchService.CheckPair() {
-			player1, player2, err := s.IMatchService.ReturnPlayerID()
+			player1, player2 := s.IMatchService.ReturnPlayerID()
+			game, err := s.CreateGame(player1.UserID, player2.UserID)
 			if err != nil {
-				s.logger.Error(err)
+				s.AddUser(player1)
+				s.AddUser(player2)
 				continue
 			}
-			game, err := s.CreateMatch(player1.UserID, player2.UserID)
-			if err != nil {
-				s.logger.Error(err)
-				continue
-			}
-			err = s.IMatchService.SendGemID(player1, game.ID)
-			if err != nil {
-				s.logger.Error(err)
-				continue
-			}
-			err = s.IMatchService.SendGemID(player2, game.ID)
-			if err != nil {
-				s.logger.Error(err)
-				continue
-			}
-			// TODO(GEORGE): Сделать красивее
-			player1.Conn.Close()
-			player2.Conn.Close()
+			_ = s.IMatchService.SendGemID(player1, game.ID)
+			_ = s.IMatchService.SendGemID(player2, game.ID)
+			_ = player1.Conn.Close()
+			_ = player2.Conn.Close()
 		}
 	}
-}
-
-func (s *Service) GetGameByID(gameID uuid.UUID) (*dto.Match, error) {
-	return s.IGameService.GetGameByID(gameID)
 }
 
 func (s *Service) MoveGameStr(gameID uuid.UUID, move string, player *dto.PlayerConn) bool {
@@ -122,7 +94,7 @@ func (s *Service) MoveGameStr(gameID uuid.UUID, move string, player *dto.PlayerC
 
 	opponentMotionUser := s.IGameService.GetOpponent(gameID)
 
-	err := s.ValidationMove(gameID, move)
+	err := s.MoveValid(gameID, move)
 	if err != nil {
 		return false
 	}
@@ -138,26 +110,17 @@ func (s *Service) MoveGameStr(gameID uuid.UUID, move string, player *dto.PlayerC
 	}
 	err = s.SendMessage(opponentMotionUser, response)
 	if err != nil {
-		s.logger.Error(err)
 		return false
 	}
 	return true
 }
 
-func (s *Service) SetConnGame(GameID uuid.UUID, player *dto.PlayerConn) {
+func (s *Service) SetConnGame(GameID uuid.UUID, player *dto.PlayerConn) error {
 	err := s.IGameService.SetPlayer(GameID, player)
 	if err != nil {
-		s.logger.Error(err)
-		return
+		return err
 	}
-}
-
-func (s *Service) GetStatusMemory(GameID uuid.UUID) (chess.Status, error) {
-	return s.IGameService.GetStatusMemory(GameID)
-}
-
-func (s *Service) GetHistoryMove(GameID uuid.UUID) []string {
-	return s.IGameService.GetHistoryMove(GameID)
+	return nil
 }
 
 func (s *Service) GetGameInfoMemory(GameID uuid.UUID, ok bool, move string) (map[string]interface{}, error) {
@@ -181,8 +144,4 @@ func (s *Service) GetGameInfoMemory(GameID uuid.UUID, ok bool, move string) (map
 	}
 
 	return answer, nil
-}
-
-func (s *Service) ValidationMove(GameID uuid.UUID, move string) error {
-	return s.IGameService.MoveValid(GameID, move)
 }

@@ -66,7 +66,11 @@ func MoveGame(logger interfaces.ILogger) gin.HandlerFunc {
 		player := &dto.PlayerConn{UserID: userID, Conn: conn}
 
 		service := GetService(c)
-		service.SetConnGame(gameID, player)
+		errConn := service.SetConnGame(gameID, player)
+		if errConn != nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+			return
+		}
 		logger.Info(
 			fmt.Sprintf(
 				"open gameID: %v, userID: %v, Address: %s",

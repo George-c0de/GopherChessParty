@@ -3,7 +3,7 @@ package services
 import (
 	"GopherChessParty/internal/dto"
 	"GopherChessParty/internal/interfaces"
-	"GopherChessParty/internal/models"
+	"github.com/google/uuid"
 )
 
 type UserService struct {
@@ -18,15 +18,18 @@ func NewUserService(
 	return &UserService{repository: repository, log: logger}
 }
 
-func (m *UserService) SaveUser(data *dto.CreateUser, hashedPassword string) (*models.User, error) {
+func (m *UserService) SaveUser(data *dto.CreateUser, hashedPassword string) (*dto.User, error) {
 	data.Password = hashedPassword
 	return m.repository.CreateUser(data)
 }
 
-func (m *UserService) GetUsers() ([]*models.User, error) {
+func (m *UserService) GetUsers() ([]*dto.User, error) {
 	return m.repository.GetUsers()
 }
 
-func (m *UserService) GetUserPassword(email string) (*models.AuthUser, error) {
+func (m *UserService) GetUserPassword(email string) (*dto.AuthUser, error) {
 	return m.repository.GetUserPassword(email)
+}
+func (m *UserService) GetUserByID(userID uuid.UUID) (*dto.User, error) {
+	return m.repository.GetUserByID(userID)
 }

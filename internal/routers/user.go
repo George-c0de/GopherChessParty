@@ -38,4 +38,15 @@ func addUserRoutes(rg *gin.RouterGroup, service interfaces.IService) {
 
 		c.JSON(http.StatusOK, gin.H{"items": users})
 	})
+	users.GET("/me", func(c *gin.Context) {
+		service := GetService(c)
+		userId, err := middleware.GetUserID(c)
+		user, err := service.GetUserByID(userId)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{"item": user})
+	})
 }

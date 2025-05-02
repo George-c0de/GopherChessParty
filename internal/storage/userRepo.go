@@ -2,11 +2,11 @@ package storage
 
 import (
 	"context"
+	"github.com/google/uuid"
 
 	"GopherChessParty/ent/user"
 	"GopherChessParty/internal/dto"
 	"GopherChessParty/internal/interfaces"
-	"GopherChessParty/internal/models"
 )
 
 type UserRepository struct {
@@ -18,7 +18,7 @@ func NewUserRepository(log interfaces.ILogger, repo *Repository) *UserRepository
 	return &UserRepository{log, repo}
 }
 
-func (r *UserRepository) CreateUser(user *dto.CreateUser) (*models.User, error) {
+func (r *UserRepository) CreateUser(user *dto.CreateUser) (*dto.User, error) {
 	ctx := context.Background()
 
 	newUser, err := r.client.User.Create().
@@ -30,7 +30,7 @@ func (r *UserRepository) CreateUser(user *dto.CreateUser) (*models.User, error) 
 		r.log.Error(err)
 		return nil, err
 	}
-	return &models.User{
+	return &dto.User{
 		ID:        newUser.ID,
 		Email:     newUser.Email,
 		CreatedAt: newUser.CreatedAt,
@@ -39,10 +39,10 @@ func (r *UserRepository) CreateUser(user *dto.CreateUser) (*models.User, error) 
 	}, nil
 }
 
-func (r *UserRepository) GetUsers() ([]*models.User, error) {
+func (r *UserRepository) GetUsers() ([]*dto.User, error) {
 	ctx := context.Background()
 
-	var users []*models.User
+	var users []*dto.User
 	err := r.client.User.
 		Query().
 		Select(user.FieldID, user.FieldName, user.FieldEmail, user.FieldCreatedAt, user.FieldUpdatedAt).
@@ -54,7 +54,27 @@ func (r *UserRepository) GetUsers() ([]*models.User, error) {
 	return users, nil
 }
 
-func (r *UserRepository) GetUserPassword(email string) (*models.AuthUser, error) {
+func (r *UserRepository) GetUserByID(UserID uuid.UUID) (*dto.User, error) {
+	ctx := context.Background()
+
+	userDB, err := r.client.User.
+		Query().
+		Select(
+			user.FieldID, user.FieldName, user.FieldEmail, user.FieldCreatedAt, user.FieldUpdatedAt,
+		).Where(user.ID(UserID)).Only(ctx)
+	if err != nil {
+		r.log.Error(err)
+		return nil, err
+	}
+	return &dto.User{
+		ID:        userDB.ID,
+		Email:     userDB.Email,
+		CreatedAt: userDB.CreatedAt,
+		UpdatedAt: userDB.UpdatedAt,
+		Name:      userDB.Name,
+	}, nil
+}
+func (r *UserRepository) GetUserPassword(email string) (*dto.AuthUser, error) {
 	ctx := context.Background()
 
 	authUser, err := r.client.User.
@@ -67,5 +87,5 @@ func (r *UserRepository) GetUserPassword(email string) (*models.AuthUser, error)
 		return nil, err
 	}
 
-	return &models.AuthUser{UserId: authUser.ID, HashedPassword: authUser.Password}, nil
+	return &dto.AuthUser{UserId: authUser.ID, HashedPassword: authUser.Password}, nil
 }

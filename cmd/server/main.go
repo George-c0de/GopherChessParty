@@ -37,15 +37,4 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	//users := service.GetUsers()
-	//
-	//for i := 0; i < len(users); i++ {
-	//	user := users[i]
-	//	fmt.Println(user)
-	//}
-	//myGame := service.CreateGame()
-	//service.Move(myGame, "e4")
-	//service.Move(myGame, "e5")
-	//service.Move(myGame, "Nf3")
-	//fmt.Printf(myGame.Position().Board().Draw())
 }

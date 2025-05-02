@@ -56,24 +56,21 @@ func (m *MatchService) sendMessage(player *dto.PlayerConn, message []byte) error
 	return nil
 }
 
-func (m *MatchService) ReturnPlayerID() (*dto.PlayerConn, *dto.PlayerConn, error) {
+func (m *MatchService) ReturnPlayerID() (*dto.PlayerConn, *dto.PlayerConn) {
 	m.queueMu.Lock()
 	defer m.queueMu.Unlock()
 	player1, player2 := m.queue[0], m.queue[1]
 	m.queue = m.queue[2:]
-	return player1, player2, nil
+	return player1, player2
 }
 
 func (m *MatchService) SendGemID(player *dto.PlayerConn, gameID uuid.UUID) error {
-	message := make(map[string]uuid.UUID)
-	message["gameID"] = gameID
-	messageByte, err := json.Marshal(message)
+	message := map[string]interface{}{
+		"gameID": gameID,
+	}
+	err := m.SendMessage(player, message)
 	if err != nil {
 		m.log.Error(err)
-		return err
-	}
-	err = m.sendMessage(player, messageByte)
-	if err != nil {
 		return err
 	}
 	return nil

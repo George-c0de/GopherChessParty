@@ -1,6 +1,10 @@
 package dto
 
-import "github.com/google/uuid"
+import (
+	"fmt"
+	"github.com/google/uuid"
+	"time"
+)
 
 type CreateUser struct {
 	Name     string `binding:"required"       json:"name"`
@@ -17,4 +21,16 @@ type GetUser struct {
 	ID    uuid.UUID `json:"id"`
 	Name  string    `json:"name"`
 	Email string    `json:"email"`
+}
+
+type User struct {
+	ID        uuid.UUID `json:"id"`
+	Name      string    `json:"name"`
+	Email     string    `json:"email"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+}
+
+func (u User) String() string {
+	return fmt.Sprintf("User(Name=%q)", u.Name)
 }

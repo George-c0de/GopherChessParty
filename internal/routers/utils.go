@@ -8,7 +8,6 @@ import (
 	"GopherChessParty/internal/services"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
-	uuid "github.com/jackc/pgtype/ext/gofrs-uuid"
 )
 
 const (
@@ -30,14 +29,6 @@ func GetService(c *gin.Context) interfaces.IService {
 	}
 	// Приводим к нужному типу
 	return svc.(*services.Service)
-}
-
-func GetUserID(c *gin.Context) (uuid.UUID, bool) {
-	userId, exists := c.Get("id")
-	if !exists {
-		return uuid.UUID{}, false
-	}
-	return userId.(uuid.UUID), true
 }
 
 func BindJSON[T any](c *gin.Context) (*T, error) {
