@@ -623,6 +623,8 @@ const useChessGame = (gameId: string | undefined) => {
   // WebSocket and move handling
   useEffect(() => {
     if (!gameInfo) return;
+    // Не подключаемся к WebSocket, если игра завершена
+    if (gameInfo.Status === 'finished' || gameInfo.Status === 'aborted') return;
     const token = localStorage.getItem('authToken')!;
     const ws = new WebSocket(`${config.wsBaseUrl}/ws/game/${gameId}?token=${encodeURIComponent('Bearer ' + token)}`);
     socketRef.current = ws;
