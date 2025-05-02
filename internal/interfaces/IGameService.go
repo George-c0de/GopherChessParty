@@ -8,7 +8,7 @@ import (
 )
 
 type IGameService interface {
-	GetGamesByUserID(userID uuid.UUID) ([]*ent.Chess, error)
+	GetGamesByUserID(userID uuid.UUID) ([]*dto.GameHistory, error)
 	CreateGame(playerID1, playerID2 uuid.UUID) (*ent.Chess, error)
 	GetGameByID(gameID uuid.UUID) (*dto.Match, error)
 	MoveGame(GameID uuid.UUID, move string, player *dto.PlayerConn) error

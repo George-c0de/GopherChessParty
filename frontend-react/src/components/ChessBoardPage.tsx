@@ -370,11 +370,12 @@ const NavigationButtons = styled.div`
   right: 20px;
   display: flex;
   gap: 10px;
-  z-index: 1000;
+  z-index: 9999;
   background: rgba(255, 255, 255, 0.9);
   padding: 10px;
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  pointer-events: auto;
 `;
 
 const LogoutButton = styled(NavigationButton)`

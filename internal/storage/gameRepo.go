@@ -1,13 +1,12 @@
 package storage
 
 import (
-	"context"
-
 	"GopherChessParty/ent"
 	"GopherChessParty/ent/chess"
 	"GopherChessParty/ent/user"
 	"GopherChessParty/internal/dto"
 	"GopherChessParty/internal/interfaces"
+	"context"
 	"github.com/google/uuid"
 )
 
@@ -23,7 +22,7 @@ func NewGameRepository(log interfaces.ILogger, client *Repository) *GameReposito
 	}
 }
 
-func (g *GameRepository) GetGames(userID uuid.UUID) ([]*ent.Chess, error) {
+func (g *GameRepository) GetGames(userID uuid.UUID) ([]*dto.GameHistory, error) {
 	ctx := context.Background()
 	games, err := g.client.Chess.
 		Query().
@@ -34,7 +33,12 @@ func (g *GameRepository) GetGames(userID uuid.UUID) ([]*ent.Chess, error) {
 			chess.FieldStatus,
 			chess.BlackUserColumn,
 			chess.WhiteUserColumn,
-		).
+		).WithWhiteUser(func(uq *ent.UserQuery) {
+		uq.Select(user.FieldID, user.FieldName)
+	}).
+		WithBlackUser(func(uq *ent.UserQuery) {
+			uq.Select(user.FieldID, user.FieldName)
+		}).
 		Where(chess.Or(
 			// партii, где userID — чёрный
 			chess.HasBlackUserWith(user.IDEQ(userID)),
@@ -45,7 +49,25 @@ func (g *GameRepository) GetGames(userID uuid.UUID) ([]*ent.Chess, error) {
 		g.log.Error(err)
 		return nil, err
 	}
-	return games, nil
+	gamesWithUsers := make([]*dto.GameHistory, 0, len(games))
+	for _, game := range games {
+		gamesWithUsers = append(gamesWithUsers, &dto.GameHistory{
+			Id:        game.ID,
+			CreatedAt: game.CreatedAt,
+			UpdatedAt: game.UpdatedAt,
+			Status:    game.Status,
+			Result:    game.Result,
+			BlackPlayer: &dto.Player{
+				Id:   game.Edges.BlackUser.ID,
+				Name: game.Edges.BlackUser.Name,
+			},
+			WhitePlayer: &dto.Player{
+				Id:   game.Edges.WhiteUser.ID,
+				Name: game.Edges.WhiteUser.Name,
+			},
+		})
+	}
+	return gamesWithUsers, nil
 }
 
 func (g *GameRepository) Create(playerID1, playerID2 uuid.UUID) (*ent.Chess, error) {

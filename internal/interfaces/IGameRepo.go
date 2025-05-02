@@ -8,7 +8,7 @@ import (
 )
 
 type IGameRepo interface {
-	GetGames(userID uuid.UUID) ([]*ent.Chess, error)
+	GetGames(userID uuid.UUID) ([]*dto.GameHistory, error)
 	Create(playerID1, playerID2 uuid.UUID) (*ent.Chess, error)
 	GetGameById(gameId uuid.UUID) (*dto.Match, error)
 	GetStatus(GameID uuid.UUID) chess.Status

@@ -26,9 +26,18 @@ const BoardContainer = styled.div`
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100vh;
+    min-height: 100vh;
     background-color: #f5f5f5;
     position: relative;
+    padding: 140px 20px 140px 20px;
+
+    @media (max-width: 900px) {
+        padding: 120px 5px 120px 5px;
+    }
+    @media (max-width: 600px) {
+        flex-direction: column;
+        padding: 110px 2px 80px 2px;
+    }
 `;
 
 const Overlay = styled.div<{ isGameStarted: boolean }>`
@@ -64,6 +73,15 @@ const StartButton = styled.button`
     &:disabled {
         background-color: #cccccc;
         cursor: not-allowed;
+    }
+`;
+
+const GoToGameButton = styled(StartButton)`
+    background-color: #2196F3;
+    margin-top: 10px;
+
+    &:hover {
+        background-color: #1976D2;
     }
 `;
 
@@ -117,6 +135,10 @@ const CapturesContainer = styled.div`
     padding: 15px;
     border-radius: 5px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    z-index: 2;
+    max-height: calc(100vh - 200px);
+    overflow-y: auto;
+    margin-right: 20px;
 `;
 
 const LogoutButton = styled.button`
@@ -153,12 +175,24 @@ const WhitePlayerInfo = styled(PlayerInfo)`
     top: 20px;
     left: 50%;
     transform: translateX(-50%);
+    z-index: 3;
+    @media (max-width: 600px) {
+        top: 70px;
+        left: 50%;
+        transform: translateX(-50%);
+    }
 `;
 
 const BlackPlayerInfo = styled(PlayerInfo)`
     bottom: 20px;
     left: 50%;
     transform: translateX(-50%);
+    z-index: 3;
+    @media (max-width: 600px) {
+        bottom: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+    }
 `;
 
 const PlayerAvatar = styled.div`
@@ -278,13 +312,18 @@ const getResultEmoji = (result: string) => {
 const HistoryControls = styled.div`
     position: fixed;
     bottom: 20px;
-    left: 20px;
+    right: 20px;
     display: flex;
     gap: 10px;
     background: white;
     padding: 10px;
     border-radius: 5px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    z-index: 2;
+    margin-top: 20px;
+    flex-direction: column;
+    margin-right: 20px;
+    margin-bottom: 20px;
 `;
 
 const HistoryButton = styled.button`
@@ -303,6 +342,15 @@ const HistoryButton = styled.button`
     &:disabled {
         background-color: #bdc3c7;
         cursor: not-allowed;
+    }
+`;
+
+const GoToGameHistoryButton = styled(HistoryButton)`
+    background-color: #2ecc71;
+    margin-top: 10px;
+
+    &:hover {
+        background-color: #27ae60;
     }
 `;
 
@@ -424,6 +472,7 @@ export const ChessBoard: React.FC = () => {
     const MAX_RECONNECT_ATTEMPTS = 5;
     const RECONNECT_DELAY = 3000;
     const CONNECTION_TIMEOUT = 5000;
+    const [foundGameId, setFoundGameId] = useState<string | null>(null);
 
     // Refs для управления WebSocket соединением
     const wsRef = useRef<WebSocket | null>(null);
@@ -862,8 +911,6 @@ export const ChessBoard: React.FC = () => {
             return;
         }
 
-        
-
         // Передаем токен в URL как query-параметр
         const wsUrl = `${config.wsBaseUrl}${config.endpoints.game.search}?token=${encodeURIComponent('Bearer ' + token)}`;
         console.log('Открываю WebSocket:', wsUrl);
@@ -879,15 +926,12 @@ export const ChessBoard: React.FC = () => {
                 const data = JSON.parse(event.data);
                 const id = data.gameId || data.gemId || data.gameID; // поддержка всех вариантов
                 if (id) {
-                    console.log('Переход на:', `/game/${id}`);
-                    setSearchStatus('Игра найдена! Перенаправление...');
-                    // Сохраняем ID игры перед переходом
+                    console.log('Игра найдена:', id);
+                    setSearchStatus('Игра найдена!');
+                    setFoundGameId(id);
+                    setIsSearching(false);
+                    // Сохраняем ID игры
                     localStorage.setItem('currentGameId', id);
-                    // Закрываем WebSocket только после сохранения ID
-                    setTimeout(() => {
-                        ws.close();
-                        navigate(`/game/${id}`);
-                    }, 100);
                 } else {
                     console.log('В сообщении нет gameId/gemId/gameID:', data);
                 }
@@ -911,6 +955,12 @@ export const ChessBoard: React.FC = () => {
                 setIsSearching(false);
             }
         };
+    };
+
+    const handleGoToGame = () => {
+        if (foundGameId) {
+            navigate(`/game/${foundGameId}`);
+        }
     };
 
     // Функция для конвертации FEN в массив доски
@@ -1267,6 +1317,11 @@ export const ChessBoard: React.FC = () => {
                             {isSearching ? 'Поиск игры...' : 'Начать игру'}
                         </StartButton>
                         {searchStatus && <StatusMessage>{searchStatus}</StatusMessage>}
+                        {foundGameId && (
+                            <GoToGameButton onClick={handleGoToGame}>
+                                Перейти к игре
+                            </GoToGameButton>
+                        )}
                     </div>
                 </Overlay>
             )}
@@ -1286,18 +1341,25 @@ export const ChessBoard: React.FC = () => {
                 </GameStatusOverlay>
             )}
             <HistoryControls>
-                <HistoryButton 
-                    onClick={handleUndo}
-                    disabled={currentMoveIndex <= 0}
-                >
-                    ⬅️ Назад
-                </HistoryButton>
-                <HistoryButton 
-                    onClick={handleRedo}
-                    disabled={currentMoveIndex >= moveHistory.length - 1}
-                >
-                    Вперед ➡️
-                </HistoryButton>
+                <div style={{ display: 'flex', gap: '10px' }}>
+                    <HistoryButton 
+                        onClick={handleUndo}
+                        disabled={currentMoveIndex <= 0}
+                    >
+                        ⬅️ Назад
+                    </HistoryButton>
+                    <HistoryButton 
+                        onClick={handleRedo}
+                        disabled={currentMoveIndex >= moveHistory.length - 1}
+                    >
+                        Вперед ➡️
+                    </HistoryButton>
+                </div>
+                {gameId && (
+                    <GoToGameHistoryButton onClick={() => navigate(`/game/${gameId}`)}>
+                        Перейти к игре
+                    </GoToGameHistoryButton>
+                )}
             </HistoryControls>
         </BoardContainer>
     );

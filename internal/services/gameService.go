@@ -37,7 +37,7 @@ func (m *GameService) CreateGame(playerID1, playerID2 uuid.UUID) (*ent.Chess, er
 	return game, nil
 }
 
-func (m *GameService) GetGamesByUserID(userID uuid.UUID) ([]*ent.Chess, error) {
+func (m *GameService) GetGamesByUserID(userID uuid.UUID) ([]*dto.GameHistory, error) {
 	return m.repository.GetGames(userID)
 }
 
