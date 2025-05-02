@@ -46,16 +46,6 @@ func (m *MatchService) AddUser(player *dto.PlayerConn) {
 	m.exists <- struct{}{} // Сигнализируем о новом игроке
 }
 
-// sendMessage отправляет сообщение игроку через WebSocket
-func (m *MatchService) sendMessage(player *dto.PlayerConn, message []byte) error {
-	err := player.Conn.WriteMessage(websocket.TextMessage, message)
-	if err != nil {
-		m.log.Error(err)
-		return err
-	}
-	return nil
-}
-
 func (m *MatchService) ReturnPlayerID() (*dto.PlayerConn, *dto.PlayerConn) {
 	m.queueMu.Lock()
 	defer m.queueMu.Unlock()

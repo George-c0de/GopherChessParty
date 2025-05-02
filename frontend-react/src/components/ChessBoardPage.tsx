@@ -393,6 +393,14 @@ const ProfileButton = styled(NavigationButton)`
   }
 `;
 
+const HistoryButton = styled(NavigationButton)`
+  background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
+
+  &:hover {
+    background: linear-gradient(135deg, #8e44ad 0%, #9b59b6 100%);
+  }
+`;
+
 const HomeButton = styled(NavigationButton)`
   background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
 
@@ -873,9 +881,13 @@ const ChessBoardPage: React.FC = () => {
           <ButtonIcon>👤</ButtonIcon>
           Профиль
         </ProfileButton>
+        <HistoryButton onClick={() => navigate('/history')}>
+          <ButtonIcon>📜</ButtonIcon>
+          История
+        </HistoryButton>
         <HomeButton onClick={() => {
           navigate('/game');
-          window.location.reload(); // Перезагружаем страницу при переходе на главную
+          window.location.reload();
         }}>
           <ButtonIcon>🏠</ButtonIcon>
           Главная

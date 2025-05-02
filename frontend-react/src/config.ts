@@ -4,6 +4,8 @@ export const config = {
     endpoints: {
         login: '/login',
         register: '/register',
+        user: '/users/me',
+        chess: '/chess/',
         game: {
             move: '/api/game/move',
             search: '/ws/search',

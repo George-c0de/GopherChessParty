@@ -25,7 +25,7 @@ func addChessRoute(rg *gin.RouterGroup, service interfaces.IService) {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
-		c.JSON(http.StatusOK, games)
+		c.JSON(http.StatusOK, gin.H{"items": games})
 	})
 	users.GET("/:game_id", func(c *gin.Context) {
 		service := GetService(c)
