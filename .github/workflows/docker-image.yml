@@ -32,7 +32,7 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             set -e
-            cd /path/to/your/app
+            cd GopherChessParty
             git pull origin main
             docker-compose pull
             docker-compose up -d --build
