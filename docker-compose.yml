@@ -58,8 +58,8 @@ services:
       context: ./frontend-react
       dockerfile: Dockerfile
       args:
-        - REACT_APP_API_URL=http://backend:8000/v1
-        - REACT_APP_WS_URL=ws://backend:8000/v1
+        - REACT_APP_API_URL=http://194.67.88.54:8000/v1
+        - REACT_APP_WS_URL=ws://194.67.88.54:8000/v1
     container_name: gopher_chess_frontend
     ports:
       - "80:80"
