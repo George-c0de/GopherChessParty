@@ -2,7 +2,7 @@
 set -e
 
 # Ждём доступности Postgres
-until pg_isready -h postgres -p 5432 -U postgres; do
+until nc -z postgres 5432; do
   echo "Waiting for PostgreSQL..."
   sleep 1
 done

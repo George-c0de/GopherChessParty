@@ -27,7 +27,7 @@ services:
       dockerfile: Dockerfile.backend
     container_name: gopher_chess_backend
     ports:
-      - "8080:8080"
+      - "8000:8000"
     environment:
       DATABASE_URL: "postgres://postgres:postgres@postgres:5432/gopher_chess?search_path=public&sslmode=disable"
     depends_on:
@@ -45,8 +45,8 @@ services:
     ports:
       - "80:80"
     environment:
-      - REACT_APP_API_URL=http://localhost:8080
-      - REACT_APP_WS_URL=ws://localhost:8080
+      - REACT_APP_API_URL=http://localhost:8000
+      - REACT_APP_WS_URL=ws://localhost:8000
     depends_on:
       - backend
 
