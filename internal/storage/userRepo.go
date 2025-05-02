@@ -2,11 +2,11 @@ package storage
 
 import (
 	"context"
-	"github.com/google/uuid"
 
 	"GopherChessParty/ent/user"
 	"GopherChessParty/internal/dto"
 	"GopherChessParty/internal/interfaces"
+	"github.com/google/uuid"
 )
 
 type UserRepository struct {
@@ -74,6 +74,7 @@ func (r *UserRepository) GetUserByID(UserID uuid.UUID) (*dto.User, error) {
 		Name:      userDB.Name,
 	}, nil
 }
+
 func (r *UserRepository) GetUserPassword(email string) (*dto.AuthUser, error) {
 	ctx := context.Background()
 

@@ -1,10 +1,11 @@
 package services
 
 import (
+	exc "errors"
+
 	"GopherChessParty/internal/dto"
 	"GopherChessParty/internal/errors"
 	"GopherChessParty/internal/interfaces"
-	exc "errors"
 	"github.com/golang-jwt/jwt"
 	"github.com/google/uuid"
 )
@@ -123,7 +124,11 @@ func (s *Service) SetConnGame(GameID uuid.UUID, player *dto.PlayerConn) error {
 	return nil
 }
 
-func (s *Service) GetGameInfoMemory(GameID uuid.UUID, ok bool, move string) (map[string]interface{}, error) {
+func (s *Service) GetGameInfoMemory(
+	GameID uuid.UUID,
+	ok bool,
+	move string,
+) (map[string]interface{}, error) {
 	game := s.IGameService.GetGameMemory(GameID)
 	if game == nil {
 		s.logger.Error(errors.ErrGameNotFound)

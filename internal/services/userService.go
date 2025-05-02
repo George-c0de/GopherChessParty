@@ -30,6 +30,7 @@ func (m *UserService) GetUsers() ([]*dto.User, error) {
 func (m *UserService) GetUserPassword(email string) (*dto.AuthUser, error) {
 	return m.repository.GetUserPassword(email)
 }
+
 func (m *UserService) GetUserByID(userID uuid.UUID) (*dto.User, error) {
 	return m.repository.GetUserByID(userID)
 }

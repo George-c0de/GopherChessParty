@@ -1,9 +1,10 @@
 package logger
 
 import (
-	"GopherChessParty/internal/interfaces"
 	"log/slog"
 	"os"
+
+	"GopherChessParty/internal/interfaces"
 )
 
 const (

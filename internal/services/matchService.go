@@ -1,12 +1,13 @@
 package services
 
 import (
+	"encoding/json"
+	"sync"
+
 	"GopherChessParty/internal/dto"
 	"GopherChessParty/internal/interfaces"
-	"encoding/json"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
-	"sync"
 )
 
 // MatchService управляет поиском и созданием пар для игры
