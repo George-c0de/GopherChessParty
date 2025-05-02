@@ -41,6 +41,10 @@ func addUserRoutes(rg *gin.RouterGroup, service interfaces.IService) {
 	users.GET("/me", func(c *gin.Context) {
 		service := GetService(c)
 		userId, err := middleware.GetUserID(c)
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+			return
+		}
 		user, err := service.GetUserByID(userId)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

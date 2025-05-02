@@ -110,10 +110,7 @@ func (s *Service) MoveGameStr(gameID uuid.UUID, move string, player *dto.PlayerC
 		return false
 	}
 	err = s.SendMessage(opponentMotionUser, response)
-	if err != nil {
-		return false
-	}
-	return true
+	return err == nil
 }
 
 func (s *Service) SetConnGame(GameID uuid.UUID, player *dto.PlayerConn) error {

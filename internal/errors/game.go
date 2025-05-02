@@ -9,4 +9,5 @@ var (
 	ErrGameDeleteFailed  = errors.New("game delete failed")
 	ErrInvalidMove       = errors.New("invalid move")
 	ErrPlayersNotConn    = errors.New("players not connected")
+	ErrPlayerNotFound    = errors.New("player not found")
 )

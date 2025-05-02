@@ -162,11 +162,15 @@ func (m *GameService) SetPlayer(GameID uuid.UUID, player *dto.PlayerConn) error 
 		m.log.Error(errors.ErrGameNotFound)
 		return errors.ErrGameNotFound
 	}
-	if player.UserID == game.WhitePlayer.UserID {
+	switch player.UserID {
+	case game.WhitePlayer.UserID:
 		game.WhitePlayer.Conn = player.Conn
-	} else if player.UserID == game.BlackPlayer.UserID {
+	case game.BlackPlayer.UserID:
 		game.BlackPlayer.Conn = player.Conn
+	default:
+		return errors.ErrPlayerNotFound
 	}
+
 	return nil
 }
 
