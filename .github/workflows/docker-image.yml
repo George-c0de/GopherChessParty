@@ -34,5 +34,4 @@ jobs:
             set -e
             cd GopherChessParty
             git pull origin main
-            docker compose pull
             docker compose up -d --build
