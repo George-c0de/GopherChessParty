@@ -4,6 +4,7 @@ package ent
 
 import (
 	"GopherChessParty/ent/chess"
+	"GopherChessParty/ent/gamehistory"
 	"GopherChessParty/ent/user"
 	"context"
 	"errors"
@@ -112,6 +113,21 @@ func (cc *ChessCreate) SetBlackUserID(id uuid.UUID) *ChessCreate {
 // SetBlackUser sets the "black_user" edge to the User entity.
 func (cc *ChessCreate) SetBlackUser(u *User) *ChessCreate {
 	return cc.SetBlackUserID(u.ID)
+}
+
+// AddMoveIDs adds the "moves" edge to the GameHistory entity by IDs.
+func (cc *ChessCreate) AddMoveIDs(ids ...uuid.UUID) *ChessCreate {
+	cc.mutation.AddMoveIDs(ids...)
+	return cc
+}
+
+// AddMoves adds the "moves" edges to the GameHistory entity.
+func (cc *ChessCreate) AddMoves(g ...*GameHistory) *ChessCreate {
+	ids := make([]uuid.UUID, len(g))
+	for i := range g {
+		ids[i] = g[i].ID
+	}
+	return cc.AddMoveIDs(ids...)
 }
 
 // Mutation returns the ChessMutation object of the builder.
@@ -284,6 +300,22 @@ func (cc *ChessCreate) createSpec() (*Chess, *sqlgraph.CreateSpec) {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_node.user_black_id = &nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := cc.mutation.MovesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   chess.MovesTable,
+			Columns: []string{chess.MovesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(gamehistory.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

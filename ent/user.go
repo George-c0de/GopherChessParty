@@ -40,9 +40,11 @@ type UserEdges struct {
 	WhiteID []*Chess `json:"white_id,omitempty"`
 	// BlackID holds the value of the black_id edge.
 	BlackID []*Chess `json:"black_id,omitempty"`
+	// Moves holds the value of the moves edge.
+	Moves []*GameHistory `json:"moves,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [2]bool
+	loadedTypes [3]bool
 }
 
 // WhiteIDOrErr returns the WhiteID value or an error if the edge
@@ -61,6 +63,15 @@ func (e UserEdges) BlackIDOrErr() ([]*Chess, error) {
 		return e.BlackID, nil
 	}
 	return nil, &NotLoadedError{edge: "black_id"}
+}
+
+// MovesOrErr returns the Moves value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) MovesOrErr() ([]*GameHistory, error) {
+	if e.loadedTypes[2] {
+		return e.Moves, nil
+	}
+	return nil, &NotLoadedError{edge: "moves"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -146,6 +157,11 @@ func (u *User) QueryWhiteID() *ChessQuery {
 // QueryBlackID queries the "black_id" edge of the User entity.
 func (u *User) QueryBlackID() *ChessQuery {
 	return NewUserClient(u.config).QueryBlackID(u)
+}
+
+// QueryMoves queries the "moves" edge of the User entity.
+func (u *User) QueryMoves() *GameHistoryQuery {
+	return NewUserClient(u.config).QueryMoves(u)
 }
 
 // Update returns a builder for updating this User.

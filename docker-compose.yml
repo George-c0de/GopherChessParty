@@ -1,7 +1,6 @@
 version: '3.8'
 
 services:
-  # База данных PostgreSQL
   postgres:
     image: postgres:15
     container_name: gopher_chess_db
@@ -13,18 +12,34 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./ent/migrate/migrations:/docker-entrypoint-initdb.d/migrations
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
       interval: 5s
       timeout: 5s
       retries: 5
 
-  # Бэкенд сервис
+
+  migrate:
+    image: arigaio/atlas:latest-alpine
+    container_name: gopher_chess_migrate
+    command:
+      - migrate
+      - apply
+      - --dir
+      - file:///migrations
+      - --url
+      - postgres://postgres:postgres@postgres:5432/gopher_chess?search_path=public&sslmode=disable
+      - --revisions-schema
+      - public
+    volumes:
+      - ./ent/migrate/migrations:/migrations
+    depends_on:
+      postgres:
+        condition: service_healthy
   backend:
     build:
       context: .
-      dockerfile: Dockerfile.backend
+      dockerfile: Dockerfile
     container_name: gopher_chess_backend
     ports:
       - "8000:8000"
@@ -33,10 +48,11 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
     volumes:
       - ./ent/migrate/migrations:/app/ent/migrate/migrations
 
-  # Фронтенд сервис
   frontend:
     build:
       context: ./frontend-react
@@ -51,4 +67,4 @@ services:
       - backend
 
 volumes:
-  postgres_data: 
+  postgres_data:

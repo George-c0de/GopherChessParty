@@ -4,6 +4,7 @@ package ent
 
 import (
 	"GopherChessParty/ent/chess"
+	"GopherChessParty/ent/gamehistory"
 	"GopherChessParty/ent/predicate"
 	"GopherChessParty/ent/user"
 	"context"
@@ -108,6 +109,21 @@ func (cu *ChessUpdate) SetBlackUser(u *User) *ChessUpdate {
 	return cu.SetBlackUserID(u.ID)
 }
 
+// AddMoveIDs adds the "moves" edge to the GameHistory entity by IDs.
+func (cu *ChessUpdate) AddMoveIDs(ids ...uuid.UUID) *ChessUpdate {
+	cu.mutation.AddMoveIDs(ids...)
+	return cu
+}
+
+// AddMoves adds the "moves" edges to the GameHistory entity.
+func (cu *ChessUpdate) AddMoves(g ...*GameHistory) *ChessUpdate {
+	ids := make([]uuid.UUID, len(g))
+	for i := range g {
+		ids[i] = g[i].ID
+	}
+	return cu.AddMoveIDs(ids...)
+}
+
 // Mutation returns the ChessMutation object of the builder.
 func (cu *ChessUpdate) Mutation() *ChessMutation {
 	return cu.mutation
@@ -123,6 +139,27 @@ func (cu *ChessUpdate) ClearWhiteUser() *ChessUpdate {
 func (cu *ChessUpdate) ClearBlackUser() *ChessUpdate {
 	cu.mutation.ClearBlackUser()
 	return cu
+}
+
+// ClearMoves clears all "moves" edges to the GameHistory entity.
+func (cu *ChessUpdate) ClearMoves() *ChessUpdate {
+	cu.mutation.ClearMoves()
+	return cu
+}
+
+// RemoveMoveIDs removes the "moves" edge to GameHistory entities by IDs.
+func (cu *ChessUpdate) RemoveMoveIDs(ids ...uuid.UUID) *ChessUpdate {
+	cu.mutation.RemoveMoveIDs(ids...)
+	return cu
+}
+
+// RemoveMoves removes "moves" edges to GameHistory entities.
+func (cu *ChessUpdate) RemoveMoves(g ...*GameHistory) *ChessUpdate {
+	ids := make([]uuid.UUID, len(g))
+	for i := range g {
+		ids[i] = g[i].ID
+	}
+	return cu.RemoveMoveIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -255,6 +292,51 @@ func (cu *ChessUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if cu.mutation.MovesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   chess.MovesTable,
+			Columns: []string{chess.MovesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(gamehistory.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := cu.mutation.RemovedMovesIDs(); len(nodes) > 0 && !cu.mutation.MovesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   chess.MovesTable,
+			Columns: []string{chess.MovesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(gamehistory.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := cu.mutation.MovesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   chess.MovesTable,
+			Columns: []string{chess.MovesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(gamehistory.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if n, err = sqlgraph.UpdateNodes(ctx, cu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{chess.Label}
@@ -353,6 +435,21 @@ func (cuo *ChessUpdateOne) SetBlackUser(u *User) *ChessUpdateOne {
 	return cuo.SetBlackUserID(u.ID)
 }
 
+// AddMoveIDs adds the "moves" edge to the GameHistory entity by IDs.
+func (cuo *ChessUpdateOne) AddMoveIDs(ids ...uuid.UUID) *ChessUpdateOne {
+	cuo.mutation.AddMoveIDs(ids...)
+	return cuo
+}
+
+// AddMoves adds the "moves" edges to the GameHistory entity.
+func (cuo *ChessUpdateOne) AddMoves(g ...*GameHistory) *ChessUpdateOne {
+	ids := make([]uuid.UUID, len(g))
+	for i := range g {
+		ids[i] = g[i].ID
+	}
+	return cuo.AddMoveIDs(ids...)
+}
+
 // Mutation returns the ChessMutation object of the builder.
 func (cuo *ChessUpdateOne) Mutation() *ChessMutation {
 	return cuo.mutation
@@ -368,6 +465,27 @@ func (cuo *ChessUpdateOne) ClearWhiteUser() *ChessUpdateOne {
 func (cuo *ChessUpdateOne) ClearBlackUser() *ChessUpdateOne {
 	cuo.mutation.ClearBlackUser()
 	return cuo
+}
+
+// ClearMoves clears all "moves" edges to the GameHistory entity.
+func (cuo *ChessUpdateOne) ClearMoves() *ChessUpdateOne {
+	cuo.mutation.ClearMoves()
+	return cuo
+}
+
+// RemoveMoveIDs removes the "moves" edge to GameHistory entities by IDs.
+func (cuo *ChessUpdateOne) RemoveMoveIDs(ids ...uuid.UUID) *ChessUpdateOne {
+	cuo.mutation.RemoveMoveIDs(ids...)
+	return cuo
+}
+
+// RemoveMoves removes "moves" edges to GameHistory entities.
+func (cuo *ChessUpdateOne) RemoveMoves(g ...*GameHistory) *ChessUpdateOne {
+	ids := make([]uuid.UUID, len(g))
+	for i := range g {
+		ids[i] = g[i].ID
+	}
+	return cuo.RemoveMoveIDs(ids...)
 }
 
 // Where appends a list predicates to the ChessUpdate builder.
@@ -523,6 +641,51 @@ func (cuo *ChessUpdateOne) sqlSave(ctx context.Context) (_node *Chess, err error
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if cuo.mutation.MovesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   chess.MovesTable,
+			Columns: []string{chess.MovesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(gamehistory.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := cuo.mutation.RemovedMovesIDs(); len(nodes) > 0 && !cuo.mutation.MovesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   chess.MovesTable,
+			Columns: []string{chess.MovesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(gamehistory.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := cuo.mutation.MovesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   chess.MovesTable,
+			Columns: []string{chess.MovesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(gamehistory.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

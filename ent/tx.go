@@ -14,6 +14,8 @@ type Tx struct {
 	config
 	// Chess is the client for interacting with the Chess builders.
 	Chess *ChessClient
+	// GameHistory is the client for interacting with the GameHistory builders.
+	GameHistory *GameHistoryClient
 	// User is the client for interacting with the User builders.
 	User *UserClient
 
@@ -148,6 +150,7 @@ func (tx *Tx) Client() *Client {
 
 func (tx *Tx) init() {
 	tx.Chess = NewChessClient(tx.config)
+	tx.GameHistory = NewGameHistoryClient(tx.config)
 	tx.User = NewUserClient(tx.config)
 }
 

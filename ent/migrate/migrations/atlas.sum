@@ -1,4 +1,5 @@
-h1:lxRkMUD9PsUgiautlQJ1jRjoLfjSEf0HU79Xr/0H4dc=
+h1:f9EvjKAeLpcfRSFLF0yYOq+rx/BSne/4qzwTFzEb8MQ=
 20250423181026_init_db.sql h1:QDj7+XtuvSkC67nU/oIV5uoVhZhFca6uWSFg5QP4S4o=
 20250423192105_editGame.sql h1:kk+rTQG2z+Lnr7whoNoLD2mx1YNfxFuXoA8SbeDyAIM=
 20250423193455_DeleteWinner.sql h1:SwKALshYTZi/h9YUxD0hPk9Es1pVhOS1+J7nXnfoHQM=
+20250502192023_AddHistoryMove.sql h1:EEqsfBJM9eFYhh5A6ODvtp0OwbSiyXIbNGXGmHhTiic=

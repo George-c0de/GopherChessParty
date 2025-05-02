@@ -7,11 +7,5 @@ until nc -z postgres 5432; do
   sleep 1
 done
 
-echo "Running migrations..."
-atlas migrate apply \
-  --dir "file://ent/migrate/migrations" \
-  --url "postgres://postgres:postgres@postgres:5432/gopher_chess?search_path=public&sslmode=disable" \
-  --revisions-schema public
-
 echo "Starting application..."
 ./main --config config/dev.yaml

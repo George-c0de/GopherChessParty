@@ -4,9 +4,11 @@ package ent
 
 import (
 	"GopherChessParty/ent/chess"
+	"GopherChessParty/ent/gamehistory"
 	"GopherChessParty/ent/predicate"
 	"GopherChessParty/ent/user"
 	"context"
+	"database/sql/driver"
 	"fmt"
 	"math"
 
@@ -26,6 +28,7 @@ type ChessQuery struct {
 	predicates    []predicate.Chess
 	withWhiteUser *UserQuery
 	withBlackUser *UserQuery
+	withMoves     *GameHistoryQuery
 	withFKs       bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
@@ -100,6 +103,28 @@ func (cq *ChessQuery) QueryBlackUser() *UserQuery {
 			sqlgraph.From(chess.Table, chess.FieldID, selector),
 			sqlgraph.To(user.Table, user.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, chess.BlackUserTable, chess.BlackUserColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(cq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryMoves chains the current query on the "moves" edge.
+func (cq *ChessQuery) QueryMoves() *GameHistoryQuery {
+	query := (&GameHistoryClient{config: cq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := cq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := cq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(chess.Table, chess.FieldID, selector),
+			sqlgraph.To(gamehistory.Table, gamehistory.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, chess.MovesTable, chess.MovesColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(cq.driver.Dialect(), step)
 		return fromU, nil
@@ -301,6 +326,7 @@ func (cq *ChessQuery) Clone() *ChessQuery {
 		predicates:    append([]predicate.Chess{}, cq.predicates...),
 		withWhiteUser: cq.withWhiteUser.Clone(),
 		withBlackUser: cq.withBlackUser.Clone(),
+		withMoves:     cq.withMoves.Clone(),
 		// clone intermediate query.
 		sql:  cq.sql.Clone(),
 		path: cq.path,
@@ -326,6 +352,17 @@ func (cq *ChessQuery) WithBlackUser(opts ...func(*UserQuery)) *ChessQuery {
 		opt(query)
 	}
 	cq.withBlackUser = query
+	return cq
+}
+
+// WithMoves tells the query-builder to eager-load the nodes that are connected to
+// the "moves" edge. The optional arguments are used to configure the query builder of the edge.
+func (cq *ChessQuery) WithMoves(opts ...func(*GameHistoryQuery)) *ChessQuery {
+	query := (&GameHistoryClient{config: cq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	cq.withMoves = query
 	return cq
 }
 
@@ -408,9 +445,10 @@ func (cq *ChessQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Chess,
 		nodes       = []*Chess{}
 		withFKs     = cq.withFKs
 		_spec       = cq.querySpec()
-		loadedTypes = [2]bool{
+		loadedTypes = [3]bool{
 			cq.withWhiteUser != nil,
 			cq.withBlackUser != nil,
+			cq.withMoves != nil,
 		}
 	)
 	if cq.withWhiteUser != nil || cq.withBlackUser != nil {
@@ -446,6 +484,13 @@ func (cq *ChessQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Chess,
 	if query := cq.withBlackUser; query != nil {
 		if err := cq.loadBlackUser(ctx, query, nodes, nil,
 			func(n *Chess, e *User) { n.Edges.BlackUser = e }); err != nil {
+			return nil, err
+		}
+	}
+	if query := cq.withMoves; query != nil {
+		if err := cq.loadMoves(ctx, query, nodes,
+			func(n *Chess) { n.Edges.Moves = []*GameHistory{} },
+			func(n *Chess, e *GameHistory) { n.Edges.Moves = append(n.Edges.Moves, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -513,6 +558,36 @@ func (cq *ChessQuery) loadBlackUser(ctx context.Context, query *UserQuery, nodes
 		for i := range nodes {
 			assign(nodes[i], n)
 		}
+	}
+	return nil
+}
+func (cq *ChessQuery) loadMoves(ctx context.Context, query *GameHistoryQuery, nodes []*Chess, init func(*Chess), assign func(*Chess, *GameHistory)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[uuid.UUID]*Chess)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(gamehistory.FieldGameID)
+	}
+	query.Where(predicate.GameHistory(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(chess.MovesColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.GameID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "game_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
 	}
 	return nil
 }

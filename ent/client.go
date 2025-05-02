@@ -12,6 +12,7 @@ import (
 	"GopherChessParty/ent/migrate"
 
 	"GopherChessParty/ent/chess"
+	"GopherChessParty/ent/gamehistory"
 	"GopherChessParty/ent/user"
 
 	"entgo.io/ent"
@@ -28,6 +29,8 @@ type Client struct {
 	Schema *migrate.Schema
 	// Chess is the client for interacting with the Chess builders.
 	Chess *ChessClient
+	// GameHistory is the client for interacting with the GameHistory builders.
+	GameHistory *GameHistoryClient
 	// User is the client for interacting with the User builders.
 	User *UserClient
 }
@@ -42,6 +45,7 @@ func NewClient(opts ...Option) *Client {
 func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
 	c.Chess = NewChessClient(c.config)
+	c.GameHistory = NewGameHistoryClient(c.config)
 	c.User = NewUserClient(c.config)
 }
 
@@ -133,10 +137,11 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	cfg := c.config
 	cfg.driver = tx
 	return &Tx{
-		ctx:    ctx,
-		config: cfg,
-		Chess:  NewChessClient(cfg),
-		User:   NewUserClient(cfg),
+		ctx:         ctx,
+		config:      cfg,
+		Chess:       NewChessClient(cfg),
+		GameHistory: NewGameHistoryClient(cfg),
+		User:        NewUserClient(cfg),
 	}, nil
 }
 
@@ -154,10 +159,11 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	cfg := c.config
 	cfg.driver = &txDriver{tx: tx, drv: c.driver}
 	return &Tx{
-		ctx:    ctx,
-		config: cfg,
-		Chess:  NewChessClient(cfg),
-		User:   NewUserClient(cfg),
+		ctx:         ctx,
+		config:      cfg,
+		Chess:       NewChessClient(cfg),
+		GameHistory: NewGameHistoryClient(cfg),
+		User:        NewUserClient(cfg),
 	}, nil
 }
 
@@ -187,6 +193,7 @@ func (c *Client) Close() error {
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
 	c.Chess.Use(hooks...)
+	c.GameHistory.Use(hooks...)
 	c.User.Use(hooks...)
 }
 
@@ -194,6 +201,7 @@ func (c *Client) Use(hooks ...Hook) {
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	c.Chess.Intercept(interceptors...)
+	c.GameHistory.Intercept(interceptors...)
 	c.User.Intercept(interceptors...)
 }
 
@@ -202,6 +210,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 	switch m := m.(type) {
 	case *ChessMutation:
 		return c.Chess.mutate(ctx, m)
+	case *GameHistoryMutation:
+		return c.GameHistory.mutate(ctx, m)
 	case *UserMutation:
 		return c.User.mutate(ctx, m)
 	default:
@@ -349,6 +359,22 @@ func (c *ChessClient) QueryBlackUser(ch *Chess) *UserQuery {
 	return query
 }
 
+// QueryMoves queries the moves edge of a Chess.
+func (c *ChessClient) QueryMoves(ch *Chess) *GameHistoryQuery {
+	query := (&GameHistoryClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := ch.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(chess.Table, chess.FieldID, id),
+			sqlgraph.To(gamehistory.Table, gamehistory.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, chess.MovesTable, chess.MovesColumn),
+		)
+		fromV = sqlgraph.Neighbors(ch.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *ChessClient) Hooks() []Hook {
 	return c.hooks.Chess
@@ -371,6 +397,171 @@ func (c *ChessClient) mutate(ctx context.Context, m *ChessMutation) (Value, erro
 		return (&ChessDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown Chess mutation op: %q", m.Op())
+	}
+}
+
+// GameHistoryClient is a client for the GameHistory schema.
+type GameHistoryClient struct {
+	config
+}
+
+// NewGameHistoryClient returns a client for the GameHistory from the given config.
+func NewGameHistoryClient(c config) *GameHistoryClient {
+	return &GameHistoryClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `gamehistory.Hooks(f(g(h())))`.
+func (c *GameHistoryClient) Use(hooks ...Hook) {
+	c.hooks.GameHistory = append(c.hooks.GameHistory, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `gamehistory.Intercept(f(g(h())))`.
+func (c *GameHistoryClient) Intercept(interceptors ...Interceptor) {
+	c.inters.GameHistory = append(c.inters.GameHistory, interceptors...)
+}
+
+// Create returns a builder for creating a GameHistory entity.
+func (c *GameHistoryClient) Create() *GameHistoryCreate {
+	mutation := newGameHistoryMutation(c.config, OpCreate)
+	return &GameHistoryCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of GameHistory entities.
+func (c *GameHistoryClient) CreateBulk(builders ...*GameHistoryCreate) *GameHistoryCreateBulk {
+	return &GameHistoryCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *GameHistoryClient) MapCreateBulk(slice any, setFunc func(*GameHistoryCreate, int)) *GameHistoryCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &GameHistoryCreateBulk{err: fmt.Errorf("calling to GameHistoryClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*GameHistoryCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &GameHistoryCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for GameHistory.
+func (c *GameHistoryClient) Update() *GameHistoryUpdate {
+	mutation := newGameHistoryMutation(c.config, OpUpdate)
+	return &GameHistoryUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *GameHistoryClient) UpdateOne(gh *GameHistory) *GameHistoryUpdateOne {
+	mutation := newGameHistoryMutation(c.config, OpUpdateOne, withGameHistory(gh))
+	return &GameHistoryUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *GameHistoryClient) UpdateOneID(id uuid.UUID) *GameHistoryUpdateOne {
+	mutation := newGameHistoryMutation(c.config, OpUpdateOne, withGameHistoryID(id))
+	return &GameHistoryUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for GameHistory.
+func (c *GameHistoryClient) Delete() *GameHistoryDelete {
+	mutation := newGameHistoryMutation(c.config, OpDelete)
+	return &GameHistoryDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *GameHistoryClient) DeleteOne(gh *GameHistory) *GameHistoryDeleteOne {
+	return c.DeleteOneID(gh.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *GameHistoryClient) DeleteOneID(id uuid.UUID) *GameHistoryDeleteOne {
+	builder := c.Delete().Where(gamehistory.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &GameHistoryDeleteOne{builder}
+}
+
+// Query returns a query builder for GameHistory.
+func (c *GameHistoryClient) Query() *GameHistoryQuery {
+	return &GameHistoryQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeGameHistory},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a GameHistory entity by its id.
+func (c *GameHistoryClient) Get(ctx context.Context, id uuid.UUID) (*GameHistory, error) {
+	return c.Query().Where(gamehistory.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *GameHistoryClient) GetX(ctx context.Context, id uuid.UUID) *GameHistory {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryUser queries the user edge of a GameHistory.
+func (c *GameHistoryClient) QueryUser(gh *GameHistory) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := gh.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(gamehistory.Table, gamehistory.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, gamehistory.UserTable, gamehistory.UserColumn),
+		)
+		fromV = sqlgraph.Neighbors(gh.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryGame queries the game edge of a GameHistory.
+func (c *GameHistoryClient) QueryGame(gh *GameHistory) *ChessQuery {
+	query := (&ChessClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := gh.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(gamehistory.Table, gamehistory.FieldID, id),
+			sqlgraph.To(chess.Table, chess.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, gamehistory.GameTable, gamehistory.GameColumn),
+		)
+		fromV = sqlgraph.Neighbors(gh.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *GameHistoryClient) Hooks() []Hook {
+	return c.hooks.GameHistory
+}
+
+// Interceptors returns the client interceptors.
+func (c *GameHistoryClient) Interceptors() []Interceptor {
+	return c.inters.GameHistory
+}
+
+func (c *GameHistoryClient) mutate(ctx context.Context, m *GameHistoryMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&GameHistoryCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&GameHistoryUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&GameHistoryUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&GameHistoryDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown GameHistory mutation op: %q", m.Op())
 	}
 }
 
@@ -514,6 +705,22 @@ func (c *UserClient) QueryBlackID(u *User) *ChessQuery {
 	return query
 }
 
+// QueryMoves queries the moves edge of a User.
+func (c *UserClient) QueryMoves(u *User) *GameHistoryQuery {
+	query := (&GameHistoryClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := u.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(gamehistory.Table, gamehistory.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.MovesTable, user.MovesColumn),
+		)
+		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *UserClient) Hooks() []Hook {
 	return c.hooks.User
@@ -542,9 +749,9 @@ func (c *UserClient) mutate(ctx context.Context, m *UserMutation) (Value, error)
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		Chess, User []ent.Hook
+		Chess, GameHistory, User []ent.Hook
 	}
 	inters struct {
-		Chess, User []ent.Interceptor
+		Chess, GameHistory, User []ent.Interceptor
 	}
 )

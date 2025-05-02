@@ -15,7 +15,7 @@ checkpoint:
 		--dev-url "docker://postgres/15/dev"
 
 revision:
-	atlas migrate diff DeleteWinner \
+	atlas migrate diff AddHistoryMove \
   --dir "file://ent/migrate/migrations" \
   --to "ent://ent/schema" \
   --dev-url "docker://postgres/15/dev"
@@ -31,3 +31,13 @@ push:
 	atlas migrate push app \
   --dev-url "docker://postgres/15/dev?search_path=public" \
   --dir "file://ent/migrate/migrations"
+
+down-one:
+	atlas migrate down \
+	  --dir "file://ent/migrate/migrations" \
+	  --url "postgres://postgres:postgres@localhost:5432/gopher_chess?search_path=public&sslmode=disable" \
+		  --dev-url "docker://postgres/15/dev"
+status:
+	atlas migrate status \
+	  --dir "file://ent/migrate/migrations" \
+	  --url "postgres://postgres:postgres@localhost:5432/gopher_chess?search_path=public&sslmode=disable"

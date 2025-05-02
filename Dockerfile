@@ -11,11 +11,7 @@ RUN go mod download
 
 COPY . .
 
-# Разделяем установку CLI-утилит
-ARG ATLAS_VERSION=latest
-RUN --mount=type=cache,target=/go/pkg/mod \
-    CGO_ENABLED=1 go install ariga.io/atlas/cmd/atlas@${ATLAS_VERSION}
-
 RUN CGO_ENABLED=1 go build -o main cmd/server/main.go
+
 RUN chmod +x /app/start.sh
 ENTRYPOINT ["/app/start.sh"]

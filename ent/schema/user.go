@@ -31,5 +31,6 @@ func (User) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.To("white_id", Chess.Type),
 		edge.To("black_id", Chess.Type),
+		edge.To("moves", GameHistory.Type),
 	}
 }

@@ -232,6 +232,29 @@ func HasBlackUserWith(preds ...predicate.User) predicate.Chess {
 	})
 }
 
+// HasMoves applies the HasEdge predicate on the "moves" edge.
+func HasMoves() predicate.Chess {
+	return predicate.Chess(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, MovesTable, MovesColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasMovesWith applies the HasEdge predicate on the "moves" edge with a given conditions (other predicates).
+func HasMovesWith(preds ...predicate.GameHistory) predicate.Chess {
+	return predicate.Chess(func(s *sql.Selector) {
+		step := newMovesStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // And groups predicates with the AND operator between them.
 func And(predicates ...predicate.Chess) predicate.Chess {
 	return predicate.Chess(sql.AndPredicates(predicates...))

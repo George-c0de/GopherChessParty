@@ -1,0 +1,2 @@
+-- Create "game_histories" table
+CREATE TABLE "public"."game_histories" ("id" uuid NOT NULL, "created_at" timestamptz NOT NULL, "num" bigint NOT NULL, "move" character varying NOT NULL, "game_id" uuid NOT NULL, "user_id" uuid NOT NULL, PRIMARY KEY ("id"), CONSTRAINT "game_histories_chesses_moves" FOREIGN KEY ("game_id") REFERENCES "public"."chesses" ("id") ON UPDATE NO ACTION ON DELETE NO ACTION, CONSTRAINT "game_histories_users_moves" FOREIGN KEY ("user_id") REFERENCES "public"."users" ("id") ON UPDATE NO ACTION ON DELETE NO ACTION);

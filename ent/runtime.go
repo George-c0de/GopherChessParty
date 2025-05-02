@@ -4,6 +4,7 @@ package ent
 
 import (
 	"GopherChessParty/ent/chess"
+	"GopherChessParty/ent/gamehistory"
 	"GopherChessParty/ent/schema"
 	"GopherChessParty/ent/user"
 	"time"
@@ -29,6 +30,16 @@ func init() {
 	chessDescID := chessFields[0].Descriptor()
 	// chess.DefaultID holds the default value on creation for the id field.
 	chess.DefaultID = chessDescID.Default.(func() uuid.UUID)
+	gamehistoryFields := schema.GameHistory{}.Fields()
+	_ = gamehistoryFields
+	// gamehistoryDescCreatedAt is the schema descriptor for created_at field.
+	gamehistoryDescCreatedAt := gamehistoryFields[1].Descriptor()
+	// gamehistory.DefaultCreatedAt holds the default value on creation for the created_at field.
+	gamehistory.DefaultCreatedAt = gamehistoryDescCreatedAt.Default.(func() time.Time)
+	// gamehistoryDescID is the schema descriptor for id field.
+	gamehistoryDescID := gamehistoryFields[0].Descriptor()
+	// gamehistory.DefaultID holds the default value on creation for the id field.
+	gamehistory.DefaultID = gamehistoryDescID.Default.(func() uuid.UUID)
 	userFields := schema.User{}.Fields()
 	_ = userFields
 	// userDescEmail is the schema descriptor for email field.

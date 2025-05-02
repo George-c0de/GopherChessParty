@@ -136,3 +136,13 @@ func (g *GameRepository) UpdateGameResult(
 	}
 	return nil
 }
+
+func (g *GameRepository) SaveMove(GameID uuid.UUID, move string, UserID uuid.UUID) (error, *ent.GameHistory) {
+	ctx := context.Background()
+	save, err := g.client.GameHistory.Create().SetGameID(GameID).SetMove(move).SetUserID(UserID).SetNum(2).Save(ctx)
+	if err != nil {
+		g.log.Error(err)
+		return err, nil
+	}
+	return nil, save
+}

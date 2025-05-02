@@ -20,6 +20,18 @@ func (f ChessFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ChessMutation", m)
 }
 
+// The GameHistoryFunc type is an adapter to allow the use of ordinary
+// function as GameHistory mutator.
+type GameHistoryFunc func(context.Context, *ent.GameHistoryMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f GameHistoryFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.GameHistoryMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.GameHistoryMutation", m)
+}
+
 // The UserFunc type is an adapter to allow the use of ordinary
 // function as User mutator.
 type UserFunc func(context.Context, *ent.UserMutation) (ent.Value, error)

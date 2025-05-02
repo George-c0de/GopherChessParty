@@ -38,6 +38,35 @@ var (
 			},
 		},
 	}
+	// GameHistoriesColumns holds the columns for the "game_histories" table.
+	GameHistoriesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID, Unique: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "num", Type: field.TypeInt},
+		{Name: "move", Type: field.TypeString},
+		{Name: "game_id", Type: field.TypeUUID},
+		{Name: "user_id", Type: field.TypeUUID},
+	}
+	// GameHistoriesTable holds the schema information for the "game_histories" table.
+	GameHistoriesTable = &schema.Table{
+		Name:       "game_histories",
+		Columns:    GameHistoriesColumns,
+		PrimaryKey: []*schema.Column{GameHistoriesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "game_histories_chesses_moves",
+				Columns:    []*schema.Column{GameHistoriesColumns[4]},
+				RefColumns: []*schema.Column{ChessesColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "game_histories_users_moves",
+				Columns:    []*schema.Column{GameHistoriesColumns[5]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+	}
 	// UsersColumns holds the columns for the "users" table.
 	UsersColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID, Unique: true},
@@ -56,6 +85,7 @@ var (
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
 		ChessesTable,
+		GameHistoriesTable,
 		UsersTable,
 	}
 )
@@ -63,4 +93,6 @@ var (
 func init() {
 	ChessesTable.ForeignKeys[0].RefTable = UsersTable
 	ChessesTable.ForeignKeys[1].RefTable = UsersTable
+	GameHistoriesTable.ForeignKeys[0].RefTable = ChessesTable
+	GameHistoriesTable.ForeignKeys[1].RefTable = UsersTable
 }

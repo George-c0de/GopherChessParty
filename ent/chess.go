@@ -41,9 +41,11 @@ type ChessEdges struct {
 	WhiteUser *User `json:"white_user,omitempty"`
 	// BlackUser holds the value of the black_user edge.
 	BlackUser *User `json:"black_user,omitempty"`
+	// Moves holds the value of the moves edge.
+	Moves []*GameHistory `json:"moves,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [2]bool
+	loadedTypes [3]bool
 }
 
 // WhiteUserOrErr returns the WhiteUser value or an error if the edge
@@ -66,6 +68,15 @@ func (e ChessEdges) BlackUserOrErr() (*User, error) {
 		return nil, &NotFoundError{label: user.Label}
 	}
 	return nil, &NotLoadedError{edge: "black_user"}
+}
+
+// MovesOrErr returns the Moves value or an error if the edge
+// was not loaded in eager-loading.
+func (e ChessEdges) MovesOrErr() ([]*GameHistory, error) {
+	if e.loadedTypes[2] {
+		return e.Moves, nil
+	}
+	return nil, &NotLoadedError{edge: "moves"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -163,6 +174,11 @@ func (c *Chess) QueryWhiteUser() *UserQuery {
 // QueryBlackUser queries the "black_user" edge of the Chess entity.
 func (c *Chess) QueryBlackUser() *UserQuery {
 	return NewChessClient(c.config).QueryBlackUser(c)
+}
+
+// QueryMoves queries the "moves" edge of the Chess entity.
+func (c *Chess) QueryMoves() *GameHistoryQuery {
+	return NewChessClient(c.config).QueryMoves(c)
 }
 
 // Update returns a builder for updating this Chess.

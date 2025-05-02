@@ -4,6 +4,7 @@ package ent
 
 import (
 	"GopherChessParty/ent/chess"
+	"GopherChessParty/ent/gamehistory"
 	"GopherChessParty/ent/predicate"
 	"GopherChessParty/ent/user"
 	"context"
@@ -26,8 +27,9 @@ const (
 	OpUpdateOne = ent.OpUpdateOne
 
 	// Node types.
-	TypeChess = "Chess"
-	TypeUser  = "User"
+	TypeChess       = "Chess"
+	TypeGameHistory = "GameHistory"
+	TypeUser        = "User"
 )
 
 // ChessMutation represents an operation that mutates the Chess nodes in the graph.
@@ -45,6 +47,9 @@ type ChessMutation struct {
 	clearedwhite_user bool
 	black_user        *uuid.UUID
 	clearedblack_user bool
+	moves             map[uuid.UUID]struct{}
+	removedmoves      map[uuid.UUID]struct{}
+	clearedmoves      bool
 	done              bool
 	oldValue          func(context.Context) (*Chess, error)
 	predicates        []predicate.Chess
@@ -376,6 +381,60 @@ func (m *ChessMutation) ResetBlackUser() {
 	m.clearedblack_user = false
 }
 
+// AddMoveIDs adds the "moves" edge to the GameHistory entity by ids.
+func (m *ChessMutation) AddMoveIDs(ids ...uuid.UUID) {
+	if m.moves == nil {
+		m.moves = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		m.moves[ids[i]] = struct{}{}
+	}
+}
+
+// ClearMoves clears the "moves" edge to the GameHistory entity.
+func (m *ChessMutation) ClearMoves() {
+	m.clearedmoves = true
+}
+
+// MovesCleared reports if the "moves" edge to the GameHistory entity was cleared.
+func (m *ChessMutation) MovesCleared() bool {
+	return m.clearedmoves
+}
+
+// RemoveMoveIDs removes the "moves" edge to the GameHistory entity by IDs.
+func (m *ChessMutation) RemoveMoveIDs(ids ...uuid.UUID) {
+	if m.removedmoves == nil {
+		m.removedmoves = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		delete(m.moves, ids[i])
+		m.removedmoves[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedMoves returns the removed IDs of the "moves" edge to the GameHistory entity.
+func (m *ChessMutation) RemovedMovesIDs() (ids []uuid.UUID) {
+	for id := range m.removedmoves {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// MovesIDs returns the "moves" edge IDs in the mutation.
+func (m *ChessMutation) MovesIDs() (ids []uuid.UUID) {
+	for id := range m.moves {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetMoves resets all changes to the "moves" edge.
+func (m *ChessMutation) ResetMoves() {
+	m.moves = nil
+	m.clearedmoves = false
+	m.removedmoves = nil
+}
+
 // Where appends a list predicates to the ChessMutation builder.
 func (m *ChessMutation) Where(ps ...predicate.Chess) {
 	m.predicates = append(m.predicates, ps...)
@@ -560,12 +619,15 @@ func (m *ChessMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *ChessMutation) AddedEdges() []string {
-	edges := make([]string, 0, 2)
+	edges := make([]string, 0, 3)
 	if m.white_user != nil {
 		edges = append(edges, chess.EdgeWhiteUser)
 	}
 	if m.black_user != nil {
 		edges = append(edges, chess.EdgeBlackUser)
+	}
+	if m.moves != nil {
+		edges = append(edges, chess.EdgeMoves)
 	}
 	return edges
 }
@@ -582,30 +644,50 @@ func (m *ChessMutation) AddedIDs(name string) []ent.Value {
 		if id := m.black_user; id != nil {
 			return []ent.Value{*id}
 		}
+	case chess.EdgeMoves:
+		ids := make([]ent.Value, 0, len(m.moves))
+		for id := range m.moves {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *ChessMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 2)
+	edges := make([]string, 0, 3)
+	if m.removedmoves != nil {
+		edges = append(edges, chess.EdgeMoves)
+	}
 	return edges
 }
 
 // RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
 // the given name in this mutation.
 func (m *ChessMutation) RemovedIDs(name string) []ent.Value {
+	switch name {
+	case chess.EdgeMoves:
+		ids := make([]ent.Value, 0, len(m.removedmoves))
+		for id := range m.removedmoves {
+			ids = append(ids, id)
+		}
+		return ids
+	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *ChessMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 2)
+	edges := make([]string, 0, 3)
 	if m.clearedwhite_user {
 		edges = append(edges, chess.EdgeWhiteUser)
 	}
 	if m.clearedblack_user {
 		edges = append(edges, chess.EdgeBlackUser)
+	}
+	if m.clearedmoves {
+		edges = append(edges, chess.EdgeMoves)
 	}
 	return edges
 }
@@ -618,6 +700,8 @@ func (m *ChessMutation) EdgeCleared(name string) bool {
 		return m.clearedwhite_user
 	case chess.EdgeBlackUser:
 		return m.clearedblack_user
+	case chess.EdgeMoves:
+		return m.clearedmoves
 	}
 	return false
 }
@@ -646,8 +730,695 @@ func (m *ChessMutation) ResetEdge(name string) error {
 	case chess.EdgeBlackUser:
 		m.ResetBlackUser()
 		return nil
+	case chess.EdgeMoves:
+		m.ResetMoves()
+		return nil
 	}
 	return fmt.Errorf("unknown Chess edge %s", name)
+}
+
+// GameHistoryMutation represents an operation that mutates the GameHistory nodes in the graph.
+type GameHistoryMutation struct {
+	config
+	op            Op
+	typ           string
+	id            *uuid.UUID
+	created_at    *time.Time
+	num           *int
+	addnum        *int
+	move          *string
+	clearedFields map[string]struct{}
+	user          *uuid.UUID
+	cleareduser   bool
+	game          *uuid.UUID
+	clearedgame   bool
+	done          bool
+	oldValue      func(context.Context) (*GameHistory, error)
+	predicates    []predicate.GameHistory
+}
+
+var _ ent.Mutation = (*GameHistoryMutation)(nil)
+
+// gamehistoryOption allows management of the mutation configuration using functional options.
+type gamehistoryOption func(*GameHistoryMutation)
+
+// newGameHistoryMutation creates new mutation for the GameHistory entity.
+func newGameHistoryMutation(c config, op Op, opts ...gamehistoryOption) *GameHistoryMutation {
+	m := &GameHistoryMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeGameHistory,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withGameHistoryID sets the ID field of the mutation.
+func withGameHistoryID(id uuid.UUID) gamehistoryOption {
+	return func(m *GameHistoryMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *GameHistory
+		)
+		m.oldValue = func(ctx context.Context) (*GameHistory, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().GameHistory.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withGameHistory sets the old GameHistory of the mutation.
+func withGameHistory(node *GameHistory) gamehistoryOption {
+	return func(m *GameHistoryMutation) {
+		m.oldValue = func(context.Context) (*GameHistory, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m GameHistoryMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m GameHistoryMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of GameHistory entities.
+func (m *GameHistoryMutation) SetID(id uuid.UUID) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *GameHistoryMutation) ID() (id uuid.UUID, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *GameHistoryMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []uuid.UUID{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().GameHistory.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *GameHistoryMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *GameHistoryMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the GameHistory entity.
+// If the GameHistory object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GameHistoryMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *GameHistoryMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetNum sets the "num" field.
+func (m *GameHistoryMutation) SetNum(i int) {
+	m.num = &i
+	m.addnum = nil
+}
+
+// Num returns the value of the "num" field in the mutation.
+func (m *GameHistoryMutation) Num() (r int, exists bool) {
+	v := m.num
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldNum returns the old "num" field's value of the GameHistory entity.
+// If the GameHistory object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GameHistoryMutation) OldNum(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldNum is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldNum requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldNum: %w", err)
+	}
+	return oldValue.Num, nil
+}
+
+// AddNum adds i to the "num" field.
+func (m *GameHistoryMutation) AddNum(i int) {
+	if m.addnum != nil {
+		*m.addnum += i
+	} else {
+		m.addnum = &i
+	}
+}
+
+// AddedNum returns the value that was added to the "num" field in this mutation.
+func (m *GameHistoryMutation) AddedNum() (r int, exists bool) {
+	v := m.addnum
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetNum resets all changes to the "num" field.
+func (m *GameHistoryMutation) ResetNum() {
+	m.num = nil
+	m.addnum = nil
+}
+
+// SetMove sets the "move" field.
+func (m *GameHistoryMutation) SetMove(s string) {
+	m.move = &s
+}
+
+// Move returns the value of the "move" field in the mutation.
+func (m *GameHistoryMutation) Move() (r string, exists bool) {
+	v := m.move
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldMove returns the old "move" field's value of the GameHistory entity.
+// If the GameHistory object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GameHistoryMutation) OldMove(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldMove is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldMove requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldMove: %w", err)
+	}
+	return oldValue.Move, nil
+}
+
+// ResetMove resets all changes to the "move" field.
+func (m *GameHistoryMutation) ResetMove() {
+	m.move = nil
+}
+
+// SetUserID sets the "user_id" field.
+func (m *GameHistoryMutation) SetUserID(u uuid.UUID) {
+	m.user = &u
+}
+
+// UserID returns the value of the "user_id" field in the mutation.
+func (m *GameHistoryMutation) UserID() (r uuid.UUID, exists bool) {
+	v := m.user
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUserID returns the old "user_id" field's value of the GameHistory entity.
+// If the GameHistory object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GameHistoryMutation) OldUserID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUserID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUserID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUserID: %w", err)
+	}
+	return oldValue.UserID, nil
+}
+
+// ResetUserID resets all changes to the "user_id" field.
+func (m *GameHistoryMutation) ResetUserID() {
+	m.user = nil
+}
+
+// SetGameID sets the "game_id" field.
+func (m *GameHistoryMutation) SetGameID(u uuid.UUID) {
+	m.game = &u
+}
+
+// GameID returns the value of the "game_id" field in the mutation.
+func (m *GameHistoryMutation) GameID() (r uuid.UUID, exists bool) {
+	v := m.game
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldGameID returns the old "game_id" field's value of the GameHistory entity.
+// If the GameHistory object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GameHistoryMutation) OldGameID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldGameID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldGameID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldGameID: %w", err)
+	}
+	return oldValue.GameID, nil
+}
+
+// ResetGameID resets all changes to the "game_id" field.
+func (m *GameHistoryMutation) ResetGameID() {
+	m.game = nil
+}
+
+// ClearUser clears the "user" edge to the User entity.
+func (m *GameHistoryMutation) ClearUser() {
+	m.cleareduser = true
+	m.clearedFields[gamehistory.FieldUserID] = struct{}{}
+}
+
+// UserCleared reports if the "user" edge to the User entity was cleared.
+func (m *GameHistoryMutation) UserCleared() bool {
+	return m.cleareduser
+}
+
+// UserIDs returns the "user" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// UserID instead. It exists only for internal usage by the builders.
+func (m *GameHistoryMutation) UserIDs() (ids []uuid.UUID) {
+	if id := m.user; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetUser resets all changes to the "user" edge.
+func (m *GameHistoryMutation) ResetUser() {
+	m.user = nil
+	m.cleareduser = false
+}
+
+// ClearGame clears the "game" edge to the Chess entity.
+func (m *GameHistoryMutation) ClearGame() {
+	m.clearedgame = true
+	m.clearedFields[gamehistory.FieldGameID] = struct{}{}
+}
+
+// GameCleared reports if the "game" edge to the Chess entity was cleared.
+func (m *GameHistoryMutation) GameCleared() bool {
+	return m.clearedgame
+}
+
+// GameIDs returns the "game" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// GameID instead. It exists only for internal usage by the builders.
+func (m *GameHistoryMutation) GameIDs() (ids []uuid.UUID) {
+	if id := m.game; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetGame resets all changes to the "game" edge.
+func (m *GameHistoryMutation) ResetGame() {
+	m.game = nil
+	m.clearedgame = false
+}
+
+// Where appends a list predicates to the GameHistoryMutation builder.
+func (m *GameHistoryMutation) Where(ps ...predicate.GameHistory) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the GameHistoryMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *GameHistoryMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.GameHistory, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *GameHistoryMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *GameHistoryMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (GameHistory).
+func (m *GameHistoryMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *GameHistoryMutation) Fields() []string {
+	fields := make([]string, 0, 5)
+	if m.created_at != nil {
+		fields = append(fields, gamehistory.FieldCreatedAt)
+	}
+	if m.num != nil {
+		fields = append(fields, gamehistory.FieldNum)
+	}
+	if m.move != nil {
+		fields = append(fields, gamehistory.FieldMove)
+	}
+	if m.user != nil {
+		fields = append(fields, gamehistory.FieldUserID)
+	}
+	if m.game != nil {
+		fields = append(fields, gamehistory.FieldGameID)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *GameHistoryMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case gamehistory.FieldCreatedAt:
+		return m.CreatedAt()
+	case gamehistory.FieldNum:
+		return m.Num()
+	case gamehistory.FieldMove:
+		return m.Move()
+	case gamehistory.FieldUserID:
+		return m.UserID()
+	case gamehistory.FieldGameID:
+		return m.GameID()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *GameHistoryMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case gamehistory.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case gamehistory.FieldNum:
+		return m.OldNum(ctx)
+	case gamehistory.FieldMove:
+		return m.OldMove(ctx)
+	case gamehistory.FieldUserID:
+		return m.OldUserID(ctx)
+	case gamehistory.FieldGameID:
+		return m.OldGameID(ctx)
+	}
+	return nil, fmt.Errorf("unknown GameHistory field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *GameHistoryMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case gamehistory.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case gamehistory.FieldNum:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetNum(v)
+		return nil
+	case gamehistory.FieldMove:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetMove(v)
+		return nil
+	case gamehistory.FieldUserID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUserID(v)
+		return nil
+	case gamehistory.FieldGameID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetGameID(v)
+		return nil
+	}
+	return fmt.Errorf("unknown GameHistory field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *GameHistoryMutation) AddedFields() []string {
+	var fields []string
+	if m.addnum != nil {
+		fields = append(fields, gamehistory.FieldNum)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *GameHistoryMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case gamehistory.FieldNum:
+		return m.AddedNum()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *GameHistoryMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case gamehistory.FieldNum:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddNum(v)
+		return nil
+	}
+	return fmt.Errorf("unknown GameHistory numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *GameHistoryMutation) ClearedFields() []string {
+	return nil
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *GameHistoryMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *GameHistoryMutation) ClearField(name string) error {
+	return fmt.Errorf("unknown GameHistory nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *GameHistoryMutation) ResetField(name string) error {
+	switch name {
+	case gamehistory.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case gamehistory.FieldNum:
+		m.ResetNum()
+		return nil
+	case gamehistory.FieldMove:
+		m.ResetMove()
+		return nil
+	case gamehistory.FieldUserID:
+		m.ResetUserID()
+		return nil
+	case gamehistory.FieldGameID:
+		m.ResetGameID()
+		return nil
+	}
+	return fmt.Errorf("unknown GameHistory field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *GameHistoryMutation) AddedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.user != nil {
+		edges = append(edges, gamehistory.EdgeUser)
+	}
+	if m.game != nil {
+		edges = append(edges, gamehistory.EdgeGame)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *GameHistoryMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case gamehistory.EdgeUser:
+		if id := m.user; id != nil {
+			return []ent.Value{*id}
+		}
+	case gamehistory.EdgeGame:
+		if id := m.game; id != nil {
+			return []ent.Value{*id}
+		}
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *GameHistoryMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 2)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *GameHistoryMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *GameHistoryMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.cleareduser {
+		edges = append(edges, gamehistory.EdgeUser)
+	}
+	if m.clearedgame {
+		edges = append(edges, gamehistory.EdgeGame)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *GameHistoryMutation) EdgeCleared(name string) bool {
+	switch name {
+	case gamehistory.EdgeUser:
+		return m.cleareduser
+	case gamehistory.EdgeGame:
+		return m.clearedgame
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *GameHistoryMutation) ClearEdge(name string) error {
+	switch name {
+	case gamehistory.EdgeUser:
+		m.ClearUser()
+		return nil
+	case gamehistory.EdgeGame:
+		m.ClearGame()
+		return nil
+	}
+	return fmt.Errorf("unknown GameHistory unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *GameHistoryMutation) ResetEdge(name string) error {
+	switch name {
+	case gamehistory.EdgeUser:
+		m.ResetUser()
+		return nil
+	case gamehistory.EdgeGame:
+		m.ResetGame()
+		return nil
+	}
+	return fmt.Errorf("unknown GameHistory edge %s", name)
 }
 
 // UserMutation represents an operation that mutates the User nodes in the graph.
@@ -668,6 +1439,9 @@ type UserMutation struct {
 	black_id        map[uuid.UUID]struct{}
 	removedblack_id map[uuid.UUID]struct{}
 	clearedblack_id bool
+	moves           map[uuid.UUID]struct{}
+	removedmoves    map[uuid.UUID]struct{}
+	clearedmoves    bool
 	done            bool
 	oldValue        func(context.Context) (*User, error)
 	predicates      []predicate.User
@@ -1065,6 +1839,60 @@ func (m *UserMutation) ResetBlackID() {
 	m.removedblack_id = nil
 }
 
+// AddMoveIDs adds the "moves" edge to the GameHistory entity by ids.
+func (m *UserMutation) AddMoveIDs(ids ...uuid.UUID) {
+	if m.moves == nil {
+		m.moves = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		m.moves[ids[i]] = struct{}{}
+	}
+}
+
+// ClearMoves clears the "moves" edge to the GameHistory entity.
+func (m *UserMutation) ClearMoves() {
+	m.clearedmoves = true
+}
+
+// MovesCleared reports if the "moves" edge to the GameHistory entity was cleared.
+func (m *UserMutation) MovesCleared() bool {
+	return m.clearedmoves
+}
+
+// RemoveMoveIDs removes the "moves" edge to the GameHistory entity by IDs.
+func (m *UserMutation) RemoveMoveIDs(ids ...uuid.UUID) {
+	if m.removedmoves == nil {
+		m.removedmoves = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		delete(m.moves, ids[i])
+		m.removedmoves[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedMoves returns the removed IDs of the "moves" edge to the GameHistory entity.
+func (m *UserMutation) RemovedMovesIDs() (ids []uuid.UUID) {
+	for id := range m.removedmoves {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// MovesIDs returns the "moves" edge IDs in the mutation.
+func (m *UserMutation) MovesIDs() (ids []uuid.UUID) {
+	for id := range m.moves {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetMoves resets all changes to the "moves" edge.
+func (m *UserMutation) ResetMoves() {
+	m.moves = nil
+	m.clearedmoves = false
+	m.removedmoves = nil
+}
+
 // Where appends a list predicates to the UserMutation builder.
 func (m *UserMutation) Where(ps ...predicate.User) {
 	m.predicates = append(m.predicates, ps...)
@@ -1266,12 +2094,15 @@ func (m *UserMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *UserMutation) AddedEdges() []string {
-	edges := make([]string, 0, 2)
+	edges := make([]string, 0, 3)
 	if m.white_id != nil {
 		edges = append(edges, user.EdgeWhiteID)
 	}
 	if m.black_id != nil {
 		edges = append(edges, user.EdgeBlackID)
+	}
+	if m.moves != nil {
+		edges = append(edges, user.EdgeMoves)
 	}
 	return edges
 }
@@ -1292,18 +2123,27 @@ func (m *UserMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case user.EdgeMoves:
+		ids := make([]ent.Value, 0, len(m.moves))
+		for id := range m.moves {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *UserMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 2)
+	edges := make([]string, 0, 3)
 	if m.removedwhite_id != nil {
 		edges = append(edges, user.EdgeWhiteID)
 	}
 	if m.removedblack_id != nil {
 		edges = append(edges, user.EdgeBlackID)
+	}
+	if m.removedmoves != nil {
+		edges = append(edges, user.EdgeMoves)
 	}
 	return edges
 }
@@ -1324,18 +2164,27 @@ func (m *UserMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case user.EdgeMoves:
+		ids := make([]ent.Value, 0, len(m.removedmoves))
+		for id := range m.removedmoves {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *UserMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 2)
+	edges := make([]string, 0, 3)
 	if m.clearedwhite_id {
 		edges = append(edges, user.EdgeWhiteID)
 	}
 	if m.clearedblack_id {
 		edges = append(edges, user.EdgeBlackID)
+	}
+	if m.clearedmoves {
+		edges = append(edges, user.EdgeMoves)
 	}
 	return edges
 }
@@ -1348,6 +2197,8 @@ func (m *UserMutation) EdgeCleared(name string) bool {
 		return m.clearedwhite_id
 	case user.EdgeBlackID:
 		return m.clearedblack_id
+	case user.EdgeMoves:
+		return m.clearedmoves
 	}
 	return false
 }
@@ -1369,6 +2220,9 @@ func (m *UserMutation) ResetEdge(name string) error {
 		return nil
 	case user.EdgeBlackID:
 		m.ResetBlackID()
+		return nil
+	case user.EdgeMoves:
+		m.ResetMoves()
 		return nil
 	}
 	return fmt.Errorf("unknown User edge %s", name)

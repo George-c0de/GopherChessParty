@@ -50,5 +50,6 @@ func (Chess) Edges() []ent.Edge {
 			Ref("black_id").
 			Unique().
 			Required(),
+		edge.To("moves", GameHistory.Type),
 	}
 }

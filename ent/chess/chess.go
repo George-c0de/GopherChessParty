@@ -28,6 +28,8 @@ const (
 	EdgeWhiteUser = "white_user"
 	// EdgeBlackUser holds the string denoting the black_user edge name in mutations.
 	EdgeBlackUser = "black_user"
+	// EdgeMoves holds the string denoting the moves edge name in mutations.
+	EdgeMoves = "moves"
 	// Table holds the table name of the chess in the database.
 	Table = "chesses"
 	// WhiteUserTable is the table that holds the white_user relation/edge.
@@ -44,6 +46,13 @@ const (
 	BlackUserInverseTable = "users"
 	// BlackUserColumn is the table column denoting the black_user relation/edge.
 	BlackUserColumn = "user_black_id"
+	// MovesTable is the table that holds the moves relation/edge.
+	MovesTable = "game_histories"
+	// MovesInverseTable is the table name for the GameHistory entity.
+	// It exists in this package in order to avoid circular dependency with the "gamehistory" package.
+	MovesInverseTable = "game_histories"
+	// MovesColumn is the table column denoting the moves relation/edge.
+	MovesColumn = "game_id"
 )
 
 // Columns holds all SQL columns for chess fields.
@@ -183,6 +192,20 @@ func ByBlackUserField(field string, opts ...sql.OrderTermOption) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newBlackUserStep(), sql.OrderByField(field, opts...))
 	}
 }
+
+// ByMovesCount orders the results by moves count.
+func ByMovesCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newMovesStep(), opts...)
+	}
+}
+
+// ByMoves orders the results by moves terms.
+func ByMoves(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newMovesStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newWhiteUserStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -195,5 +218,12 @@ func newBlackUserStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(BlackUserInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.M2O, true, BlackUserTable, BlackUserColumn),
+	)
+}
+func newMovesStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(MovesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, MovesTable, MovesColumn),
 	)
 }
