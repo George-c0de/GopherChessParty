@@ -1,6 +1,6 @@
 export const config = {
-    apiBaseUrl: 'http://127.0.0.1:8000/v1',
-    wsBaseUrl: 'ws://127.0.0.1:8000/v1',
+    apiBaseUrl: process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000/v1',
+    wsBaseUrl: process.env.REACT_APP_WS_URL || 'ws://127.0.0.1:8000/v1',
     endpoints: {
         login: '/login',
         register: '/register',
