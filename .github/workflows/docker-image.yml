@@ -15,9 +15,6 @@ jobs:
     steps:
       - name: Golangci-lint
         uses: golangci/golangci-lint-action@v7.0.
-        args:
-          - ./cmd/backend/...
-          - ./internal/...
 
   deploy:
     runs-on: ubuntu-latest
