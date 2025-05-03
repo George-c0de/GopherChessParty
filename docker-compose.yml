@@ -12,12 +12,12 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./init-user-db.sh:/docker-entrypoint-initdb.d/init-user-db.sh
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U ${DB_USER}" ]
       interval: 5s
       timeout: 5s
       retries: 5
+    entrypoint: init-user-db.sh
 
     restart: unless-stopped
 
