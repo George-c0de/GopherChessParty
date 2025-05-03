@@ -7,6 +7,7 @@ import (
 	"GopherChessParty/internal/dto"
 	"GopherChessParty/internal/interfaces"
 	"context"
+	"entgo.io/ent/dialect/sql"
 	"github.com/google/uuid"
 )
 
@@ -39,12 +40,14 @@ func (g *GameRepository) GetGames(userID uuid.UUID) ([]*dto.GameHistory, error) 
 		WithBlackUser(func(uq *ent.UserQuery) {
 			uq.Select(user.FieldID, user.FieldName)
 		}).
-		Where(chess.Or(
-			// партii, где userID — чёрный
-			chess.HasBlackUserWith(user.IDEQ(userID)),
-			// или партii, где userID — белый
-			chess.HasWhiteUserWith(user.IDEQ(userID)),
-		)).All(ctx)
+		Where(
+			chess.Or(
+				// партii, где userID — чёрный
+				chess.HasBlackUserWith(user.IDEQ(userID)),
+				// или партii, где userID — белый
+				chess.HasWhiteUserWith(user.IDEQ(userID)),
+			),
+		).Order(chess.ByCreatedAt(sql.OrderDesc())).All(ctx)
 	if err != nil {
 		g.log.Error(err)
 		return nil, err
