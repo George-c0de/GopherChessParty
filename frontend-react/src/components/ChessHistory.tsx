@@ -421,7 +421,11 @@ export const ChessHistory: React.FC = () => {
       if (pageNum === 1) {
         setGames(newGames);
       } else {
-        setGames(prevGames => [...prevGames, ...newGames]);
+        setGames(prevGames => {
+          const existingIds = new Set(prevGames.map(game => game.id));
+          const uniqueNewGames = newGames.filter((game: ChessGame) => !existingIds.has(game.id));
+          return [...prevGames, ...uniqueNewGames];
+        });
       }
       
       setHasMore(newGames.length > 0);
@@ -439,7 +443,7 @@ export const ChessHistory: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (page > 1) {
+    if (page > 1 && !isLoadingMore) {
       setIsLoadingMore(true);
       fetchGames(page);
     }

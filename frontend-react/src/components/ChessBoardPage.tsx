@@ -439,6 +439,57 @@ const CenteredStartButton = styled(StartGameButton)`
   }
 `;
 
+const CheckAnimation = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 0, 0, 0.2);
+  animation: pulse 1s infinite;
+  pointer-events: none;
+  z-index: 5;
+
+  @keyframes pulse {
+    0% { opacity: 0.2; }
+    50% { opacity: 0.4; }
+    100% { opacity: 0.2; }
+  }
+`;
+
+const MateAnimation = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  pointer-events: none;
+  z-index: 10;
+  animation: fadeIn 0.5s ease-out;
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+`;
+
+const MateText = styled.div`
+  color: white;
+  font-size: 48px;
+  font-weight: bold;
+  text-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+  animation: scaleIn 0.5s ease-out;
+
+  @keyframes scaleIn {
+    from { transform: scale(0.5); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+`;
+
 // Types
 interface GameInfo {
   ID: string;
@@ -457,6 +508,7 @@ interface WSMessage {
   move?: string;
   error?: string;
   result?: string;
+  event?: string;
 }
 
 type Color = 'white' | 'black';
@@ -476,6 +528,8 @@ const useChessGame = (gameId: string | undefined) => {
   const navigate = useNavigate();
   const [currentMoveIndex, setCurrentMoveIndex] = useState<number>(-1);
   const [temporaryPosition, setTemporaryPosition] = useState<string>('start');
+  const [isCheck, setIsCheck] = useState(false);
+  const [isMate, setIsMate] = useState(false);
 
   const chessRef = React.useRef(new Chess());
   const socketRef = React.useRef<WebSocket | null>(null);
@@ -638,6 +692,14 @@ const useChessGame = (gameId: string | undefined) => {
       try {
         console.log('Received WebSocket message:', msg);
         const data: WSMessage = JSON.parse(msg);
+        
+        // Handle check/mate events
+        if (data.event === 'check') {
+          setIsCheck(true);
+          setTimeout(() => setIsCheck(false), 2000); // Remove check animation after 2 seconds
+        } else if (data.event === 'mate') {
+          setIsMate(true);
+        }
         
         // Handle game result first
         if (data.result && data.result !== "0-0") {
@@ -809,7 +871,9 @@ const useChessGame = (gameId: string | undefined) => {
     currentMoveIndex,
     handleMoveBack,
     handleMoveForward,
-    handleMoveClick
+    handleMoveClick,
+    isCheck,
+    isMate
   };
 };
 
@@ -833,7 +897,9 @@ const ChessBoardPage: React.FC = () => {
     currentMoveIndex,
     handleMoveBack,
     handleMoveForward,
-    handleMoveClick
+    handleMoveClick,
+    isCheck,
+    isMate
   } = useChessGame(gameId);
 
   const getGameResultText = (result: string) => {
@@ -961,6 +1027,12 @@ const ChessBoardPage: React.FC = () => {
             </MoveControls>
           </MoveHistoryContainer>
           <ChessBoardContainer>
+            {isCheck && <CheckAnimation />}
+            {isMate && (
+              <MateAnimation>
+                <MateText>ШАХ И МАТ!</MateText>
+              </MateAnimation>
+            )}
             {gameInfo && (
               <>
                 <WhitePlayerInfo>
