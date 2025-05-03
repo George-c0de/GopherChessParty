@@ -368,22 +368,7 @@ export const ChessHistory: React.FC = () => {
   const [games, setGames] = useState<ChessGame[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
-  const [page, setPage] = useState(1);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-  const observer = useRef<IntersectionObserver | null>(null);
-  const lastGameElementRef = useCallback((node: HTMLDivElement | null) => {
-    if (isLoadingMore) return;
-    if (observer.current) observer.current.disconnect();
-    observer.current = new IntersectionObserver(entries => {
-      if (entries[0].isIntersecting && hasMore) {
-        setPage(prevPage => prevPage + 1);
-      }
-    });
-    if (node) observer.current.observe(node);
-  }, [isLoadingMore, hasMore]);
-
   const navigate = useNavigate();
   const [selectedGame, setSelectedGame] = useState<ChessGame | null>(null);
 
@@ -397,7 +382,7 @@ export const ChessHistory: React.FC = () => {
     return player.id === currentUserId ? 'Вы' : player.name;
   };
 
-  const fetchGames = async (pageNum: number) => {
+  const fetchGames = async () => {
     const token = localStorage.getItem('authToken');
     if (!token) {
       navigate('/login');
@@ -405,7 +390,7 @@ export const ChessHistory: React.FC = () => {
     }
 
     try {
-      const response = await fetch(`${config.apiBaseUrl}${config.endpoints.chess}?page=${pageNum}`, {
+      const response = await fetch(`${config.apiBaseUrl}${config.endpoints.chess}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -416,38 +401,18 @@ export const ChessHistory: React.FC = () => {
       }
 
       const data = await response.json();
-      const newGames = data.items || [];
-      
-      if (pageNum === 1) {
-        setGames(newGames);
-      } else {
-        setGames(prevGames => {
-          const existingIds = new Set(prevGames.map(game => game.id));
-          const uniqueNewGames = newGames.filter((game: ChessGame) => !existingIds.has(game.id));
-          return [...prevGames, ...uniqueNewGames];
-        });
-      }
-      
-      setHasMore(newGames.length > 0);
+      setGames(data.items || []);
     } catch (err) {
       setError('Ошибка при загрузке истории игр');
       console.error('Error fetching games:', err);
     } finally {
       setIsLoading(false);
-      setIsLoadingMore(false);
     }
   };
 
   useEffect(() => {
-    fetchGames(1);
+    fetchGames();
   }, []);
-
-  useEffect(() => {
-    if (page > 1 && !isLoadingMore) {
-      setIsLoadingMore(true);
-      fetchGames(page);
-    }
-  }, [page]);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleString('ru-RU', {
@@ -579,11 +544,10 @@ export const ChessHistory: React.FC = () => {
       <Container>
         <Title>История игр</Title>
         <GameList>
-          {games.map((game, index) => (
+          {games.map((game) => (
             <GameCard 
               key={game.id} 
               onClick={() => handleGameClick(game)}
-              ref={index === games.length - 1 ? lastGameElementRef : null}
             >
               <GameHeader>
                 <GameId>Игра #{game.id.slice(0, 8)}</GameId>
@@ -608,12 +572,6 @@ export const ChessHistory: React.FC = () => {
               </GameInfo>
             </GameCard>
           ))}
-          {isLoadingMore && (
-            <LoadingIndicator>
-              <LoadingSpinner />
-              Загрузка...
-            </LoadingIndicator>
-          )}
         </GameList>
       </Container>
 
