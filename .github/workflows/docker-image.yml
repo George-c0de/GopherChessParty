@@ -14,7 +14,11 @@ jobs:
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     steps:
       - name: Golangci-lint
-        uses: golangci/golangci-lint-action@v7.0.0
+        uses: golangci/golangci-lint-action@v7.0.
+        args:
+          - ./cmd/backend/...
+          - ./internal/...
+
   deploy:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
@@ -26,14 +30,14 @@ jobs:
           REACT_APP_WS_URL: ${{secrets.REACT_APP_API_URL}}
           ENV: ${{ secrets.ENV }}
 
-          DBHOST: ${{ secrets.DB_HOST }}
-          DBUSER: ${{ secrets.DB_USER }}
-          DBPASSWORD: ${{ secrets.DB_PASSWORD }}
-          DBDATABASE: ${{ secrets.DB_DATABASE }}
-          DBSSLMODE: ${{ secrets.DB_SSLMODE }}
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_DATABASE: ${{ secrets.DB_DATABASE }}
+          DB_SSLMODE: ${{ secrets.DB_SSLMODE }}
 
-          JWTSECRET: ${{ secrets.JWT_SECRET }}
-          EXPTIME: ${{ secrets.EXP_TIME }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          EXP_TIME: ${{ secrets.EXP_TIME }}
 
           API_URL: ${{ secrets.API_URL }}
           WS_URL: ${{ secrets.WS_URL }}

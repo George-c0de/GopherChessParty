@@ -23,6 +23,8 @@ services:
   migrate:
     image: arigaio/atlas:latest-alpine
     container_name: gopher_chess_migrate
+    environment:
+      - DB_SSLMODE=${DB_SSLMODE}
     command:
       - migrate
       - apply
