@@ -30,18 +30,18 @@ func (d *Database) DBUrl() string {
 
 type Auth struct {
 	JwtSecret string        `env-default:"secret" yaml:"jwtSecret" env:"JWT_SECRET"`
-	ExpTime   time.Duration `env-default:"24h"    yaml:"expTime"   env:"EXP_TIME"`
+	ExpTime   time.Duration `yaml:"expTime"   env:"EXP_TIME"`
 }
 
 type Application struct {
 	Port int `env-default:"8000" yaml:"port"`
 }
 type Config struct {
-	Env         string      `env-default:"local" yaml:"env"          env:"ENV"`
-	StoragePath string      `                    yaml:"storage_path" env:"storagePath"`
-	Database    Database    `                    yaml:"database"     env:"database"`
-	Auth        Auth        `                    yaml:"auth"         env:"auth"`
-	Application Application `                    yaml:"application"  env:"application"`
+	Env         string `env-default:"local" yaml:"env"          env:"ENV"`
+	StoragePath string `                    yaml:"storage_path" env:"storagePath"`
+	Database    Database
+	Auth        Auth
+	Application Application
 }
 
 func MustLoad() *Config {

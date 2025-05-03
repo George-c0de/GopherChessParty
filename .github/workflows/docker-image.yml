@@ -26,8 +26,8 @@ jobs:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - name: Deploy to server via SSH
+        uses: appleboy/ssh-action@v0.1.7
         env:
           REACT_APP_API_URL: ${{secrets.REACT_APP_API_URL}}
           REACT_APP_WS_URL: ${{secrets.REACT_APP_API_URL}}
@@ -44,8 +44,6 @@ jobs:
 
           API_URL: ${{ secrets.API_URL }}
           WS_URL: ${{ secrets.WS_URL }}
-      - name: Deploy to server via SSH
-        uses: appleboy/ssh-action@v0.1.7
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
