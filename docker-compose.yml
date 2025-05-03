@@ -12,6 +12,7 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./init-user-db.sh:/docker-entrypoint-initdb.d/init-user-db.sh
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U ${DB_USER}" ]
       interval: 5s
@@ -38,7 +39,6 @@ services:
       - public
     volumes:
       - ./ent/migrate/migrations:/migrations
-      - ./init-user-db.sh:/docker-entrypoint-initdb.d/init-user-db.sh
     depends_on:
       - postgres
     restart: on-failure
