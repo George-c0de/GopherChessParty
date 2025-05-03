@@ -38,6 +38,7 @@ services:
       - public
     volumes:
       - ./ent/migrate/migrations:/migrations
+      - ./init-user-db.sh:/docker-entrypoint-initdb.d/init-user-db.sh
     depends_on:
       - postgres
     restart: on-failure
@@ -49,14 +50,14 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - ENV=${ENV}
-      - DB_HOST=postgres
-      - DB_USER=${DB_USER}
-      - DB_PASSWORD=${DB_PASSWORD}
-      - DB_DATABASE=${DB_DATABASE}
-      - DB_SSLMODE=${DB_SSLMODE}
-      - JWT_SECRET=${JWT_SECRET}
-      - EXP_TIME=${EXP_TIME}
+      ENV: ${ENV}
+      DB_HOST: postgres
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_DATABASE: ${DB_DATABASE}
+      DB_SSLMODE: ${DB_SSLMODE}
+      JWT_SECRET: ${JWT_SECRET}
+      EXP_TIME: ${EXP_TIME}
     depends_on:
       - postgres
       - migrate
@@ -68,10 +69,10 @@ services:
     build:
       context: ./frontend-react
       dockerfile: Dockerfile
-      args:
-        REACT_APP_API_URL: ${REACT_APP_API_URL}
-        REACT_APP_WS_URL: ${REACT_APP_WS_URL}
     container_name: gopher_chess_frontend
+    environment:
+      REACT_APP_API_URL: ${REACT_APP_API_URL}
+      REACT_APP_WS_URL: ${REACT_APP_WS_URL}
     ports:
       - "80:80"
     depends_on:
