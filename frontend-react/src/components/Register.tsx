@@ -41,12 +41,8 @@ export const Register: React.FC = () => {
         }
 
         try {
-            const response = await authApi.register({ name, email, password });
-            localStorage.setItem('authToken', response.token);
-            if (response.userId) {
-                localStorage.setItem('userId', response.userId);
-            }
-            navigate('/game');
+            await authApi.register({ name, email, password });
+            navigate('/login');
         } catch (err: any) {
             setError(err.response?.data?.error || 'Ошибка регистрации');
         } finally {
