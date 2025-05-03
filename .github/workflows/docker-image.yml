@@ -54,17 +54,17 @@ jobs:
             cd GopherChessParty
             git pull origin main
             cat > .env <<EOF
-            REACT_APP_API_URL=${REACT_APP_API_URL}
-            REACT_APP_WS_URL=${REACT_APP_WS_URL}
-            ENV=${ENV}
-            DB_HOST=${DB_HOST}
-            DB_USER=${DB_USER}
-            DB_PASSWORD=${DB_PASSWORD}
-            DB_DATABASE=${DB_DATABASE}
-            DB_SSLMODE=${DB_SSLMODE}
-            JWT_SECRET=${JWT_SECRET}
-            EXP_TIME=${EXP_TIME}
-            API_URL=${API_URL}
-            WS_URL=${WS_URL}
+            REACT_APP_API_URL=${secrets.REACT_APP_API_URL}
+            REACT_APP_WS_URL=${secrets.REACT_APP_WS_URL}
+            ENV=${secrets.ENV}
+            DB_HOST=${secrets.DB_HOST}
+            DB_USER=${secrets.DB_USER}
+            DB_PASSWORD=${secrets.DB_PASSWORD}
+            DB_DATABASE=${secrets.DB_DATABASE}
+            DB_SSLMODE=${secrets.DB_SSLMODE}
+            JWT_SECRET=${secrets.JWT_SECRET}
+            EXP_TIME=${secrets.EXP_TIME}
+            API_URL=${secrets.API_URL}
+            WS_URL=${secrets.WS_URL}
             EOF
             docker compose up -d --build
