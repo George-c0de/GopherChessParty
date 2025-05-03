@@ -151,7 +151,7 @@ func (g *GameRepository) SaveMove(
 		SetGameID(GameID).
 		SetMove(move).
 		SetUserID(UserID).
-		SetNum(2). //TODO(George): Сделай правильно
+		SetNum(2). // TODO(George): Сделай правильно
 		Save(ctx)
 	if err != nil {
 		g.log.Error(err)

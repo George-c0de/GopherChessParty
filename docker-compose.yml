@@ -5,18 +5,19 @@ services:
     image: postgres:15
     container_name: gopher_chess_db
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: gopher_chess
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_DATABASE}
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER}" ]
       interval: 5s
       timeout: 5s
       retries: 5
+    restart: unless-stopped
 
 
   migrate:
@@ -28,14 +29,14 @@ services:
       - --dir
       - file:///migrations
       - --url
-      - postgres://postgres:postgres@postgres:5432/gopher_chess?search_path=public&sslmode=disable
+      - postgres://${DB_USER}:${DB_PASSWORD}@postgres:5432/${DB_DATABASE}?search_path=public&sslmode=${DB_SSLMODE}
       - --revisions-schema
       - public
     volumes:
       - ./ent/migrate/migrations:/migrations
     depends_on:
-      postgres:
-        condition: service_healthy
+      - postgres
+    restart: on-failure
   backend:
     build:
       context: .
@@ -44,27 +45,35 @@ services:
     ports:
       - "8000:8000"
     environment:
-      DATABASE_URL: "postgres://postgres:postgres@postgres:5432/gopher_chess?search_path=public&sslmode=disable"
+      - ENV=${ENV}
+      - DB_HOST=postgres
+      - DB_PORT=${DB_PORT}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_DATABASE=${DB_DATABASE}
+      - DB_SSLMODE=${DB_SSLMODE}
+      - JWT_SECRET=${JWT_SECRET}
+      - EXP_TIME=${EXP_TIME}
     depends_on:
-      postgres:
-        condition: service_healthy
-      migrate:
-        condition: service_completed_successfully
+      - postgres
+      - migrate
     volumes:
       - ./ent/migrate/migrations:/app/ent/migrate/migrations
+    restart: unless-stopped
 
   frontend:
     build:
       context: ./frontend-react
       dockerfile: Dockerfile
       args:
-        - REACT_APP_API_URL=http://194.67.88.54:8000/v1
-        - REACT_APP_WS_URL=ws://194.67.88.54:8000/v1
+        - REACT_APP_API_URL=${REACT_APP_API_URL}
+        - REACT_APP_WS_URL=${REACT_APP_WS_URL}
     container_name: gopher_chess_frontend
     ports:
       - "80:80"
     depends_on:
       - backend
+    restart: unless-stopped
 
 volumes:
   postgres_data:

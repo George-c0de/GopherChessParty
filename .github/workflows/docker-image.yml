@@ -22,7 +22,21 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        env:
+          ENV: ${{ secrets.ENV }}
 
+          DBHOST: ${{ secrets.DB_HOST }}
+          DBPORT: ${{ secrets.DB_PORT }}
+          DBUSER: ${{ secrets.DB_USER }}
+          DBPASSWORD: ${{ secrets.DB_PASSWORD }}
+          DBDATABASE: ${{ secrets.DB_DATABASE }}
+          DBSSLMODE: ${{ secrets.DB_SSLMODE }}
+
+          JWTSECRET: ${{ secrets.JWT_SECRET }}
+          EXPTIME: ${{ secrets.EXP_TIME }}
+
+          API_URL: ${{ secrets.API_URL }}
+          WS_URL: ${{ secrets.WS_URL }}
       - name: Deploy to server via SSH
         uses: appleboy/ssh-action@v0.1.7
         with:
