@@ -13,4 +13,5 @@ type IGameRepo interface {
 	GetGameById(gameId uuid.UUID) (*dto.Match, error)
 	GetStatus(GameID uuid.UUID) chess.Status
 	UpdateGameResult(GameId uuid.UUID, status chess.Status, result chess.Result) error
+	SaveMove(GameID uuid.UUID, move string, UserID uuid.UUID, numMove int) (*ent.GameHistory, error)
 }

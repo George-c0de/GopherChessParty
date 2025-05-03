@@ -105,7 +105,7 @@ func (s *Service) MoveGameStr(gameID uuid.UUID, move string, player *dto.PlayerC
 		return false
 	}
 
-	response, errSend := s.GetGameInfoMemory(gameID, false, move)
+	response, errSend := s.GetGameInfoMemory(gameID, errMove == nil, move)
 	if errSend != nil {
 		return false
 	}

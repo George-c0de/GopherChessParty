@@ -145,6 +145,10 @@ func (m *GameService) MoveGame(GameID uuid.UUID, move string, player *dto.Player
 		return err
 	}
 	game.SetMove(move)
+	_, err = m.repository.SaveMove(GameID, move, player.UserID, game.NumMove)
+	if err != nil {
+		return err
+	}
 	if game.Match.Outcome() != chesslib.NoOutcome {
 		err := m.UpdateStatus(GameID, game.Match.Outcome())
 		if err != nil {

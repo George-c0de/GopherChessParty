@@ -1,13 +1,12 @@
 package storage
 
 import (
-	"context"
-
 	"GopherChessParty/ent"
 	"GopherChessParty/ent/chess"
 	"GopherChessParty/ent/user"
 	"GopherChessParty/internal/dto"
 	"GopherChessParty/internal/interfaces"
+	"context"
 	"entgo.io/ent/dialect/sql"
 	"github.com/google/uuid"
 )
@@ -92,11 +91,22 @@ func (g *GameRepository) GetGameById(gameId uuid.UUID) (*dto.Match, error) {
 	game, err := g.client.Chess.Query().
 		WithBlackUser().
 		WithWhiteUser().
+		WithMoves().
 		Where(chess.ID(gameId)).
 		Only(ctx)
 	if err != nil {
 		g.log.Error(err)
 		return nil, err
+	}
+	moves := make([]*dto.Move, 0, len(game.Edges.Moves))
+	for _, move := range game.Edges.Moves {
+		moves = append(moves, &dto.Move{
+			Id:        move.ID,
+			CreatedAt: move.CreatedAt,
+			Num:       move.Num,
+			Move:      move.Move,
+			UserID:    move.UserID,
+		})
 	}
 	return &dto.Match{
 		ID:        game.ID,
@@ -113,6 +123,7 @@ func (g *GameRepository) GetGameById(gameId uuid.UUID) (*dto.Match, error) {
 			Name:  game.Edges.WhiteUser.Name,
 			Email: game.Edges.WhiteUser.Email,
 		},
+		HistoryMove: moves,
 	}, nil
 }
 
@@ -145,13 +156,14 @@ func (g *GameRepository) SaveMove(
 	GameID uuid.UUID,
 	move string,
 	UserID uuid.UUID,
+	numMove int,
 ) (*ent.GameHistory, error) {
 	ctx := context.Background()
 	save, err := g.client.GameHistory.Create().
 		SetGameID(GameID).
 		SetMove(move).
 		SetUserID(UserID).
-		SetNum(2). // TODO(George): Сделай правильно
+		SetNum(numMove).
 		Save(ctx)
 	if err != nil {
 		g.log.Error(err)

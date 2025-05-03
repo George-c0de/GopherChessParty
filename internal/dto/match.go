@@ -18,14 +18,21 @@ type PlayerConn struct {
 	UserID uuid.UUID
 	Conn   *websocket.Conn
 }
-
-type Match struct {
-	ID        uuid.UUID
+type Move struct {
+	Id        uuid.UUID
 	CreatedAt time.Time
-	Result    chess.Result
-	Status    chess.Status
-	WhiteUser *GetUser
-	BlackUser *GetUser
+	Num       int
+	Move      string
+	UserID    uuid.UUID
+}
+type Match struct {
+	ID          uuid.UUID
+	CreatedAt   time.Time
+	Result      chess.Result
+	Status      chess.Status
+	WhiteUser   *GetUser
+	BlackUser   *GetUser
+	HistoryMove []*Move
 }
 
 type Game struct {
@@ -37,6 +44,7 @@ type Game struct {
 	HistoryMove   []string
 	Status        chess.Status
 	Result        chess.Result
+	NumMove       int
 }
 
 func (game *Game) GetOpponentUser() *PlayerConn {
@@ -62,4 +70,5 @@ func (game *Game) SetMove(move string) {
 		game.CurrentMotion = WhiteMotion
 	}
 	game.HistoryMove = append(game.HistoryMove, move)
+	game.NumMove++
 }
