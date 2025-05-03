@@ -69,10 +69,10 @@ services:
     build:
       context: ./frontend-react
       dockerfile: Dockerfile
+      args:
+        REACT_APP_API_URL: ${REACT_APP_API_URL}
+        REACT_APP_WS_URL: ${REACT_APP_WS_URL}
     container_name: gopher_chess_frontend
-    environment:
-      REACT_APP_API_URL: ${REACT_APP_API_URL}
-      REACT_APP_WS_URL: ${REACT_APP_WS_URL}
     ports:
       - "80:80"
     depends_on:

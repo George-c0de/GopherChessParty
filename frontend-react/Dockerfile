@@ -12,6 +12,14 @@ RUN npm ci
 # Копируем исходный код
 COPY . .
 
+# Определяем build arguments
+ARG REACT_APP_API_URL
+ARG REACT_APP_WS_URL
+
+# Устанавливаем переменные окружения для сборки
+ENV REACT_APP_API_URL=$REACT_APP_API_URL
+ENV REACT_APP_WS_URL=$REACT_APP_WS_URL
+
 # Собираем приложение
 RUN npm run build
 
