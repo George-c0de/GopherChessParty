@@ -38,15 +38,13 @@ jobs:
             cd GopherChessParty
             git pull origin main
             echo REACT_APP_API_URL=${{secrets.REACT_APP_API_URL}} > .env
-            echo REACT_APP_WS_URL=${{secrets.REACT_APP_WS_URL}} > .env
-            echo ENV=${{secrets.ENV}} > .env
-            echo DB_HOST=${{secrets.DB_HOST}} > .env
-            echo DB_USER=${{secrets.DB_USER}} > .env
-            echo DB_PASSWORD=${{secrets.DB_PASSWORD}} > .env
-            echo DB_DATABASE=${{secrets.DB_DATABASE}} > .env
-            echo DB_SSLMODE=${{secrets.DB_SSLMODE}} > .env
-            echo JWT_SECRET=${{secrets.JWT_SECRET}} > .env
-            echo EXP_TIME=${{secrets.EXP_TIME}} > .env
-            echo API_URL=${{secrets.API_URL}} > .env
-            echo WS_URL=${{secrets.WS_URL}} > .env
+            echo REACT_APP_WS_URL=${{secrets.REACT_APP_WS_URL}} >> .env
+            echo ENV=${{secrets.ENV}} >> .env
+            echo DB_HOST=${{secrets.DB_HOST}} >> .env
+            echo DB_USER=${{secrets.DB_USER}} >> .env
+            echo DB_PASSWORD=${{secrets.DB_PASSWORD}} >> .env
+            echo DB_DATABASE=${{secrets.DB_DATABASE}} >> .env
+            echo DB_SSLMODE=${{secrets.DB_SSLMODE}} >> .env
+            echo JWT_SECRET=${{secrets.JWT_SECRET}} >> .env
+            echo EXP_TIME=${{secrets.EXP_TIME}} >> .env
             docker compose up -d --build
