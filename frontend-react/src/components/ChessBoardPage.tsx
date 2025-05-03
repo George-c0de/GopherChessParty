@@ -40,6 +40,15 @@ const BoardWrapper = styled.div`
   margin-top: 20px;
 `;
 
+const SideResultContainer = styled.div`
+  min-width: 220px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  margin-left: 10px;
+`;
+
 const ChessBoardContainer = styled.div`
   position: relative;
   background: white;
@@ -187,60 +196,53 @@ const ErrorMessage = styled.div`
 `;
 
 const StartGameButton = styled.button`
-  position: absolute;
-  top: -50px;
+  position: fixed;
+  top: 50%;
   left: 50%;
-  transform: translateX(-50%);
-  padding: 10px 20px;
-  background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+  transform: translate(-50%, -50%);
+  padding: 16px 32px;
+  background: linear-gradient(135deg, #4a90e2, #357abd);
   color: white;
   border: none;
   border-radius: 8px;
   cursor: pointer;
-  font-size: 16px;
+  font-size: 18px;
   font-weight: bold;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   transition: all 0.3s ease;
-  z-index: 10;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  z-index: 100;
 
   &:hover {
-    transform: translateX(-50%) translateY(-2px);
-    box-shadow: 0 6px 12px rgba(0,0,0,0.15);
-    background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+    transform: translate(-50%, -50%) scale(1.05);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
   }
 
   &:active {
-    transform: translateX(-50%) translateY(0);
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transform: translate(-50%, -50%) scale(0.95);
+  }
+`;
+
+const NewGameButton = styled(StartGameButton)`
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+  z-index: 20;
+  padding: 15px 30px;
+  font-size: 20px;
+  box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+
+  &:hover {
+    transform: translate(-50%, -50%) translateY(-2px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.25);
   }
 
   &:disabled {
     background: #cccccc;
     cursor: not-allowed;
-    transform: translateX(-50%);
+    transform: translate(-50%, -50%);
     box-shadow: none;
-  }
-`;
-
-const NewGameButton = styled(StartGameButton)`
-  position: fixed;
-  top: auto;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  background-color: #2196F3;
-  z-index: 10;
-
-  &:hover {
-    background-color: #1976D2;
-  }
-
-  &:disabled {
-    background-color: #cccccc;
-    cursor: not-allowed;
   }
 `;
 
@@ -259,16 +261,13 @@ const GameStatus = styled.div`
 `;
 
 const VictoryResult = styled.div`
-  position: fixed;
-  top: 20px;
-  left: 50%;
-  transform: translateX(-50%);
+  margin-top: 0;
+  margin-bottom: 20px;
   background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
   color: white;
   padding: 16px 32px;
   border-radius: 10px;
   box-shadow: 0 4px 15px rgba(46, 204, 113, 0.3);
-  z-index: 1000;
   font-size: 26px;
   font-weight: 800;
   text-align: center;
@@ -279,16 +278,13 @@ const VictoryResult = styled.div`
 `;
 
 const DefeatResult = styled.div`
-  position: fixed;
-  top: 20px;
-  left: 50%;
-  transform: translateX(-50%);
+  margin-top: 0;
+  margin-bottom: 20px;
   background: linear-gradient(135deg, #7f8c8d 0%, #95a5a6 100%);
   color: white;
   padding: 16px 32px;
   border-radius: 10px;
   box-shadow: 0 4px 15px rgba(149, 165, 166, 0.3);
-  z-index: 1000;
   font-size: 26px;
   font-weight: 800;
   text-align: center;
@@ -299,16 +295,13 @@ const DefeatResult = styled.div`
 `;
 
 const DrawResult = styled.div`
-  position: fixed;
-  top: 20px;
-  left: 50%;
-  transform: translateX(-50%);
+  margin-top: 0;
+  margin-bottom: 20px;
   background: linear-gradient(135deg, #2980b9 0%, #3498db 100%);
   color: white;
   padding: 16px 32px;
   border-radius: 10px;
   box-shadow: 0 4px 15px rgba(41, 128, 185, 0.3);
-  z-index: 1000;
   font-size: 26px;
   font-weight: 800;
   text-align: center;
@@ -416,6 +409,21 @@ const ChessBoardWrapper = styled.div`
 
 const ButtonIcon = styled.span`
   font-size: 18px;
+`;
+
+const DefeatMessage = styled.div`
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 20px;
+  border-radius: 8px;
+  text-align: center;
+  z-index: 100;
+  min-width: 300px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 `;
 
 // Types
@@ -809,6 +817,9 @@ const useChessGame = (gameId: string | undefined) => {
 const ChessBoardPage: React.FC = () => {
   const { gameId } = useParams();
   const navigate = useNavigate();
+  const [showResult, setShowResult] = useState(false);
+  const handleResultClick = () => setShowResult(false);
+
   const { 
     gameInfo, 
     position: temporaryPosition,
@@ -829,6 +840,11 @@ const ChessBoardPage: React.FC = () => {
     isCheck,
     isMate
   } = useChessGame(gameId);
+
+  // Определяем, кто пользователь
+  const userId = localStorage.getItem('userId');
+  const isWhitePlayer = gameInfo?.WhiteUser.id === userId;
+  const isBlackPlayer = gameInfo?.BlackUser.id === userId;
 
   const getGameResultText = (result: string) => {
     const userId = localStorage.getItem('userId');
@@ -934,14 +950,25 @@ const ChessBoardPage: React.FC = () => {
                 </ControlButton>
               </MoveControls>
             </MoveHistoryContainer>
-            <ChessBoardContainer>
-              <WhitePlayerInfo>
-                <PlayerAvatar>W</PlayerAvatar>
-                <div>
-                  <PlayerName>{gameInfo.WhiteUser.name}</PlayerName>
-                  <PlayerColor>Белые</PlayerColor>
-                </div>
-              </WhitePlayerInfo>
+            <ChessBoardContainer style={{position: 'relative'}}>
+              {/* Верхний блок — соперник */}
+              {playerColor === 'white' ? (
+                <BlackPlayerInfo>
+                  <PlayerAvatar>B</PlayerAvatar>
+                  <div>
+                    <PlayerName>{gameInfo.BlackUser.name}</PlayerName>
+                    <PlayerColor>Черные</PlayerColor>
+                  </div>
+                </BlackPlayerInfo>
+              ) : (
+                <WhitePlayerInfo>
+                  <PlayerAvatar>W</PlayerAvatar>
+                  <div>
+                    <PlayerName>{gameInfo.WhiteUser.name}</PlayerName>
+                    <PlayerColor>Белые</PlayerColor>
+                  </div>
+                </WhitePlayerInfo>
+              )}
               <ChessBoardWrapper>
                 <Chessboard
                   position={temporaryPosition}
@@ -955,43 +982,59 @@ const ChessBoardPage: React.FC = () => {
                   customDarkSquareStyle={{ backgroundColor: '#779556' }}
                   customLightSquareStyle={{ backgroundColor: '#ebecd0' }}
                 />
+                {gameResult && gameResult !== "0-0" && (
+                  <NewGameButton 
+                    onClick={startNewGame}
+                    disabled={isSearching}
+                  >
+                    <ButtonIcon>♟️</ButtonIcon>
+                    {isSearching ? 'Поиск...' : 'Новая игра'}
+                  </NewGameButton>
+                )}
               </ChessBoardWrapper>
-              <BlackPlayerInfo>
-                <PlayerAvatar>B</PlayerAvatar>
-                <div>
-                  <PlayerName>{gameInfo.BlackUser.name}</PlayerName>
-                  <PlayerColor>Черные</PlayerColor>
-                </div>
-              </BlackPlayerInfo>
+              {/* Нижний блок — пользователь */}
+              {playerColor === 'white' ? (
+                <WhitePlayerInfo>
+                  <PlayerAvatar>W</PlayerAvatar>
+                  <div>
+                    <PlayerName>{gameInfo.WhiteUser.name} <span style={{color:'#27ae60', fontWeight:'bold', fontSize:'14px', marginLeft:'6px'}}>Вы</span></PlayerName>
+                    <PlayerColor>Белые</PlayerColor>
+                  </div>
+                </WhitePlayerInfo>
+              ) : (
+                <BlackPlayerInfo>
+                  <PlayerAvatar>B</PlayerAvatar>
+                  <div>
+                    <PlayerName>{gameInfo.BlackUser.name} <span style={{color:'#27ae60', fontWeight:'bold', fontSize:'14px', marginLeft:'6px'}}>Вы</span></PlayerName>
+                    <PlayerColor>Черные</PlayerColor>
+                  </div>
+                </BlackPlayerInfo>
+              )}
             </ChessBoardContainer>
+            {showResult && gameResult && gameResult !== "0-0" && (
+              <div 
+                style={{ position: 'fixed', top: 40, left: '50%', transform: 'translateX(-50%)', zIndex: 2000, cursor: 'pointer' }}
+                onClick={handleResultClick}
+                title="Нажмите, чтобы скрыть"
+              >
+                {gameResult === '1-0' && isWhitePlayer && (
+                  <VictoryResult>ПОБЕДА</VictoryResult>
+                )}
+                {gameResult === '1-0' && isBlackPlayer && (
+                  <DefeatResult>ПОРАЖЕНИЕ</DefeatResult>
+                )}
+                {gameResult === '0-1' && isBlackPlayer && (
+                  <VictoryResult>ПОБЕДА</VictoryResult>
+                )}
+                {gameResult === '0-1' && isWhitePlayer && (
+                  <DefeatResult>ПОРАЖЕНИЕ</DefeatResult>
+                )}
+                {gameResult === '1/2-1/2' && (
+                  <DrawResult>НИЧЬЯ</DrawResult>
+                )}
+              </div>
+            )}
           </BoardWrapper>
-        )}
-
-        {gameResult && gameResult !== "0-0" && (
-          <>
-            {gameResult === '1-0' && gameInfo?.WhiteUser.id === localStorage.getItem('userId') && (
-              <VictoryResult>ПОБЕДА</VictoryResult>
-            )}
-            {gameResult === '1-0' && gameInfo?.BlackUser.id === localStorage.getItem('userId') && (
-              <DefeatResult>ПОРАЖЕНИЕ</DefeatResult>
-            )}
-            {gameResult === '0-1' && gameInfo?.BlackUser.id === localStorage.getItem('userId') && (
-              <VictoryResult>ПОБЕДА</VictoryResult>
-            )}
-            {gameResult === '0-1' && gameInfo?.WhiteUser.id === localStorage.getItem('userId') && (
-              <DefeatResult>ПОРАЖЕНИЕ</DefeatResult>
-            )}
-            {gameResult === '1/2-1/2' && (
-              <DrawResult>НИЧЬЯ</DrawResult>
-            )}
-            <CenteredStartButton 
-              onClick={startNewGame}
-              disabled={isSearching}
-            >
-              <ButtonIcon>♟️</ButtonIcon>
-              {isSearching ? 'Поиск...' : 'Новая игра'}
-            </CenteredStartButton>
-          </>
         )}
       </MainContent>
     </BoardContainer>
