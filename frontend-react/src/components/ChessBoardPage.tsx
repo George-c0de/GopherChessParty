@@ -3,7 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { Chess } from 'chess.js';
 import { config } from '../config';
-import { Chessboard } from 'react-chessboard';  // измените импорт
+import { Chessboard } from 'react-chessboard';
+import Header from './Header';
 
 // Theme types
 declare module 'styled-components' {
@@ -18,34 +19,17 @@ declare module 'styled-components' {
 // styled-components
 const BoardContainer = styled.div`
   display: flex;
-  justify-content: center;
-  align-items: center;
+  flex-direction: column;
   min-height: 100vh;
   background-color: #f0f0f0;
-  position: relative;
-  padding: 20px;
 `;
 
-const MainContent = styled.div`
+const MainContent = styled.main`
+  flex: 1;
+  padding-top: 80px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 20px;
-  margin-top: 80px;
-`;
-
-const WelcomeMessage = styled.div`
-  text-align: center;
-  margin-bottom: 20px;
-  h1 {
-    font-size: 32px;
-    color: #2c3e50;
-    margin-bottom: 10px;
-  }
-  p {
-    font-size: 18px;
-    color: #7f8c8d;
-  }
 `;
 
 const BoardWrapper = styled.div`
@@ -53,8 +37,7 @@ const BoardWrapper = styled.div`
   gap: 20px;
   align-items: flex-start;
   position: relative;
-  margin-top: 100px;
-  margin-bottom: 100px;
+  margin-top: 20px;
 `;
 
 const ChessBoardContainer = styled.div`
@@ -64,6 +47,10 @@ const ChessBoardContainer = styled.div`
   border-radius: 12px;
   box-shadow: 0 4px 20px rgba(0,0,0,0.1);
   margin: 0 auto;
+  min-width: 600px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 `;
 
 const MoveHistoryContainer = styled.div`
@@ -136,7 +123,6 @@ const ControlButton = styled.button`
 `;
 
 const PlayerInfo = styled.div`
-  position: absolute;
   background: rgba(255, 255, 255, 0.95);
   padding: 12px 20px;
   border-radius: 8px;
@@ -146,6 +132,7 @@ const PlayerInfo = styled.div`
   gap: 12px;
   min-width: 200px;
   transition: all 0.3s ease;
+  align-self: center;
 
   &:hover {
     transform: translateY(-2px);
@@ -154,19 +141,11 @@ const PlayerInfo = styled.div`
 `;
 
 const WhitePlayerInfo = styled(PlayerInfo)`
-  top: -80px;
-  left: 50%;
-  transform: translateX(-50%);
   border: 2px solid #ebecd0;
-  z-index: 10;
 `;
 
 const BlackPlayerInfo = styled(PlayerInfo)`
-  bottom: -80px;
-  left: 50%;
-  transform: translateX(-50%);
   border: 2px solid #779556;
-  z-index: 10;
 `;
 
 const PlayerAvatar = styled.div`
@@ -339,79 +318,18 @@ const DrawResult = styled.div`
   border: 2px solid #2c3e50;
 `;
 
-const NavigationButton = styled.button`
-  padding: 12px 24px;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 16px;
-  font-weight: bold;
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+const WelcomeMessage = styled.div`
+  text-align: center;
+  margin-bottom: 20px;
+  h1 {
+    font-size: 32px;
+    color: #2c3e50;
+    margin-bottom: 10px;
   }
-
-  &:active {
-    transform: translateY(0);
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  p {
+    font-size: 18px;
+    color: #7f8c8d;
   }
-`;
-
-const NavigationButtons = styled.div`
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  display: flex;
-  gap: 10px;
-  z-index: 9999;
-  background: rgba(255, 255, 255, 0.9);
-  padding: 10px;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-  pointer-events: auto;
-`;
-
-const LogoutButton = styled(NavigationButton)`
-  background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
-
-  &:hover {
-    background: linear-gradient(135deg, #c0392b 0%, #e74c3c 100%);
-  }
-`;
-
-const ProfileButton = styled(NavigationButton)`
-  background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
-
-  &:hover {
-    background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
-  }
-`;
-
-const HistoryButton = styled(NavigationButton)`
-  background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
-
-  &:hover {
-    background: linear-gradient(135deg, #8e44ad 0%, #9b59b6 100%);
-  }
-`;
-
-const HomeButton = styled(NavigationButton)`
-  background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
-
-  &:hover {
-    background: linear-gradient(135deg, #8e44ad 0%, #9b59b6 100%);
-  }
-`;
-
-const ButtonIcon = styled.span`
-  font-size: 18px;
 `;
 
 const MutedChessboard = styled.div`
@@ -488,6 +406,16 @@ const MateText = styled.div`
     from { transform: scale(0.5); opacity: 0; }
     to { transform: scale(1); opacity: 1; }
   }
+`;
+
+const ChessBoardWrapper = styled.div`
+  position: relative;
+  width: 600px;
+  height: 600px;
+`;
+
+const ButtonIcon = styled.span`
+  font-size: 18px;
 `;
 
 // Types
@@ -941,158 +869,131 @@ const ChessBoardPage: React.FC = () => {
 
   return (
     <BoardContainer>
-      <NavigationButtons>
-        <LogoutButton onClick={handleLogout}>
-          <ButtonIcon>🚪</ButtonIcon>
-          Выйти
-        </LogoutButton>
-        <ProfileButton onClick={() => navigate('/profile')}>
-          <ButtonIcon>👤</ButtonIcon>
-          Профиль
-        </ProfileButton>
-        <HistoryButton onClick={() => navigate('/history')}>
-          <ButtonIcon>📜</ButtonIcon>
-          История
-        </HistoryButton>
-        <HomeButton onClick={() => {
-          navigate('/game');
-          window.location.reload();
-        }}>
-          <ButtonIcon>🏠</ButtonIcon>
-          Главная
-        </HomeButton>
-      </NavigationButtons>
+      <Header />
+      <MainContent>
+        {!gameId && (
+          <>
+            <WelcomeMessage>
+              <h1>Добро пожаловать в GopherChess!</h1>
+              <p>Начните новую игру и сразитесь с противником</p>
+            </WelcomeMessage>
+            <BoardWrapper>
+              <MutedChessboard>
+                <Chessboard
+                  position="start"
+                  boardWidth={600}
+                  customBoardStyle={{
+                    borderRadius: '4px',
+                    boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
+                  }}
+                  customDarkSquareStyle={{ backgroundColor: '#779556' }}
+                  customLightSquareStyle={{ backgroundColor: '#ebecd0' }}
+                />
+              </MutedChessboard>
+              <CenteredStartButton 
+                onClick={startNewGame}
+                disabled={isSearching}
+              >
+                <ButtonIcon>♟️</ButtonIcon>
+                {isSearching ? 'Поиск...' : 'Начать игру'}
+              </CenteredStartButton>
+            </BoardWrapper>
+            {searchStatus && <GameStatus>{searchStatus}</GameStatus>}
+          </>
+        )}
 
-      {!gameId && (
-        <MainContent>
-          <WelcomeMessage>
-            <h1>Добро пожаловать в GopherChess!</h1>
-            <p>Начните новую игру и сразитесь с противником</p>
-          </WelcomeMessage>
+        {error && <ErrorMessage>{error}</ErrorMessage>}
+
+        {gameInfo && gameId && (
           <BoardWrapper>
-            <MutedChessboard>
-              <Chessboard
-                position="start"
-                boardWidth={600}
-                customBoardStyle={{
-                  borderRadius: '4px',
-                  boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
-                }}
-                customDarkSquareStyle={{ backgroundColor: '#779556' }}
-                customLightSquareStyle={{ backgroundColor: '#ebecd0' }}
-              />
-            </MutedChessboard>
+            <MoveHistoryContainer>
+              <MoveHistoryTitle>История ходов</MoveHistoryTitle>
+              <MoveHistoryList>
+                {moveHistory.map((move, index) => (
+                  <MoveItem 
+                    key={index}
+                    isCurrent={index === currentMoveIndex}
+                    onClick={() => handleMoveClick(index)}
+                  >
+                    {Math.floor(index/2) + 1}. {move}
+                  </MoveItem>
+                ))}
+              </MoveHistoryList>
+              <MoveControls>
+                <ControlButton 
+                  onClick={handleMoveBack}
+                  disabled={currentMoveIndex <= 0}
+                >
+                  ⏮️ Назад
+                </ControlButton>
+                <ControlButton 
+                  onClick={handleMoveForward}
+                  disabled={currentMoveIndex >= moveHistory.length - 1}
+                >
+                  Вперед ⏭️
+                </ControlButton>
+              </MoveControls>
+            </MoveHistoryContainer>
+            <ChessBoardContainer>
+              <WhitePlayerInfo>
+                <PlayerAvatar>W</PlayerAvatar>
+                <div>
+                  <PlayerName>{gameInfo.WhiteUser.name}</PlayerName>
+                  <PlayerColor>Белые</PlayerColor>
+                </div>
+              </WhitePlayerInfo>
+              <ChessBoardWrapper>
+                <Chessboard
+                  position={temporaryPosition}
+                  onPieceDrop={handlePieceDrop}
+                  boardOrientation={playerColor || 'white'}
+                  boardWidth={600}
+                  customBoardStyle={{
+                    borderRadius: '4px',
+                    boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
+                  }}
+                  customDarkSquareStyle={{ backgroundColor: '#779556' }}
+                  customLightSquareStyle={{ backgroundColor: '#ebecd0' }}
+                />
+              </ChessBoardWrapper>
+              <BlackPlayerInfo>
+                <PlayerAvatar>B</PlayerAvatar>
+                <div>
+                  <PlayerName>{gameInfo.BlackUser.name}</PlayerName>
+                  <PlayerColor>Черные</PlayerColor>
+                </div>
+              </BlackPlayerInfo>
+            </ChessBoardContainer>
+          </BoardWrapper>
+        )}
+
+        {gameResult && gameResult !== "0-0" && (
+          <>
+            {gameResult === '1-0' && gameInfo?.WhiteUser.id === localStorage.getItem('userId') && (
+              <VictoryResult>ПОБЕДА</VictoryResult>
+            )}
+            {gameResult === '1-0' && gameInfo?.BlackUser.id === localStorage.getItem('userId') && (
+              <DefeatResult>ПОРАЖЕНИЕ</DefeatResult>
+            )}
+            {gameResult === '0-1' && gameInfo?.BlackUser.id === localStorage.getItem('userId') && (
+              <VictoryResult>ПОБЕДА</VictoryResult>
+            )}
+            {gameResult === '0-1' && gameInfo?.WhiteUser.id === localStorage.getItem('userId') && (
+              <DefeatResult>ПОРАЖЕНИЕ</DefeatResult>
+            )}
+            {gameResult === '1/2-1/2' && (
+              <DrawResult>НИЧЬЯ</DrawResult>
+            )}
             <CenteredStartButton 
               onClick={startNewGame}
               disabled={isSearching}
             >
               <ButtonIcon>♟️</ButtonIcon>
-              {isSearching ? 'Поиск...' : 'Начать игру'}
+              {isSearching ? 'Поиск...' : 'Новая игра'}
             </CenteredStartButton>
-          </BoardWrapper>
-          {searchStatus && <GameStatus>{searchStatus}</GameStatus>}
-        </MainContent>
-      )}
-
-      {error && <ErrorMessage>{error}</ErrorMessage>}
-
-      {gameInfo && gameId && (
-        <BoardWrapper>
-          <MoveHistoryContainer>
-            <MoveHistoryTitle>История ходов</MoveHistoryTitle>
-            <MoveHistoryList>
-              {moveHistory.map((move, index) => (
-                <MoveItem 
-                  key={index}
-                  isCurrent={index === currentMoveIndex}
-                  onClick={() => handleMoveClick(index)}
-                >
-                  {Math.floor(index/2) + 1}. {move}
-                </MoveItem>
-              ))}
-            </MoveHistoryList>
-            <MoveControls>
-              <ControlButton 
-                onClick={handleMoveBack}
-                disabled={currentMoveIndex <= 0}
-              >
-                ⏮️ Назад
-              </ControlButton>
-              <ControlButton 
-                onClick={handleMoveForward}
-                disabled={currentMoveIndex >= moveHistory.length - 1}
-              >
-                Вперед ⏭️
-              </ControlButton>
-            </MoveControls>
-          </MoveHistoryContainer>
-          <ChessBoardContainer>
-            {isCheck && <CheckAnimation />}
-            {isMate && (
-              <MateAnimation>
-                <MateText>ШАХ И МАТ!</MateText>
-              </MateAnimation>
-            )}
-            {gameInfo && (
-              <>
-                <WhitePlayerInfo>
-                  <PlayerAvatar>W</PlayerAvatar>
-                  <div>
-                    <PlayerName>{gameInfo.WhiteUser.name}</PlayerName>
-                    <PlayerColor>Белые</PlayerColor>
-                  </div>
-                </WhitePlayerInfo>
-                <BlackPlayerInfo>
-                  <PlayerAvatar>B</PlayerAvatar>
-                  <div>
-                    <PlayerName>{gameInfo.BlackUser.name}</PlayerName>
-                    <PlayerColor>Черные</PlayerColor>
-                  </div>
-                </BlackPlayerInfo>
-              </>
-            )}
-            <Chessboard
-              position={temporaryPosition}
-              onPieceDrop={handlePieceDrop}
-              boardOrientation={playerColor || 'white'}
-              boardWidth={600}
-              customBoardStyle={{
-                borderRadius: '4px',
-                boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
-              }}
-              customDarkSquareStyle={{ backgroundColor: '#779556' }}
-              customLightSquareStyle={{ backgroundColor: '#ebecd0' }}
-            />
-          </ChessBoardContainer>
-        </BoardWrapper>
-      )}
-
-      {gameResult && gameResult !== "0-0" && (
-        <>
-          {gameResult === '1-0' && gameInfo?.WhiteUser.id === localStorage.getItem('userId') && (
-            <VictoryResult>ПОБЕДА</VictoryResult>
-          )}
-          {gameResult === '1-0' && gameInfo?.BlackUser.id === localStorage.getItem('userId') && (
-            <DefeatResult>ПОРАЖЕНИЕ</DefeatResult>
-          )}
-          {gameResult === '0-1' && gameInfo?.BlackUser.id === localStorage.getItem('userId') && (
-            <VictoryResult>ПОБЕДА</VictoryResult>
-          )}
-          {gameResult === '0-1' && gameInfo?.WhiteUser.id === localStorage.getItem('userId') && (
-            <DefeatResult>ПОРАЖЕНИЕ</DefeatResult>
-          )}
-          {gameResult === '1/2-1/2' && (
-            <DrawResult>НИЧЬЯ</DrawResult>
-          )}
-          <CenteredStartButton 
-            onClick={startNewGame}
-            disabled={isSearching}
-          >
-            <ButtonIcon>♟️</ButtonIcon>
-            {isSearching ? 'Поиск...' : 'Новая игра'}
-          </CenteredStartButton>
-        </>
-      )}
+          </>
+        )}
+      </MainContent>
     </BoardContainer>
   );
 };

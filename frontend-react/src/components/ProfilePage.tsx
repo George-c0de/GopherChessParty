@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
 import { config } from '../config';
+import Header from './Header';
+import { MainContent } from './MainContent';
 
 const Container = styled.div`
   max-width: 600px;
@@ -186,51 +188,40 @@ export const ProfilePage: React.FC = () => {
 
   return (
     <>
-      <NavigationButtons>
-        <LogoutButton onClick={handleLogout}>
-          <ButtonIcon>🚪</ButtonIcon>
-          Выйти
-        </LogoutButton>
-        <HistoryButton onClick={() => navigate('/history')}>
-          <ButtonIcon>📜</ButtonIcon>
-          История
-        </HistoryButton>
-        <HomeButton onClick={handleGoHome}>
-          <ButtonIcon>🏠</ButtonIcon>
-          Главная
-        </HomeButton>
-      </NavigationButtons>
-      <Container>
-        <Title>Личный кабинет</Title>
-        {isLoading ? (
-          <LoadingMessage>Загрузка данных пользователя...</LoadingMessage>
-        ) : error ? (
-          <ErrorMessage>{error}</ErrorMessage>
-        ) : user ? (
-          <UserInfo>
-            <InfoRow>
-              <InfoLabel>ID:</InfoLabel>
-              <InfoValue>{user.id}</InfoValue>
-            </InfoRow>
-            <InfoRow>
-              <InfoLabel>Имя:</InfoLabel>
-              <InfoValue>{user.name}</InfoValue>
-            </InfoRow>
-            <InfoRow>
-              <InfoLabel>Email:</InfoLabel>
-              <InfoValue>{user.email}</InfoValue>
-            </InfoRow>
-            <InfoRow>
-              <InfoLabel>Дата регистрации:</InfoLabel>
-              <InfoValue>{formatDate(user.created_at)}</InfoValue>
-            </InfoRow>
-            <InfoRow>
-              <InfoLabel>Последнее обновление:</InfoLabel>
-              <InfoValue>{formatDate(user.updated_at)}</InfoValue>
-            </InfoRow>
-          </UserInfo>
-        ) : null}
-      </Container>
+      <Header />
+      <MainContent>
+        <Container>
+          <Title>Личный кабинет</Title>
+          {isLoading ? (
+            <LoadingMessage>Загрузка данных пользователя...</LoadingMessage>
+          ) : error ? (
+            <ErrorMessage>{error}</ErrorMessage>
+          ) : user ? (
+            <UserInfo>
+              <InfoRow>
+                <InfoLabel>ID:</InfoLabel>
+                <InfoValue>{user.id}</InfoValue>
+              </InfoRow>
+              <InfoRow>
+                <InfoLabel>Имя:</InfoLabel>
+                <InfoValue>{user.name}</InfoValue>
+              </InfoRow>
+              <InfoRow>
+                <InfoLabel>Email:</InfoLabel>
+                <InfoValue>{user.email}</InfoValue>
+              </InfoRow>
+              <InfoRow>
+                <InfoLabel>Дата регистрации:</InfoLabel>
+                <InfoValue>{formatDate(user.created_at)}</InfoValue>
+              </InfoRow>
+              <InfoRow>
+                <InfoLabel>Последнее обновление:</InfoLabel>
+                <InfoValue>{formatDate(user.updated_at)}</InfoValue>
+              </InfoRow>
+            </UserInfo>
+          ) : null}
+        </Container>
+      </MainContent>
     </>
   );
 }; 

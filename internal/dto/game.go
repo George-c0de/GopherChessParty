@@ -1,9 +1,10 @@
 package dto
 
 import (
+	"time"
+
 	"GopherChessParty/ent/chess"
 	"github.com/google/uuid"
-	"time"
 )
 
 type Player struct {

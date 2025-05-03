@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import styled, { keyframes } from 'styled-components';
 import { useNavigate } from 'react-router-dom';
 import { config } from '../config';
+import Header from './Header';
+import { MainContent } from './MainContent';
 
 const Container = styled.div`
   max-width: 800px;
@@ -480,23 +482,12 @@ export const ChessHistory: React.FC = () => {
   if (isLoading) {
     return (
       <>
-        <NavigationButtons>
-          <LogoutButton onClick={handleLogout}>
-            <ButtonIcon>🚪</ButtonIcon>
-            Выйти
-          </LogoutButton>
-          <ProfileButton onClick={() => navigate('/profile')}>
-            <ButtonIcon>👤</ButtonIcon>
-            Профиль
-          </ProfileButton>
-          <HomeButton onClick={handleGoHome}>
-            <ButtonIcon>🏠</ButtonIcon>
-            Главная
-          </HomeButton>
-        </NavigationButtons>
-        <Container>
-          <LoadingMessage>Загрузка истории игр...</LoadingMessage>
-        </Container>
+        <Header />
+        <MainContent>
+          <Container>
+            <LoadingMessage>Загрузка истории игр...</LoadingMessage>
+          </Container>
+        </MainContent>
       </>
     );
   }
@@ -504,125 +495,103 @@ export const ChessHistory: React.FC = () => {
   if (error) {
     return (
       <>
-        <NavigationButtons>
-          <LogoutButton onClick={handleLogout}>
-            <ButtonIcon>🚪</ButtonIcon>
-            Выйти
-          </LogoutButton>
-          <ProfileButton onClick={() => navigate('/profile')}>
-            <ButtonIcon>👤</ButtonIcon>
-            Профиль
-          </ProfileButton>
-          <HomeButton onClick={handleGoHome}>
-            <ButtonIcon>🏠</ButtonIcon>
-            Главная
-          </HomeButton>
-        </NavigationButtons>
-        <Container>
-          <ErrorMessage>{error}</ErrorMessage>
-        </Container>
+        <Header />
+        <MainContent>
+          <Container>
+            <ErrorMessage>{error}</ErrorMessage>
+          </Container>
+        </MainContent>
       </>
     );
   }
 
   return (
     <>
-      <NavigationButtons>
-        <LogoutButton onClick={handleLogout}>
-          <ButtonIcon>🚪</ButtonIcon>
-          Выйти
-        </LogoutButton>
-        <ProfileButton onClick={() => navigate('/profile')}>
-          <ButtonIcon>👤</ButtonIcon>
-          Профиль
-        </ProfileButton>
-        <HomeButton onClick={handleGoHome}>
-          <ButtonIcon>🏠</ButtonIcon>
-          Главная
-        </HomeButton>
-      </NavigationButtons>
-      <Container>
-        <Title>История игр</Title>
-        <GameList>
-          {games.map((game) => (
-            <GameCard 
-              key={game.id} 
-              onClick={() => handleGameClick(game)}
-            >
-              <GameHeader>
-                <GameId>Игра #{game.id.slice(0, 8)}</GameId>
-                <GameStatus status={game.status}>{getStatusText(game.status)}</GameStatus>
-              </GameHeader>
-              <GameResult result={game.result} isCurrentUser={isCurrentUserWinner(game)}>
-                {getResultText(game.result)}
-              </GameResult>
-              <GameInfo>
-                <PlayerInfo>
-                  <PlayerName>{getPlayerName(game.white_player)}</PlayerName>
-                  <PlayerColor>Белые</PlayerColor>
-                </PlayerInfo>
-                <PlayerInfo>
-                  <PlayerName>{getPlayerName(game.black_player)}</PlayerName>
-                  <PlayerColor>Черные</PlayerColor>
-                </PlayerInfo>
-              </GameInfo>
-              <GameInfo>
-                <span>Создана: {formatDate(game.created_at)}</span>
-                <span>Обновлена: {formatDate(game.updated_at)}</span>
-              </GameInfo>
-            </GameCard>
-          ))}
-        </GameList>
-      </Container>
+      <Header />
+      <MainContent>
+        <Container>
+          <Title>История игр</Title>
+          <GameList>
+            {games.map((game) => (
+              <GameCard 
+                key={game.id} 
+                onClick={() => handleGameClick(game)}
+              >
+                <GameHeader>
+                  <GameId>Игра #{game.id.slice(0, 8)}</GameId>
+                  <GameStatus status={game.status}>{getStatusText(game.status)}</GameStatus>
+                </GameHeader>
+                <GameResult result={game.result} isCurrentUser={isCurrentUserWinner(game)}>
+                  {getResultText(game.result)}
+                </GameResult>
+                <GameInfo>
+                  <PlayerInfo>
+                    <PlayerName>{getPlayerName(game.white_player)}</PlayerName>
+                    <PlayerColor>Белые</PlayerColor>
+                  </PlayerInfo>
+                  <PlayerInfo>
+                    <PlayerName>{getPlayerName(game.black_player)}</PlayerName>
+                    <PlayerColor>Черные</PlayerColor>
+                  </PlayerInfo>
+                </GameInfo>
+                <GameInfo>
+                  <span>Создана: {formatDate(game.created_at)}</span>
+                  <span>Обновлена: {formatDate(game.updated_at)}</span>
+                </GameInfo>
+              </GameCard>
+            ))}
+          </GameList>
+        </Container>
 
-      {selectedGame && (
-        <GameModal>
-          <GameModalContent>
-            <GameModalHeader>
-              <GameModalTitle>Игра #{selectedGame.id.slice(0, 8)}</GameModalTitle>
-              <GameModalClose onClick={handleCloseModal}>×</GameModalClose>
-            </GameModalHeader>
-            
-            <GameModalPlayers>
-              <GameModalPlayer>
-                <GameModalPlayerName>{getPlayerName(selectedGame.white_player)}</GameModalPlayerName>
-                <GameModalPlayerColor>Белые</GameModalPlayerColor>
-              </GameModalPlayer>
-              <GameModalPlayer>
-                <GameModalPlayerName>{getPlayerName(selectedGame.black_player)}</GameModalPlayerName>
-                <GameModalPlayerColor>Черные</GameModalPlayerColor>
-              </GameModalPlayer>
-            </GameModalPlayers>
+        {selectedGame && (
+          <GameModal>
+            <GameModalContent>
+              <GameModalHeader>
+                <GameModalTitle>Игра #{selectedGame.id.slice(0, 8)}</GameModalTitle>
+                <GameModalClose onClick={handleCloseModal}>×</GameModalClose>
+              </GameModalHeader>
+              
+              <GameModalPlayers>
+                <GameModalPlayer>
+                  <GameModalPlayerName>{getPlayerName(selectedGame.white_player)}</GameModalPlayerName>
+                  <GameModalPlayerColor>Белые</GameModalPlayerColor>
+                </GameModalPlayer>
+                <GameModalPlayer>
+                  <GameModalPlayerName>{getPlayerName(selectedGame.black_player)}</GameModalPlayerName>
+                  <GameModalPlayerColor>Черные</GameModalPlayerColor>
+                </GameModalPlayer>
+              </GameModalPlayers>
 
-            <GameModalInfo>
-              <GameModalInfoRow>
-                <GameModalInfoLabel>Статус:</GameModalInfoLabel>
-                <GameModalInfoValue>{getStatusText(selectedGame.status)}</GameModalInfoValue>
-              </GameModalInfoRow>
-              <GameModalInfoRow>
-                <GameModalInfoLabel>Результат:</GameModalInfoLabel>
-                <GameModalInfoValue style={{ 
-                  color: isCurrentUserWinner(selectedGame) ? '#28a745' : '#dc3545'
-                }}>
-                  {getResultText(selectedGame.result)}
-                </GameModalInfoValue>
-              </GameModalInfoRow>
-              <GameModalInfoRow>
-                <GameModalInfoLabel>Создана:</GameModalInfoLabel>
-                <GameModalInfoValue>{formatDate(selectedGame.created_at)}</GameModalInfoValue>
-              </GameModalInfoRow>
-              <GameModalInfoRow>
-                <GameModalInfoLabel>Обновлена:</GameModalInfoLabel>
-                <GameModalInfoValue>{formatDate(selectedGame.updated_at)}</GameModalInfoValue>
-              </GameModalInfoRow>
-            </GameModalInfo>
+              <GameModalInfo>
+                <GameModalInfoRow>
+                  <GameModalInfoLabel>Статус:</GameModalInfoLabel>
+                  <GameModalInfoValue>{getStatusText(selectedGame.status)}</GameModalInfoValue>
+                </GameModalInfoRow>
+                <GameModalInfoRow>
+                  <GameModalInfoLabel>Результат:</GameModalInfoLabel>
+                  <GameModalInfoValue style={{ 
+                    color: isCurrentUserWinner(selectedGame) ? '#28a745' : '#dc3545'
+                  }}>
+                    {getResultText(selectedGame.result)}
+                  </GameModalInfoValue>
+                </GameModalInfoRow>
+                <GameModalInfoRow>
+                  <GameModalInfoLabel>Создана:</GameModalInfoLabel>
+                  <GameModalInfoValue>{formatDate(selectedGame.created_at)}</GameModalInfoValue>
+                </GameModalInfoRow>
+                <GameModalInfoRow>
+                  <GameModalInfoLabel>Обновлена:</GameModalInfoLabel>
+                  <GameModalInfoValue>{formatDate(selectedGame.updated_at)}</GameModalInfoValue>
+                </GameModalInfoRow>
+              </GameModalInfo>
 
-            <GameModalButton onClick={() => navigate(`/game/${selectedGame.id}`)}>
-              Просмотреть игру
-            </GameModalButton>
-          </GameModalContent>
-        </GameModal>
-      )}
+              <GameModalButton onClick={() => navigate(`/game/${selectedGame.id}`)}>
+                Просмотреть игру
+              </GameModalButton>
+            </GameModalContent>
+          </GameModal>
+        )}
+      </MainContent>
     </>
   );
 }; 
