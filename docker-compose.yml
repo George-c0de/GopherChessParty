@@ -47,7 +47,6 @@ services:
     environment:
       - ENV=${ENV}
       - DB_HOST=postgres
-      - DB_PORT=${DB_PORT}
       - DB_USER=${DB_USER}
       - DB_PASSWORD=${DB_PASSWORD}
       - DB_DATABASE=${DB_DATABASE}
