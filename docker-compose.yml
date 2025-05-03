@@ -33,7 +33,7 @@ services:
       - --dir
       - file:///migrations
       - --url
-      - postgres://${DB_USER}:${DB_PASSWORD}@postgres:5432/${DB_DATABASE}?search_path=public&sslmode=${DB_SSLMODE}
+      - postgresql://${DB_USER}@postgres:5432/${DB_DATABASE}?password=${DB_PASSWORD}&search_path=public&sslmode=${DB_SSLMODE}
       - --revisions-schema
       - public
     volumes:
