@@ -17,7 +17,6 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
-
     restart: unless-stopped
 
   migrate:
@@ -25,9 +24,9 @@ services:
     container_name: gopher_chess_migrate
     environment:
       DB_SSLMODE: ${DB_SSLMODE}
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_DB: ${DB_DATABASE}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_DATABASE: ${DB_DATABASE}
     command:
       - migrate
       - apply
