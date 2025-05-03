@@ -9,19 +9,16 @@ on:
       - main
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-  deploy:
-    needs: build
+  lint:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     steps:
       - name: Golangci-lint
         uses: golangci/golangci-lint-action@v7.0.0
+  deploy:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
       - name: Checkout code
         uses: actions/checkout@v4
         env:
