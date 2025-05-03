@@ -30,7 +30,7 @@ func (d *Database) DBUrl() string {
 
 type Auth struct {
 	JwtSecret string        `env-default:"secret" yaml:"jwtSecret" env:"JWT_SECRET"`
-	ExpTime   time.Duration `yaml:"expTime"   env:"EXP_TIME"`
+	ExpTime   time.Duration `                     yaml:"expTime"   env:"EXP_TIME"`
 }
 
 type Application struct {

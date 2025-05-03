@@ -111,13 +111,14 @@ func MoveGame(logger interfaces.ILogger) gin.HandlerFunc {
 					return
 				}
 
-				if messageType == websocket.TextMessage {
+				switch messageType {
+				case websocket.TextMessage:
 					// Обрабатываем ход
 					move := string(message)
 					ok := service.MoveGameStr(gameID, move, player)
 					response, _ := service.GetGameInfoMemory(gameID, ok, "")
 					_ = service.SendMessage(player, response)
-				} else if messageType == websocket.PingMessage {
+				case websocket.PingMessage:
 					err := conn.WriteMessage(websocket.PongMessage, message)
 					if err != nil {
 						logger.Error(fmt.Errorf("error sending pong: %v", err))

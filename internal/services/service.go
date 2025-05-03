@@ -37,7 +37,7 @@ func NewService(
 }
 
 func (s *Service) IsValidateToken(tokenString string) (*jwt.Token, bool) {
-	token, err := s.IAuthService.ValidateToken(tokenString)
+	token, err := s.ValidateToken(tokenString)
 	if err != nil {
 		return nil, false
 	}
@@ -45,23 +45,23 @@ func (s *Service) IsValidateToken(tokenString string) (*jwt.Token, bool) {
 }
 
 func (s *Service) CreateUser(data *dto.CreateUser) (*dto.User, error) {
-	hashedPassword, err := s.IAuthService.GeneratePassword(data.Password)
+	hashedPassword, err := s.GeneratePassword(data.Password)
 	if err != nil {
 		return nil, err
 	}
-	return s.IUserService.SaveUser(data, hashedPassword)
+	return s.SaveUser(data, hashedPassword)
 }
 
 func (s *Service) RegisterUser(data *dto.CreateUser) (*dto.User, error) {
-	hashedPassword, err := s.IAuthService.GeneratePassword(data.Password)
+	hashedPassword, err := s.GeneratePassword(data.Password)
 	if err != nil {
 		return nil, err
 	}
-	return s.IUserService.SaveUser(data, hashedPassword)
+	return s.SaveUser(data, hashedPassword)
 }
 
 func (s *Service) ValidPassword(data dto.AuthenticateUser) (*uuid.UUID, bool) {
-	userAuth, err := s.IUserService.GetUserPassword(data.Email)
+	userAuth, err := s.GetUserPassword(data.Email)
 	if err != nil {
 		return nil, false
 	}
@@ -70,17 +70,17 @@ func (s *Service) ValidPassword(data dto.AuthenticateUser) (*uuid.UUID, bool) {
 
 // SearchPlayerConn ищет пары игроков в очереди
 func (s *Service) SearchPlayerConn() {
-	for range s.IMatchService.GetExistsChannel() {
-		if s.IMatchService.CheckPair() {
-			player1, player2 := s.IMatchService.ReturnPlayerID()
+	for range s.GetExistsChannel() {
+		if s.CheckPair() {
+			player1, player2 := s.ReturnPlayerID()
 			game, err := s.CreateGame(player1.UserID, player2.UserID)
 			if err != nil {
 				s.AddUser(player1)
 				s.AddUser(player2)
 				continue
 			}
-			_ = s.IMatchService.SendGemID(player1, game.ID)
-			_ = s.IMatchService.SendGemID(player2, game.ID)
+			_ = s.SendGemID(player1, game.ID)
+			_ = s.SendGemID(player2, game.ID)
 			_ = player1.Conn.Close()
 			_ = player2.Conn.Close()
 		}
@@ -88,19 +88,19 @@ func (s *Service) SearchPlayerConn() {
 }
 
 func (s *Service) MoveGameStr(gameID uuid.UUID, move string, player *dto.PlayerConn) bool {
-	if !s.IGameService.IsConnectPlayers(gameID) {
+	if !s.IsConnectPlayers(gameID) {
 		s.logger.Error(errors.ErrPlayersNotConn)
 		return false
 	}
 
-	opponentMotionUser := s.IGameService.GetOpponent(gameID)
+	opponentMotionUser := s.GetOpponent(gameID)
 
 	err := s.MoveValid(gameID, move)
 	if err != nil {
 		return false
 	}
 
-	errMove := s.IGameService.MoveGame(gameID, move, player)
+	errMove := s.MoveGame(gameID, move, player)
 	if errMove != nil && !exc.Is(errMove, errors.ErrGameEnd) {
 		return false
 	}
@@ -114,7 +114,7 @@ func (s *Service) MoveGameStr(gameID uuid.UUID, move string, player *dto.PlayerC
 }
 
 func (s *Service) SetConnGame(GameID uuid.UUID, player *dto.PlayerConn) error {
-	err := s.IGameService.SetPlayer(GameID, player)
+	err := s.SetPlayer(GameID, player)
 	if err != nil {
 		return err
 	}
@@ -126,7 +126,7 @@ func (s *Service) GetGameInfoMemory(
 	ok bool,
 	move string,
 ) (map[string]interface{}, error) {
-	game := s.IGameService.GetGameMemory(GameID)
+	game := s.GetGameMemory(GameID)
 	if game == nil {
 		s.logger.Error(errors.ErrGameNotFound)
 		return nil, errors.ErrGameNotFound

@@ -145,7 +145,7 @@ func (g *GameRepository) SaveMove(
 	GameID uuid.UUID,
 	move string,
 	UserID uuid.UUID,
-) (error, *ent.GameHistory) {
+) (*ent.GameHistory, error) {
 	ctx := context.Background()
 	save, err := g.client.GameHistory.Create().
 		SetGameID(GameID).
@@ -155,7 +155,7 @@ func (g *GameRepository) SaveMove(
 		Save(ctx)
 	if err != nil {
 		g.log.Error(err)
-		return err, nil
+		return nil, err
 	}
-	return nil, save
+	return save, nil
 }
