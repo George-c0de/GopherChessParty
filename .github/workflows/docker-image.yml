@@ -13,8 +13,10 @@ jobs:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     steps:
-      - name: Golangci-lint
-        uses: golangci/golangci-lint-action@v7.0.
+      - name: Run golangci-lint
+        uses: golangci/golangci-lint-action@v7.0.0
+        with:
+          args: ./cmd/backend/... ./internal/...
 
   deploy:
     runs-on: ubuntu-latest
