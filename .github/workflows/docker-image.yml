@@ -23,6 +23,8 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         env:
+          REACT_APP_API_URL: ${{REACT_APP_API_URL}}
+          REACT_APP_WS_URL: ${{REACT_APP_WS_URL}}
           ENV: ${{ secrets.ENV }}
 
           DBHOST: ${{ secrets.DB_HOST }}
