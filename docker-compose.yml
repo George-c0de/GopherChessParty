@@ -19,7 +19,6 @@ services:
       retries: 5
     restart: unless-stopped
 
-
   migrate:
     image: arigaio/atlas:latest-alpine
     container_name: gopher_chess_migrate
@@ -43,14 +42,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      args:
-        DB_USER: ${DB_USER}
-        DB_PASSWORD: ${DB_PASSWORD}
-        DB_DATABASE: ${DB_DATABASE}
-        DB_SSLMODE: ${DB_SSLMODE}
-        ENV: ${ENV}
-        JWT_SECRET: ${JWT_SECRET}
-        EXP_TIME: ${EXP_TIME}
     container_name: gopher_chess_backend
     ports:
       - "8000:8000"
