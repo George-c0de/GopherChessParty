@@ -1,12 +1,13 @@
 package storage
 
 import (
+	"context"
+
 	"GopherChessParty/ent"
 	"GopherChessParty/ent/chess"
 	"GopherChessParty/ent/user"
 	"GopherChessParty/internal/dto"
 	"GopherChessParty/internal/interfaces"
-	"context"
 	"entgo.io/ent/dialect/sql"
 	"github.com/google/uuid"
 )

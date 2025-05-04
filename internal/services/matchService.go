@@ -17,6 +17,7 @@ type MatchService struct {
 	exists  chan struct{}       // Сигнальный канал для оповещения о новых игроках
 	queue   []*dto.PlayerConn   // Очередь ожидающих игроков
 	queueMu sync.Mutex          // Мьютекс для безопасного доступа к очереди
+	exits   chan uuid.UUID
 }
 
 // NewMatchService создает новый сервис матчмейкинга
@@ -34,17 +35,42 @@ func (m *MatchService) CheckPair() bool {
 	return len(m.queue) == 2
 }
 
+func (m *MatchService) ExitPlayerAdd(playerID uuid.UUID) {
+	m.log.Info("ExitPlayerAdd", playerID.String(), "exit")
+	m.exits <- playerID
+}
+
+func (m *MatchService) ClearCloseConnection() {
+	for playerID := range m.exits {
+		m.queueMu.Lock()
+		for i, user := range m.queue {
+			if user.UserID == playerID {
+				m.queue = append(m.queue[:i], m.queue[i+1:]...)
+				break
+			}
+		}
+		m.queueMu.Unlock()
+	}
+}
+
 // GetExistsChannel возвращает канал для оповещения о новых игроках
 func (m *MatchService) GetExistsChannel() <-chan struct{} {
 	return m.exists
 }
 
 // AddUser добавляет нового игрока в очередь ожидания
-func (m *MatchService) AddUser(player *dto.PlayerConn) {
+func (m *MatchService) AddUser(player *dto.PlayerConn) error {
 	m.queueMu.Lock()
 	defer m.queueMu.Unlock()
+	for i, user := range m.queue {
+		if user.UserID == player.UserID {
+			m.queue = append(m.queue[:i], m.queue[i+1:]...)
+			break
+		}
+	}
 	m.queue = append(m.queue, player)
 	m.exists <- struct{}{} // Сигнализируем о новом игроке
+	return nil
 }
 
 func (m *MatchService) ReturnPlayerID() (*dto.PlayerConn, *dto.PlayerConn) {

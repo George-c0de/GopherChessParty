@@ -19,4 +19,5 @@ type IService interface {
 	MoveGameStr(gameID uuid.UUID, move string, player *dto.PlayerConn) bool
 	SetConnGame(GameID uuid.UUID, player *dto.PlayerConn) error
 	GetGameInfoMemory(GameID uuid.UUID, ok bool, move string) (map[string]interface{}, error)
+	PlayerExit(player *dto.PlayerConn) error
 }

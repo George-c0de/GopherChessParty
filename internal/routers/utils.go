@@ -11,14 +11,18 @@ import (
 )
 
 const (
-	pongWait   = 60 * time.Second
-	pingPeriod = (pongWait * 9) / 10
+	writeWait      = 5 * time.Minute
+	pongWait       = 1 * time.Second
+	pingPeriod     = (pongWait * 9) / 10
+	maxMessageSize = 512
 )
 
 var upgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool {
 		return true
 	},
+	ReadBufferSize:  1024,
+	WriteBufferSize: 1024,
 }
 
 func GetService(c *gin.Context) interfaces.IService {
@@ -48,9 +52,19 @@ func CreateWebSocket(c *gin.Context) (*websocket.Conn, error) {
 	if err != nil {
 		return nil, err
 	}
+	conn.SetReadLimit(maxMessageSize)
+	err = conn.SetReadDeadline(time.Now().Add(pongWait))
+	if err != nil {
+		return nil, err
+	}
 	conn.SetPongHandler(func(string) error {
-		return conn.SetReadDeadline(time.Now().Add(pongWait))
+		err := conn.SetReadDeadline(time.Now().Add(pongWait))
+		if err != nil {
+			return err
+		}
+		return nil
 	})
+
 	// Тикер для отправки ping
 	go func() {
 		ticker := time.NewTicker(pingPeriod)

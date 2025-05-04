@@ -75,8 +75,8 @@ func (s *Service) SearchPlayerConn() {
 			player1, player2 := s.ReturnPlayerID()
 			game, err := s.CreateGame(player1.UserID, player2.UserID)
 			if err != nil {
-				s.AddUser(player1)
-				s.AddUser(player2)
+				_ = s.AddUser(player1)
+				_ = s.AddUser(player2)
 				continue
 			}
 			_ = s.SendGemID(player1, game.ID)
@@ -85,6 +85,16 @@ func (s *Service) SearchPlayerConn() {
 			_ = player2.Conn.Close()
 		}
 	}
+}
+
+func (s *Service) PlayerExit(player *dto.PlayerConn) error {
+	s.ExitPlayerAdd(player.UserID)
+	err := player.Conn.Close()
+	if err != nil {
+		s.logger.Error(err)
+		return err
+	}
+	return nil
 }
 
 func (s *Service) MoveGameStr(gameID uuid.UUID, move string, player *dto.PlayerConn) bool {

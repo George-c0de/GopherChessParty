@@ -192,22 +192,6 @@ func (m *GameService) GetOpponent(gameID uuid.UUID) *dto.PlayerConn {
 	return game.GetOpponentUser()
 }
 
-func (m *GameService) GetStatusMemory(gameID uuid.UUID) (chess.Status, error) {
-	game := m.games[gameID]
-	if game == nil {
-		return chess.StatusInProgress, errors.ErrGameNotFound
-	}
-	return game.Status, nil
-}
-
-func (m *GameService) GetHistoryMove(gameID uuid.UUID) []string {
-	game := m.games[gameID]
-	if game == nil {
-		return []string{}
-	}
-	return game.HistoryMove
-}
-
 func (m *GameService) GetGameMemory(GameID uuid.UUID) *dto.Game {
 	return m.games[GameID]
 }

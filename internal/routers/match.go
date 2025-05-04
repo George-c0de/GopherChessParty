@@ -1,7 +1,6 @@
 package routers
 
 import (
-	"fmt"
 	"net/http"
 
 	"GopherChessParty/internal/dto"
@@ -27,6 +26,8 @@ func SearchMatchHandler(logger interfaces.ILogger) gin.HandlerFunc {
 		conn, err := CreateWebSocket(c)
 		if err != nil {
 			logger.Error(err)
+			c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+			return
 		}
 
 		// Получение пользователя
@@ -38,7 +39,16 @@ func SearchMatchHandler(logger interfaces.ILogger) gin.HandlerFunc {
 		player := &dto.PlayerConn{UserID: userId, Conn: conn}
 
 		service := GetService(c)
-		service.AddUser(player)
+		err = service.AddUser(player)
+		if err != nil {
+			_ = conn.Close()
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		player.Conn.SetCloseHandler(func(code int, text string) error {
+			service.ExitPlayerAdd(player.UserID)
+			return nil
+		})
 	}
 }
 
@@ -47,6 +57,7 @@ func MoveGame(logger interfaces.ILogger) gin.HandlerFunc {
 		conn, err := CreateWebSocket(c)
 		if err != nil {
 			logger.Error(err)
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
@@ -71,29 +82,13 @@ func MoveGame(logger interfaces.ILogger) gin.HandlerFunc {
 			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 			return
 		}
-		logger.Info(
-			fmt.Sprintf(
-				"open gameID: %v, userID: %v, Address: %s",
-				gameID,
-				userID,
-				player.Conn.RemoteAddr().String(),
-			),
-		)
 
 		// Запускаем горутину для чтения сообщений
 		go func() {
 			defer func() {
-				logger.Info(
-					fmt.Sprintf(
-						"close gameID: %v, userID: %v, Address: %s",
-						gameID,
-						userID,
-						player.Conn.RemoteAddr().String(),
-					),
-				)
 				err := conn.Close()
 				if err != nil {
-					logger.Error(fmt.Errorf("error closing connection: %v", err))
+					logger.Error(err)
 					return
 				}
 			}()
@@ -106,7 +101,7 @@ func MoveGame(logger interfaces.ILogger) gin.HandlerFunc {
 						websocket.CloseGoingAway,
 						websocket.CloseAbnormalClosure,
 					) {
-						logger.Error(fmt.Errorf("WebSocket closed unexpectedly: %v", err))
+						logger.Error(err)
 					}
 					return
 				}
@@ -121,7 +116,7 @@ func MoveGame(logger interfaces.ILogger) gin.HandlerFunc {
 				case websocket.PingMessage:
 					err := conn.WriteMessage(websocket.PongMessage, message)
 					if err != nil {
-						logger.Error(fmt.Errorf("error sending pong: %v", err))
+						logger.Error(err)
 						return
 					}
 				}

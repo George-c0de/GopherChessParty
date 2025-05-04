@@ -8,10 +8,11 @@ import (
 type IMatchService interface {
 	CheckPair() bool
 	GetExistsChannel() <-chan struct{}
-	AddUser(player *dto.PlayerConn)
+	AddUser(player *dto.PlayerConn) error
 	ReturnPlayerID() (*dto.PlayerConn, *dto.PlayerConn)
 	SendGemID(player *dto.PlayerConn, gameID uuid.UUID) error
 	CloseConnection(player *dto.PlayerConn) error
 	SendMove(player *dto.PlayerConn, move string) error
 	SendMessage(player *dto.PlayerConn, message map[string]interface{}) error
+	ExitPlayerAdd(playerID uuid.UUID)
 }
