@@ -6,11 +6,9 @@ import (
 	"context"
 
 	"GopherChessParty/ent"
+	"GopherChessParty/ent/migrate"
 	// required by schema hooks.
 	_ "GopherChessParty/ent/runtime"
-
-	"GopherChessParty/ent/migrate"
-
 	"entgo.io/ent/dialect/sql/schema"
 )
 

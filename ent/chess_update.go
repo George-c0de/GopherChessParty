@@ -3,15 +3,15 @@
 package ent
 
 import (
-	"GopherChessParty/ent/chess"
-	"GopherChessParty/ent/gamehistory"
-	"GopherChessParty/ent/predicate"
-	"GopherChessParty/ent/user"
 	"context"
 	"errors"
 	"fmt"
 	"time"
 
+	"GopherChessParty/ent/chess"
+	"GopherChessParty/ent/gamehistory"
+	"GopherChessParty/ent/predicate"
+	"GopherChessParty/ent/user"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"

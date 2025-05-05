@@ -3,10 +3,10 @@
 package ent
 
 import (
-	"GopherChessParty/ent/predicate"
-	"GopherChessParty/ent/user"
 	"context"
 
+	"GopherChessParty/ent/predicate"
+	"GopherChessParty/ent/user"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"

@@ -3,11 +3,11 @@
 package ent
 
 import (
-	"GopherChessParty/ent/user"
 	"fmt"
 	"strings"
 	"time"
 
+	"GopherChessParty/ent/user"
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"github.com/google/uuid"

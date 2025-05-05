@@ -9,12 +9,10 @@ import (
 	"log"
 	"reflect"
 
-	"GopherChessParty/ent/migrate"
-
 	"GopherChessParty/ent/chess"
 	"GopherChessParty/ent/gamehistory"
+	"GopherChessParty/ent/migrate"
 	"GopherChessParty/ent/user"
-
 	"entgo.io/ent"
 	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/sql"

@@ -3,9 +3,10 @@
 package hook
 
 import (
-	"GopherChessParty/ent"
 	"context"
 	"fmt"
+
+	"GopherChessParty/ent"
 )
 
 // The ChessFunc type is an adapter to allow the use of ordinary

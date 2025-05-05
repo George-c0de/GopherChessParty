@@ -3,12 +3,12 @@
 package ent
 
 import (
+	"time"
+
 	"GopherChessParty/ent/chess"
 	"GopherChessParty/ent/gamehistory"
 	"GopherChessParty/ent/schema"
 	"GopherChessParty/ent/user"
-	"time"
-
 	"github.com/google/uuid"
 )
 
