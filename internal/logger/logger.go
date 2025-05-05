@@ -4,6 +4,7 @@ import (
 	"log/slog"
 	"os"
 
+	"GopherChessParty/internal/config"
 	"GopherChessParty/internal/interfaces"
 )
 
@@ -31,10 +32,10 @@ func (logger *Logger) ErrorWithMsg(msg string, err error) {
 	logger.log.Error(msg, slog.String("error", err.Error()))
 }
 
-func NewLogger(env string) interfaces.ILogger {
+func New(application config.Application) interfaces.ILogger {
 	var log *slog.Logger
 
-	switch env {
+	switch application.Env {
 	case envLocal:
 		log = slog.New(
 			slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{

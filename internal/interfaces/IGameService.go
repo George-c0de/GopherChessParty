@@ -13,7 +13,7 @@ type IGameService interface {
 	MoveGame(GameID uuid.UUID, move string, player *dto.PlayerConn) error
 	SetPlayer(GameID uuid.UUID, player *dto.PlayerConn) error
 	IsConnectPlayers(GameID uuid.UUID) bool
-	GetOpponent(gameID uuid.UUID) *dto.PlayerConn
+	Opponent(gameID uuid.UUID) *dto.PlayerConn
 	GameMemory(GameID uuid.UUID) *dto.Game
 	MoveValid(GameID uuid.UUID, move string) error
 }

@@ -1,4 +1,4 @@
-package storage
+package repository
 
 import (
 	"context"
@@ -11,10 +11,10 @@ import (
 
 type UserRepository struct {
 	log interfaces.ILogger
-	*Repository
+	*Connection
 }
 
-func NewUserRepository(log interfaces.ILogger, repo *Repository) *UserRepository {
+func NewUserRepository(log interfaces.ILogger, repo *Connection) *UserRepository {
 	return &UserRepository{log, repo}
 }
 

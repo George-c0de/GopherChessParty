@@ -440,7 +440,7 @@ func (m *ChessMutation) Where(ps ...predicate.Chess) {
 	m.predicates = append(m.predicates, ps...)
 }
 
-// WhereP appends storage-level predicates to the ChessMutation builder. Using this method,
+// WhereP appends repository-level predicates to the ChessMutation builder. Using this method,
 // users can use type-assertion to append predicates that do not depend on any generated package.
 func (m *ChessMutation) WhereP(ps ...func(*sql.Selector)) {
 	p := make([]predicate.Chess, len(ps))
@@ -1120,7 +1120,7 @@ func (m *GameHistoryMutation) Where(ps ...predicate.GameHistory) {
 	m.predicates = append(m.predicates, ps...)
 }
 
-// WhereP appends storage-level predicates to the GameHistoryMutation builder. Using this method,
+// WhereP appends repository-level predicates to the GameHistoryMutation builder. Using this method,
 // users can use type-assertion to append predicates that do not depend on any generated package.
 func (m *GameHistoryMutation) WhereP(ps ...func(*sql.Selector)) {
 	p := make([]predicate.GameHistory, len(ps))
@@ -1898,7 +1898,7 @@ func (m *UserMutation) Where(ps ...predicate.User) {
 	m.predicates = append(m.predicates, ps...)
 }
 
-// WhereP appends storage-level predicates to the UserMutation builder. Using this method,
+// WhereP appends repository-level predicates to the UserMutation builder. Using this method,
 // users can use type-assertion to append predicates that do not depend on any generated package.
 func (m *UserMutation) WhereP(ps ...func(*sql.Selector)) {
 	p := make([]predicate.User, len(ps))

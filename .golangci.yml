@@ -16,5 +16,6 @@ formatters:
   enable:
     - gci
     - golines
+
   exclusions:
     generated: strict

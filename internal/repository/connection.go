@@ -1,4 +1,4 @@
-package storage
+package repository
 
 import (
 	"GopherChessParty/ent"
@@ -7,13 +7,13 @@ import (
 	_ "github.com/lib/pq"
 )
 
-type Repository struct {
+type Connection struct {
 	client *ent.Client
 }
 
-// MustNewRepository Создание нового подключения.
-func MustNewRepository(cfg config.Database) *Repository {
-	drv, err := sql.Open("postgres", cfg.DBUrl())
+// MustNewConnection Создание нового подключения.
+func MustNewConnection(cfg config.Database) *Connection {
+	drv, err := sql.Open("postgres", cfg.Url())
 	if err != nil {
 		panic(err)
 	}
@@ -23,5 +23,5 @@ func MustNewRepository(cfg config.Database) *Repository {
 	db.SetMaxOpenConns(cfg.MaxOpenConns)   // Максимальное количество открытых соединений.
 	db.SetConnMaxLifetime(cfg.MaxTimeLife) // Максимальное время жизни одного соединения.
 
-	return &Repository{client: ent.NewClient(ent.Driver(drv))}
+	return &Connection{client: ent.NewClient(ent.Driver(drv))}
 }

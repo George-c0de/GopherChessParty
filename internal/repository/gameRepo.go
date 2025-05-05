@@ -1,4 +1,4 @@
-package storage
+package repository
 
 import (
 	"context"
@@ -14,64 +14,46 @@ import (
 
 type GameRepository struct {
 	log interfaces.ILogger
-	*Repository
+	*Connection
 }
 
-func NewGameRepository(log interfaces.ILogger, client *Repository) *GameRepository {
+func NewGameRepository(log interfaces.ILogger, client *Connection) *GameRepository {
 	return &GameRepository{
 		log:        log,
-		Repository: client,
+		Connection: client,
 	}
 }
 
 func (g *GameRepository) Games(userID uuid.UUID) ([]*dto.GameHistory, error) {
 	ctx := context.Background()
-	games, err := g.client.Chess.
+	var gameHistory []*dto.GameHistory
+	err := g.client.Chess.
 		Query().
 		Select(
 			chess.FieldID,
 			chess.FieldCreatedAt,
 			chess.FieldResult,
 			chess.FieldStatus,
-			chess.BlackUserColumn,
-			chess.WhiteUserColumn,
-		).WithWhiteUser(func(uq *ent.UserQuery) {
-		uq.Select(user.FieldID, user.FieldName)
-	}).
+		).
+		WithWhiteUser(func(uq *ent.UserQuery) {
+			uq.Select(user.FieldID, user.FieldName)
+		}).
 		WithBlackUser(func(uq *ent.UserQuery) {
 			uq.Select(user.FieldID, user.FieldName)
 		}).
 		Where(
 			chess.Or(
-				// партii, где userID — чёрный
 				chess.HasBlackUserWith(user.IDEQ(userID)),
-				// или партii, где userID — белый
 				chess.HasWhiteUserWith(user.IDEQ(userID)),
 			),
-		).Order(chess.ByCreatedAt(sql.OrderDesc())).All(ctx)
+		).
+		Order(chess.ByCreatedAt(sql.OrderDesc())).
+		Select().Scan(ctx, &gameHistory)
 	if err != nil {
 		g.log.Error(err)
 		return nil, err
 	}
-	gamesWithUsers := make([]*dto.GameHistory, 0, len(games))
-	for _, game := range games {
-		gamesWithUsers = append(gamesWithUsers, &dto.GameHistory{
-			ID:        game.ID,
-			CreatedAt: game.CreatedAt,
-			UpdatedAt: game.UpdatedAt,
-			Status:    game.Status,
-			Result:    game.Result,
-			BlackPlayer: &dto.Player{
-				ID:   game.Edges.BlackUser.ID,
-				Name: game.Edges.BlackUser.Name,
-			},
-			WhitePlayer: &dto.Player{
-				ID:   game.Edges.WhiteUser.ID,
-				Name: game.Edges.WhiteUser.Name,
-			},
-		})
-	}
-	return gamesWithUsers, nil
+	return gameHistory, nil
 }
 
 func (g *GameRepository) Create(playerID1, playerID2 uuid.UUID) (*ent.Chess, error) {
@@ -145,7 +127,7 @@ func (g *GameRepository) UpdateGame(
 	result chess.Result,
 ) error {
 	ctx := context.Background()
-	_, err := g.client.Chess.UpdateOneID(GameId).SetStatus(status).SetResult(result).Save(ctx)
+	err := g.client.Chess.UpdateOneID(GameId).SetStatus(status).SetResult(result).Exec(ctx)
 	if err != nil {
 		g.log.Error(err)
 		return err

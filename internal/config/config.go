@@ -21,7 +21,7 @@ type Database struct {
 	MaxTimeLife  time.Duration `env-default:"24h"       yaml:"dbMaxTimeLife"     env:"DB_MAX_TIME_LIFE"`
 }
 
-func (d *Database) DBUrl() string {
+func (d *Database) Url() string {
 	return fmt.Sprintf(
 		"user=%s dbname=%s password=%s host=%s port=%d sslmode=%s",
 		d.User, d.Database, d.Password, d.Host, d.Port, d.SSLMode,
@@ -34,11 +34,11 @@ type Auth struct {
 }
 
 type Application struct {
-	Port int `env-default:"8000" yaml:"port"`
+	Port int    `env-default:"8000"  yaml:"port"`
+	Env  string `env-default:"local" yaml:"env"  env:"ENV"`
 }
+
 type Config struct {
-	Env         string `env-default:"local" yaml:"env"          env:"ENV"`
-	StoragePath string `                    yaml:"storage_path" env:"storagePath"`
 	Database    Database
 	Auth        Auth
 	Application Application

@@ -103,7 +103,7 @@ func (s *Service) MoveGameStr(gameID uuid.UUID, move string, player *dto.PlayerC
 		return false
 	}
 
-	opponentMotionUser := s.GetOpponent(gameID)
+	opponentMotionUser := s.Opponent(gameID)
 
 	err := s.MoveValid(gameID, move)
 	if err != nil {

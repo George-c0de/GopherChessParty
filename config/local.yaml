@@ -1,5 +1,4 @@
 env: "local"
-storagePath: "./connection/chess.db"
 database:
   dbHost: "localhost"
   dbPort: 5432

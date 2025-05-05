@@ -58,11 +58,11 @@ func (m *GameService) startGame(GameID uuid.UUID, whiteUserID, blackUserID uuid.
 	}
 }
 
-func (m *GameService) GetStatusGame(GameID uuid.UUID) chess.Status {
+func (m *GameService) StatusGame(GameID uuid.UUID) chess.Status {
 	return m.repository.Status(GameID)
 }
 
-func (m *GameService) GetGame(GameID uuid.UUID) (*dto.Game, error) {
+func (m *GameService) Game(GameID uuid.UUID) (*dto.Game, error) {
 	if m.games[GameID] == nil {
 		status := m.repository.Status(GameID)
 		if status != chess.StatusInProgress {
@@ -92,7 +92,7 @@ func (m *GameService) UpdateStatus(
 		status = chess.StatusAborted
 		result = chess.Result00
 	}
-	game, err := m.GetGame(gameID)
+	game, err := m.Game(gameID)
 	if err != nil {
 		m.log.Error(err)
 		return err
@@ -106,7 +106,7 @@ func (m *GameService) MoveValid(GameID uuid.UUID, move string) error {
 	if move == "" {
 		return errors.ErrInvalidMove
 	}
-	game, err := m.GetGame(GameID)
+	game, err := m.Game(GameID)
 	if err != nil {
 		return err
 	}
@@ -124,7 +124,7 @@ func (m *GameService) MoveValid(GameID uuid.UUID, move string) error {
 }
 
 func (m *GameService) MoveGame(GameID uuid.UUID, move string, player *dto.PlayerConn) error {
-	game, err := m.GetGame(GameID)
+	game, err := m.Game(GameID)
 	if err != nil {
 		return err
 	}
@@ -187,7 +187,7 @@ func (m *GameService) IsConnectPlayers(GameID uuid.UUID) bool {
 		game.WhitePlayer.Conn != nil
 }
 
-func (m *GameService) GetOpponent(gameID uuid.UUID) *dto.PlayerConn {
+func (m *GameService) Opponent(gameID uuid.UUID) *dto.PlayerConn {
 	game := m.games[gameID]
 	return game.GetOpponentUser()
 }

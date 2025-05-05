@@ -1,11 +1,13 @@
 package main
 
 import (
+	"fmt"
+
 	"GopherChessParty/internal/config"
 	"GopherChessParty/internal/logger"
+	"GopherChessParty/internal/repository"
 	"GopherChessParty/internal/routers"
 	"GopherChessParty/internal/services"
-	"GopherChessParty/internal/storage"
 )
 
 func main() {
@@ -13,14 +15,14 @@ func main() {
 	cfg := config.MustLoad()
 
 	// Создание Логгера
-	log := logger.NewLogger(cfg.Env)
+	log := logger.New(cfg.Application)
 
 	// Подключение к базе данных и создание репозитория
-	repository := storage.MustNewRepository(cfg.Database)
+	connection := repository.MustNewConnection(cfg.Database)
 
 	// Создание репозиториев
-	userRepo := storage.NewUserRepository(log, repository)
-	gameRepo := storage.NewGameRepository(log, repository)
+	userRepo := repository.NewUserRepository(log, connection)
+	gameRepo := repository.NewGameRepository(log, connection)
 
 	// Создание сервиса
 	userService := services.NewUserService(log, userRepo)
@@ -31,9 +33,9 @@ func main() {
 	service := services.NewService(userService, gameService, authService, matchService, log)
 
 	// Создание экземпляра Gin
-	router := routers.GetRoutes(service, log)
+	router := routers.New(service, log)
 
-	err := router.Run(":8000")
+	err := router.Run(fmt.Sprintf(":%d", cfg.Application.Port))
 	if err != nil {
 		panic(err)
 	}
