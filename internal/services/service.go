@@ -61,18 +61,18 @@ func (s *Service) RegisterUser(data *dto.CreateUser) (*dto.User, error) {
 }
 
 func (s *Service) ValidPassword(data dto.AuthenticateUser) (*uuid.UUID, bool) {
-	userAuth, err := s.GetUserPassword(data.Email)
+	userAuth, err := s.UserPassword(data.Email)
 	if err != nil {
 		return nil, false
 	}
-	return &userAuth.UserId, s.IsValidPassword(userAuth.HashedPassword, data.Password)
+	return &userAuth.UserID, s.IsValidPassword(userAuth.HashedPassword, data.Password)
 }
 
 // SearchPlayerConn ищет пары игроков в очереди
 func (s *Service) SearchPlayerConn() {
-	for range s.GetExistsChannel() {
+	for range s.ExistsChannel() {
 		if s.CheckPair() {
-			player1, player2 := s.ReturnPlayerID()
+			player1, player2 := s.ReturnPlayers()
 			game, err := s.CreateGame(player1.UserID, player2.UserID)
 			if err != nil {
 				_ = s.AddUser(player1)
@@ -136,7 +136,7 @@ func (s *Service) GetGameInfoMemory(
 	ok bool,
 	move string,
 ) (map[string]interface{}, error) {
-	game := s.GetGameMemory(GameID)
+	game := s.GameMemory(GameID)
 	if game == nil {
 		s.logger.Error(errors.ErrGameNotFound)
 		return nil, errors.ErrGameNotFound

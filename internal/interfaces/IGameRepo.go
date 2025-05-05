@@ -8,10 +8,10 @@ import (
 )
 
 type IGameRepo interface {
-	GetGames(userID uuid.UUID) ([]*dto.GameHistory, error)
+	Games(userID uuid.UUID) ([]*dto.GameHistory, error)
 	Create(playerID1, playerID2 uuid.UUID) (*ent.Chess, error)
-	GetGameById(gameId uuid.UUID) (*dto.Match, error)
-	GetStatus(GameID uuid.UUID) chess.Status
-	UpdateGameResult(GameId uuid.UUID, status chess.Status, result chess.Result) error
+	GameById(gameId uuid.UUID) (*dto.Match, error)
+	Status(GameID uuid.UUID) chess.Status
+	UpdateGame(GameId uuid.UUID, status chess.Status, result chess.Result) error
 	SaveMove(GameID uuid.UUID, move string, UserID uuid.UUID, numMove int) (*ent.GameHistory, error)
 }

@@ -6,8 +6,8 @@ import (
 )
 
 type IUserService interface {
-	GetUsers() ([]*dto.User, error)
+	Users() ([]*dto.User, error)
 	SaveUser(data *dto.CreateUser, hashedPassword string) (*dto.User, error)
-	GetUserPassword(Email string) (*dto.AuthUser, error)
-	GetUserByID(UserID uuid.UUID) (*dto.User, error)
+	UserPassword(Email string) (*dto.AuthUser, error)
+	UserByID(UserID uuid.UUID) (*dto.User, error)
 }

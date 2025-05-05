@@ -24,7 +24,7 @@ func NewGameRepository(log interfaces.ILogger, client *Repository) *GameReposito
 	}
 }
 
-func (g *GameRepository) GetGames(userID uuid.UUID) ([]*dto.GameHistory, error) {
+func (g *GameRepository) Games(userID uuid.UUID) ([]*dto.GameHistory, error) {
 	ctx := context.Background()
 	games, err := g.client.Chess.
 		Query().
@@ -56,17 +56,17 @@ func (g *GameRepository) GetGames(userID uuid.UUID) ([]*dto.GameHistory, error) 
 	gamesWithUsers := make([]*dto.GameHistory, 0, len(games))
 	for _, game := range games {
 		gamesWithUsers = append(gamesWithUsers, &dto.GameHistory{
-			Id:        game.ID,
+			ID:        game.ID,
 			CreatedAt: game.CreatedAt,
 			UpdatedAt: game.UpdatedAt,
 			Status:    game.Status,
 			Result:    game.Result,
 			BlackPlayer: &dto.Player{
-				Id:   game.Edges.BlackUser.ID,
+				ID:   game.Edges.BlackUser.ID,
 				Name: game.Edges.BlackUser.Name,
 			},
 			WhitePlayer: &dto.Player{
-				Id:   game.Edges.WhiteUser.ID,
+				ID:   game.Edges.WhiteUser.ID,
 				Name: game.Edges.WhiteUser.Name,
 			},
 		})
@@ -87,7 +87,7 @@ func (g *GameRepository) Create(playerID1, playerID2 uuid.UUID) (*ent.Chess, err
 	return game, nil
 }
 
-func (g *GameRepository) GetGameById(gameId uuid.UUID) (*dto.Match, error) {
+func (g *GameRepository) GameById(gameId uuid.UUID) (*dto.Match, error) {
 	ctx := context.Background()
 	game, err := g.client.Chess.Query().
 		WithBlackUser().
@@ -102,7 +102,7 @@ func (g *GameRepository) GetGameById(gameId uuid.UUID) (*dto.Match, error) {
 	moves := make([]*dto.Move, 0, len(game.Edges.Moves))
 	for _, move := range game.Edges.Moves {
 		moves = append(moves, &dto.Move{
-			Id:        move.ID,
+			ID:        move.ID,
 			CreatedAt: move.CreatedAt,
 			Num:       move.Num,
 			Move:      move.Move,
@@ -128,7 +128,7 @@ func (g *GameRepository) GetGameById(gameId uuid.UUID) (*dto.Match, error) {
 	}, nil
 }
 
-func (g *GameRepository) GetStatus(GameID uuid.UUID) chess.Status {
+func (g *GameRepository) Status(GameID uuid.UUID) chess.Status {
 	var status chess.Status
 	ctx := context.Background()
 	game, err := g.client.Chess.Query().Select(chess.FieldStatus).Where(chess.ID(GameID)).Only(ctx)
@@ -139,7 +139,7 @@ func (g *GameRepository) GetStatus(GameID uuid.UUID) chess.Status {
 	return game.Status
 }
 
-func (g *GameRepository) UpdateGameResult(
+func (g *GameRepository) UpdateGame(
 	GameId uuid.UUID,
 	status chess.Status,
 	result chess.Result,

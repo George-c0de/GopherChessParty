@@ -8,11 +8,11 @@ import (
 )
 
 type Player struct {
-	Id   uuid.UUID `json:"id"`
+	ID   uuid.UUID `json:"id"`
 	Name string    `json:"name"`
 }
 type GameHistory struct {
-	Id          uuid.UUID    `json:"id"`
+	ID          uuid.UUID    `json:"id"`
 	CreatedAt   time.Time    `json:"created_at"`
 	UpdatedAt   time.Time    `json:"updated_at"`
 	Status      chess.Status `json:"status"`

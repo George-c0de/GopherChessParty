@@ -3,6 +3,6 @@ package dto
 import "github.com/google/uuid"
 
 type AuthUser struct {
-	UserId         uuid.UUID
+	UserID         uuid.UUID
 	HashedPassword string
 }

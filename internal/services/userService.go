@@ -24,13 +24,13 @@ func (m *UserService) SaveUser(data *dto.CreateUser, hashedPassword string) (*dt
 }
 
 func (m *UserService) GetUsers() ([]*dto.User, error) {
-	return m.repository.GetUsers()
+	return m.repository.Users()
 }
 
 func (m *UserService) GetUserPassword(email string) (*dto.AuthUser, error) {
-	return m.repository.GetUserPassword(email)
+	return m.repository.UserPassword(email)
 }
 
 func (m *UserService) GetUserByID(userID uuid.UUID) (*dto.User, error) {
-	return m.repository.GetUserByID(userID)
+	return m.repository.UserByID(userID)
 }

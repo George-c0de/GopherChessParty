@@ -54,7 +54,7 @@ func (m *MatchService) ClearCloseConnection() {
 }
 
 // GetExistsChannel возвращает канал для оповещения о новых игроках
-func (m *MatchService) GetExistsChannel() <-chan struct{} {
+func (m *MatchService) ExistsChannel() <-chan struct{} {
 	return m.exists
 }
 
@@ -73,7 +73,7 @@ func (m *MatchService) AddUser(player *dto.PlayerConn) error {
 	return nil
 }
 
-func (m *MatchService) ReturnPlayerID() (*dto.PlayerConn, *dto.PlayerConn) {
+func (m *MatchService) ReturnPlayers() (*dto.PlayerConn, *dto.PlayerConn) {
 	m.queueMu.Lock()
 	defer m.queueMu.Unlock()
 	player1, player2 := m.queue[0], m.queue[1]

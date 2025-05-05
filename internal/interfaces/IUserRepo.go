@@ -7,7 +7,7 @@ import (
 
 type IUserRepo interface {
 	CreateUser(user *dto.CreateUser) (*dto.User, error)
-	GetUsers() ([]*dto.User, error)
-	GetUserPassword(email string) (*dto.AuthUser, error)
-	GetUserByID(UserID uuid.UUID) (*dto.User, error)
+	Users() ([]*dto.User, error)
+	UserPassword(email string) (*dto.AuthUser, error)
+	UserByID(UserID uuid.UUID) (*dto.User, error)
 }

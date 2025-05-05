@@ -39,7 +39,7 @@ func (r *UserRepository) CreateUser(user *dto.CreateUser) (*dto.User, error) {
 	}, nil
 }
 
-func (r *UserRepository) GetUsers() ([]*dto.User, error) {
+func (r *UserRepository) Users() ([]*dto.User, error) {
 	ctx := context.Background()
 
 	var users []*dto.User
@@ -54,7 +54,7 @@ func (r *UserRepository) GetUsers() ([]*dto.User, error) {
 	return users, nil
 }
 
-func (r *UserRepository) GetUserByID(UserID uuid.UUID) (*dto.User, error) {
+func (r *UserRepository) UserByID(UserID uuid.UUID) (*dto.User, error) {
 	ctx := context.Background()
 
 	userDB, err := r.client.User.
@@ -75,7 +75,7 @@ func (r *UserRepository) GetUserByID(UserID uuid.UUID) (*dto.User, error) {
 	}, nil
 }
 
-func (r *UserRepository) GetUserPassword(email string) (*dto.AuthUser, error) {
+func (r *UserRepository) UserPassword(email string) (*dto.AuthUser, error) {
 	ctx := context.Background()
 
 	authUser, err := r.client.User.
@@ -88,5 +88,5 @@ func (r *UserRepository) GetUserPassword(email string) (*dto.AuthUser, error) {
 		return nil, err
 	}
 
-	return &dto.AuthUser{UserId: authUser.ID, HashedPassword: authUser.Password}, nil
+	return &dto.AuthUser{UserID: authUser.ID, HashedPassword: authUser.Password}, nil
 }

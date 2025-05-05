@@ -19,7 +19,7 @@ type PlayerConn struct {
 	Conn   *websocket.Conn
 }
 type Move struct {
-	Id        uuid.UUID
+	ID        uuid.UUID
 	CreatedAt time.Time
 	Num       int
 	Move      string

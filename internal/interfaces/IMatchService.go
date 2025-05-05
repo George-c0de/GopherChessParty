@@ -7,9 +7,9 @@ import (
 
 type IMatchService interface {
 	CheckPair() bool
-	GetExistsChannel() <-chan struct{}
+	ExistsChannel() <-chan struct{}
 	AddUser(player *dto.PlayerConn) error
-	ReturnPlayerID() (*dto.PlayerConn, *dto.PlayerConn)
+	ReturnPlayers() (player1, player2 *dto.PlayerConn)
 	SendGemID(player *dto.PlayerConn, gameID uuid.UUID) error
 	CloseConnection(player *dto.PlayerConn) error
 	SendMove(player *dto.PlayerConn, move string) error

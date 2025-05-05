@@ -20,7 +20,7 @@ func addChessRoute(rg *gin.RouterGroup, service interfaces.IService) {
 			return
 		}
 
-		games, err := service.GetGamesByUserID(userId)
+		games, err := service.GamesByUserID(userId)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
@@ -39,7 +39,7 @@ func addChessRoute(rg *gin.RouterGroup, service interfaces.IService) {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
-		games, err := service.GetGameByID(gameID)
+		games, err := service.GameByID(gameID)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return

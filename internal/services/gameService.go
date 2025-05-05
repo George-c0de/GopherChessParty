@@ -37,12 +37,12 @@ func (m *GameService) CreateGame(playerID1, playerID2 uuid.UUID) (*ent.Chess, er
 	return game, nil
 }
 
-func (m *GameService) GetGamesByUserID(userID uuid.UUID) ([]*dto.GameHistory, error) {
-	return m.repository.GetGames(userID)
+func (m *GameService) GamesByUserID(userID uuid.UUID) ([]*dto.GameHistory, error) {
+	return m.repository.Games(userID)
 }
 
-func (m *GameService) GetGameByID(gameID uuid.UUID) (*dto.Match, error) {
-	return m.repository.GetGameById(gameID)
+func (m *GameService) GameByID(gameID uuid.UUID) (*dto.Match, error) {
+	return m.repository.GameById(gameID)
 }
 
 func (m *GameService) startGame(GameID uuid.UUID, whiteUserID, blackUserID uuid.UUID) {
@@ -59,12 +59,12 @@ func (m *GameService) startGame(GameID uuid.UUID, whiteUserID, blackUserID uuid.
 }
 
 func (m *GameService) GetStatusGame(GameID uuid.UUID) chess.Status {
-	return m.repository.GetStatus(GameID)
+	return m.repository.Status(GameID)
 }
 
 func (m *GameService) GetGame(GameID uuid.UUID) (*dto.Game, error) {
 	if m.games[GameID] == nil {
-		status := m.repository.GetStatus(GameID)
+		status := m.repository.Status(GameID)
 		if status != chess.StatusInProgress {
 			m.log.Error(errors.ErrGameEnd)
 			return nil, errors.ErrGameEnd
@@ -99,7 +99,7 @@ func (m *GameService) UpdateStatus(
 	}
 	game.Status = status
 	game.Result = result
-	return m.repository.UpdateGameResult(gameID, status, result)
+	return m.repository.UpdateGame(gameID, status, result)
 }
 
 func (m *GameService) MoveValid(GameID uuid.UUID, move string) error {
@@ -192,6 +192,6 @@ func (m *GameService) GetOpponent(gameID uuid.UUID) *dto.PlayerConn {
 	return game.GetOpponentUser()
 }
 
-func (m *GameService) GetGameMemory(GameID uuid.UUID) *dto.Game {
+func (m *GameService) GameMemory(GameID uuid.UUID) *dto.Game {
 	return m.games[GameID]
 }

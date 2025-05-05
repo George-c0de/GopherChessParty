@@ -30,7 +30,7 @@ func addUserRoutes(rg *gin.RouterGroup, service interfaces.IService) {
 	users.Use(middleware.JWTAuthMiddleware(service))
 	users.GET("/", func(c *gin.Context) {
 		service := GetService(c)
-		users, err := service.GetUsers()
+		users, err := service.Users()
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
@@ -45,7 +45,7 @@ func addUserRoutes(rg *gin.RouterGroup, service interfaces.IService) {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 			return
 		}
-		user, err := service.GetUserByID(userId)
+		user, err := service.UserByID(userId)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
