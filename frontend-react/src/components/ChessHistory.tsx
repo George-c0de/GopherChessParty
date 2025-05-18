@@ -385,7 +385,7 @@ export const ChessHistory: React.FC = () => {
   };
 
   const fetchGames = async () => {
-    const token = localStorage.getItem('authToken');
+    const token = localStorage.getItem('access_token');
     if (!token) {
       navigate('/login');
       return;
@@ -463,7 +463,8 @@ export const ChessHistory: React.FC = () => {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('authToken');
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('refresh_token');
     localStorage.removeItem('userId');
     navigate('/login');
   };

@@ -23,7 +23,7 @@ export const authApi = {
 
 // Добавляем интерцептор для добавления токена к запросам
 api.interceptors.request.use((config) => {
-    const token = localStorage.getItem('authToken');
+    const token = localStorage.getItem('access_token');
     if (token) {
         config.headers.Authorization = `Bearer ${token}`;
     }

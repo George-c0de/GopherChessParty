@@ -37,7 +37,7 @@ func NewService(
 }
 
 func (s *Service) IsValidateToken(tokenString string) (*jwt.Token, bool) {
-	token, err := s.ValidateToken(tokenString)
+	token, err := s.ValidateAccess(tokenString)
 	if err != nil {
 		return nil, false
 	}
@@ -136,10 +136,9 @@ func (s *Service) GetGameInfoMemory(
 	ok bool,
 	move string,
 ) (map[string]interface{}, error) {
-	game := s.GameMemory(GameID)
-	if game == nil {
-		s.logger.Error(errors.ErrGameNotFound)
-		return nil, errors.ErrGameNotFound
+	game, err := s.GameDB(GameID)
+	if err != nil {
+		return nil, err
 	}
 	answer := map[string]interface{}{
 		"ok":          ok,
@@ -147,6 +146,8 @@ func (s *Service) GetGameInfoMemory(
 		"historyMove": game.HistoryMove,
 		"currentMove": game.CurrentMotion,
 		"result":      game.Result,
+		"WhiteUserId": game.WhitePlayer.UserID,
+		"BlackUserId": game.BlackPlayer.UserID,
 	}
 	if !ok {
 		answer["message"] = "Недопустимый ход"

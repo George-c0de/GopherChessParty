@@ -10,7 +10,8 @@ export interface RegisterRequest {
 }
 
 export interface AuthResponse {
-    token: string;
+    access_token: string;
+    refresh_token: string;
     userId?: string;
     id?: string;
     user_id?: string;

@@ -193,6 +193,14 @@ const ErrorMessage = styled.div`
   padding: 10px 20px;
   border-radius: 5px;
   z-index: 1000;
+  cursor: pointer;
+  animation: fadeOut 3s forwards;
+  animation-delay: 2s;
+
+  @keyframes fadeOut {
+    from { opacity: 1; }
+    to { opacity: 0; }
+  }
 `;
 
 const StartGameButton = styled.button`
@@ -401,7 +409,11 @@ const MateText = styled.div`
   }
 `;
 
-const ChessBoardWrapper = styled.div`
+interface ChessBoardWrapperProps {
+  playerColor: Color | null;
+}
+
+const ChessBoardWrapper = styled.div<ChessBoardWrapperProps>`
   position: relative;
   width: 600px;
   height: 600px;
@@ -466,6 +478,7 @@ const useChessGame = (gameId: string | undefined) => {
   const [temporaryPosition, setTemporaryPosition] = useState<string>('start');
   const [isCheck, setIsCheck] = useState(false);
   const [isMate, setIsMate] = useState(false);
+  const [isConnected, setIsConnected] = useState(false);
 
   const chessRef = React.useRef(new Chess());
   const socketRef = React.useRef<WebSocket | null>(null);
@@ -478,19 +491,48 @@ const useChessGame = (gameId: string | undefined) => {
         return;
       }
 
-      const token = localStorage.getItem('authToken');
+      const accessToken = localStorage.getItem('access_token');
+      const refreshToken = localStorage.getItem('refresh_token');
       const userId = localStorage.getItem('userId');
       
-      if (!token || !userId) {
+      if (!accessToken || !refreshToken || !userId) {
         navigate('/login');
         return;
       }
 
       try {
         setIsLoading(true);
+
+        // Проверяем срок действия токена
+        const tokenData = JSON.parse(atob(accessToken.split('.')[1]));
+        const isTokenExpired = tokenData.exp * 1000 < Date.now();
+
+        let currentAccessToken = accessToken;
+
+        // Если токен истек, обновляем его
+        if (isTokenExpired) {
+          const refreshRes = await fetch(`${config.apiBaseUrl}${config.endpoints.auth.refresh}`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ refresh_token: refreshToken })
+          });
+
+          if (!refreshRes.ok) {
+            navigate('/login');
+            return;
+          }
+
+          const refreshData = await refreshRes.json();
+          currentAccessToken = refreshData.access_token;
+          localStorage.setItem('access_token', currentAccessToken);
+        }
+
+        // Получаем информацию об игре
         const res = await fetch(`${config.apiBaseUrl}/chess/${gameId}`, {
           headers: { 
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${currentAccessToken}`,
             'Content-Type': 'application/json'
           }
         });
@@ -499,7 +541,39 @@ const useChessGame = (gameId: string | undefined) => {
           throw new Error('Failed to fetch game info');
         }
 
-        const data: GameInfo = await res.json();
+        const data = await res.json();
+        console.log('=== Game Info from REST API ===');
+        console.log('Game Data:', data);
+        console.log('White User:', data.WhiteUser);
+        console.log('Black User:', data.BlackUser);
+        console.log('Game Status:', data.Status);
+        console.log('============================');
+        
+        // Проверяем структуру данных
+        if (!data) {
+          console.error('Data is null or undefined');
+          setError('Ошибка получения данных игры');
+          return;
+        }
+
+        if (!data.WhiteUser) {
+          console.error('WhiteUser is missing');
+          setError('Ошибка получения данных игры');
+          return;
+        }
+
+        if (!data.BlackUser) {
+          console.error('BlackUser is missing');
+          setError('Ошибка получения данных игры');
+          return;
+        }
+
+        if (!data.WhiteUser.id || !data.BlackUser.id) {
+          console.error('User IDs are missing');
+          setError('Ошибка получения данных игры');
+          return;
+        }
+        
         setGameInfo(data);
         
         const userColor = data.WhiteUser.id === userId ? 'white' : 
@@ -507,8 +581,53 @@ const useChessGame = (gameId: string | undefined) => {
         setPlayerColor(userColor);
 
         if (!userColor) {
+          console.error('User color not found. User ID:', userId);
+          console.error('White User ID:', data.WhiteUser.id);
+          console.error('Black User ID:', data.BlackUser.id);
           setError('Вы не являетесь участником этой игры');
+          return;
         }
+
+        // Если игра в статусе waiting или playing, открываем WebSocket соединение
+        if (data.Status === 'waiting' || data.Status === 'playing') {
+          const ws = new WebSocket(`${config.wsBaseUrl}${config.endpoints.game.play}/${gameId}?token=${encodeURIComponent('Bearer ' + currentAccessToken)}`);
+          socketRef.current = ws;
+
+          ws.onopen = () => {
+            console.log('=== WebSocket Connected ===');
+            console.log('User ID:', userId);
+            console.log('Player Color:', userColor);
+            console.log('Game Status:', data.Status);
+            console.log('========================');
+            setIsConnected(true);
+          };
+
+          ws.onmessage = (event) => {
+            console.log('=== Received Move ===');
+            console.log('Player Color:', userColor);
+            console.log('Move:', event.data);
+            
+            // Обрабатываем только ходы
+            if (typeof event.data === 'string' && event.data.length === 4) {
+              const move = event.data;
+              const from = move.substring(0, 2);
+              const to = move.substring(2, 4);
+              chessRef.current.move({ from, to });
+              setPosition(chessRef.current.fen());
+              setMoveHistory(prev => [...prev, move]);
+              setCurrentTurn(prev => prev === 'white' ? 'black' : 'white');
+            }
+          };
+
+          ws.onclose = () => {
+            console.log('=== WebSocket Disconnected ===');
+            console.log('User ID:', userId);
+            console.log('Player Color:', userColor);
+            console.log('===========================');
+            setIsConnected(false);
+          };
+        }
+
       } catch (e) {
         console.error('Error fetching game info:', e);
         setError(e instanceof Error ? e.message : 'Ошибка загрузки игры');
@@ -521,8 +640,8 @@ const useChessGame = (gameId: string | undefined) => {
   }, [gameId, navigate]);
 
   const startNewGame = async () => {
-    const token = localStorage.getItem('authToken');
-    if (!token) {
+    const accessToken = localStorage.getItem('access_token');
+    if (!accessToken) {
       navigate('/login');
       return;
     }
@@ -531,7 +650,7 @@ const useChessGame = (gameId: string | undefined) => {
     setSearchStatus('Поиск противника...');
 
     try {
-      const wsUrl = `${config.wsBaseUrl}/ws/search?token=${encodeURIComponent('Bearer ' + token)}`;
+      const wsUrl = `${config.wsBaseUrl}/ws/search?token=${encodeURIComponent('Bearer ' + accessToken)}`;
       console.log('Connecting to WebSocket:', wsUrl);
       
       const ws = new WebSocket(wsUrl);
@@ -612,117 +731,113 @@ const useChessGame = (gameId: string | undefined) => {
 
   // WebSocket and move handling
   useEffect(() => {
-    if (!gameInfo) return;
-    // Не подключаемся к WebSocket, если игра завершена
-    if (gameInfo.Status === 'finished' || gameInfo.Status === 'aborted') return;
-    const token = localStorage.getItem('authToken')!;
-    const ws = new WebSocket(`${config.wsBaseUrl}/ws/game/${gameId}?token=${encodeURIComponent('Bearer ' + token)}`);
+    if (!gameId) return;
+
+    const accessToken = localStorage.getItem('access_token');
+    const userId = localStorage.getItem('userId');
+    
+    if (!accessToken || !userId) {
+      navigate('/login');
+      return;
+    }
+
+    const ws = new WebSocket(`${config.wsBaseUrl}${config.endpoints.game.play}/${gameId}?token=${encodeURIComponent('Bearer ' + accessToken)}`);
     socketRef.current = ws;
 
     ws.onopen = () => {
-      console.log('WebSocket connection established for game:', gameId);
-      setError(null);
+      console.log('=== WebSocket Connected ===');
+      console.log('User ID:', userId);
+      console.log('Player Color:', playerColor);
+      console.log('========================');
+      setIsConnected(true);
     };
 
-    ws.onmessage = ({ data: msg }) => {
+    ws.onmessage = (event) => {
+      console.log('=== Received Message ===');
+      console.log('Player Color:', playerColor);
+      console.log('Raw message:', event.data);
+      
       try {
-        console.log('Received WebSocket message:', msg);
-        const data: WSMessage = JSON.parse(msg);
+        const data = JSON.parse(event.data);
+        console.log('Parsed data:', data);
         
-        // Handle check/mate events
-        if (data.event === 'check') {
-          setIsCheck(true);
-          setTimeout(() => setIsCheck(false), 2000); // Remove check animation after 2 seconds
-        } else if (data.event === 'mate') {
-          setIsMate(true);
-        }
-        
-        // Handle game result first
-        if (data.result && data.result !== "0-0") {
-          console.log('Game result received:', data.result);
-          setGameResult(data.result);
-          return;
-        }
-        
-        // initial history
-        if (data.historyMove) {
-          console.log('Processing initial history:', data.historyMove);
-          chessRef.current.reset();
-          data.historyMove.forEach((m: string) => {
-            try {
-              chessRef.current.move({ from: m.slice(0, 2), to: m.slice(2, 4) });
-            } catch (moveError) {
-              console.error('Error processing move:', m, moveError);
-            }
-          });
-          setPosition(chessRef.current.fen());
-          setMoveHistory(data.historyMove);
-          setCurrentTurn((data.currentMove! % 2 === 0) ? 'white' : 'black');
-          return;
-        }
-        
-        // single move from opponent
-        if (data.move) {
-          console.log('Processing opponent move:', data.move);
-          try {
-            chessRef.current.move({ from: data.move.slice(0, 2), to: data.move.slice(2, 4) });
+        // Обработка информации о игре
+        if (data.ok === true) {
+          console.log('=== Game Info ===');
+          console.log('White User ID:', data.WhiteUserId);
+          console.log('Black User ID:', data.BlackUserId);
+          console.log('Current Move:', data.currentMove);
+          console.log('History Moves:', data.historyMove);
+          console.log('Game Status:', data.status);
+          console.log('Game Result:', data.result);
+          console.log('================');
+          
+          // Обновляем информацию об игре
+          const userId = localStorage.getItem('userId');
+          if (userId) {
+            const userColor = data.WhiteUserId === userId ? 'white' : 
+                            data.BlackUserId === userId ? 'black' : null;
+            setPlayerColor(userColor);
+            
+            // Обновляем gameInfo
+            setGameInfo({
+              ID: gameId || '',
+              CreatedAt: new Date().toISOString(),
+              Result: data.result,
+              Status: data.status,
+              WhiteUser: { id: data.WhiteUserId, name: 'White Player', email: '' },
+              BlackUser: { id: data.BlackUserId, name: 'Black Player', email: '' }
+            });
+          }
+          
+          // Обновляем состояние игры
+          if (data.historyMove && data.historyMove.length > 0) {
+            chessRef.current.reset();
+            data.historyMove.forEach((move: string) => {
+              try {
+                chessRef.current.move({ from: move.slice(0, 2), to: move.slice(2, 4) });
+              } catch (e) {
+                console.error('Error processing move:', move, e);
+              }
+            });
             setPosition(chessRef.current.fen());
-            setMoveHistory(prev => [...prev, data.move!]);
-            setCurrentTurn(prev => prev === 'white' ? 'black' : 'white');
-          } catch (moveError) {
-            console.error('Error processing opponent move:', data.move, moveError);
-            setError('Ошибка при обработке хода противника');
+            setMoveHistory(data.historyMove);
+            setCurrentTurn((data.currentMove % 2 === 0) ? 'white' : 'black');
           }
-          return;
-        }
-        
-        // server response with result
-        if (data.ok === true && data.result && data.result !== "0-0") {
-          console.log('Server response with result:', data.result);
-          setGameResult(data.result);
-          return;
-        }
-        
-        // server response
-        if (typeof data.ok === 'boolean') {
-          if (!data.ok && data.message) {
-            console.error('Server error message:', data.message);
-            setError(data.message);
+          
+          // Обновляем статус игры
+          if (data.status === 'finished' || data.status === 'aborted') {
+            setGameResult(data.result);
           }
         }
         
-        if (data.error) {
-          console.error('Server error:', data.error);
-          setError(data.error);
+        // Обработка хода
+        if (typeof event.data === 'string' && event.data.length === 4) {
+          const move = event.data;
+          const from = move.substring(0, 2);
+          const to = move.substring(2, 4);
+          chessRef.current.move({ from, to });
+          setPosition(chessRef.current.fen());
+          setMoveHistory(prev => [...prev, move]);
+          setCurrentTurn(prev => prev === 'white' ? 'black' : 'white');
         }
-      } catch (parseError) {
-        console.error('Error parsing WebSocket message:', parseError);
-        console.error('Raw message:', msg);
-        setError('Ошибка при обработке сообщения от сервера');
+      } catch (error) {
+        console.error('Error processing message:', error);
       }
     };
 
-    ws.onerror = (error) => {
-      console.error('WebSocket error:', error);
-      setError('Ошибка соединения с сервером');
+    ws.onclose = () => {
+      console.log('=== WebSocket Disconnected ===');
+      console.log('User ID:', userId);
+      console.log('Player Color:', playerColor);
+      console.log('===========================');
+      setIsConnected(false);
     };
 
-    ws.onclose = (event) => {
-      console.log('WebSocket closed:', event.code, event.reason);
-      if (event.code !== 1000) {
-        setError('Соединение с сервером прервано');
-      }
-      socketRef.current = null;
+    return () => {
+      ws.close();
     };
-
-    return () => { 
-      console.log('Cleaning up WebSocket connection');
-      if (socketRef.current) {
-        socketRef.current.close(1000, 'Component unmounting');
-        socketRef.current = null;
-      }
-    };
-  }, [gameInfo, gameId]);
+  }, [gameId, navigate, playerColor]);
 
   useEffect(() => {
     if (gameInfo) {
@@ -731,21 +846,22 @@ const useChessGame = (gameId: string | undefined) => {
       }
       
       if (gameInfo.HistoryMove && gameInfo.HistoryMove.length > 0) {
-        const chess = new Chess();
+        chessRef.current.reset();
         gameInfo.HistoryMove.forEach(move => {
           try {
-            chess.move(move);
+            chessRef.current.move(move);
           } catch (e) {
             console.error('Invalid move in history:', move, e);
           }
         });
-        setPosition(chess.fen());
+        setPosition(chessRef.current.fen());
       }
     }
   }, [gameInfo]);
 
   const handleLogout = () => {
-    localStorage.removeItem('authToken');
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('refresh_token');
     localStorage.removeItem('userId');
     navigate('/login');
   };
@@ -791,12 +907,23 @@ const useChessGame = (gameId: string | undefined) => {
     }
   }, [moveHistory, position]);
 
+  // Автоматически очищаем ошибку через 3 секунды
+  useEffect(() => {
+    if (error) {
+      const timer = setTimeout(() => {
+        setError(null);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [error]);
+
   return { 
     gameInfo, 
     position: temporaryPosition,
     moveHistory, 
     playerColor, 
     error, 
+    setError,
     isLoading, 
     isSearching,
     searchStatus,
@@ -809,7 +936,8 @@ const useChessGame = (gameId: string | undefined) => {
     handleMoveForward,
     handleMoveClick,
     isCheck,
-    isMate
+    isMate,
+    isConnected
   };
 };
 
@@ -826,6 +954,7 @@ const ChessBoardPage: React.FC = () => {
     moveHistory, 
     playerColor, 
     error, 
+    setError,
     isLoading, 
     isSearching,
     searchStatus,
@@ -838,20 +967,21 @@ const ChessBoardPage: React.FC = () => {
     handleMoveForward,
     handleMoveClick,
     isCheck,
-    isMate
+    isMate,
+    isConnected
   } = useChessGame(gameId);
 
   // Определяем, кто пользователь
   const userId = localStorage.getItem('userId');
-  const isWhitePlayer = gameInfo?.WhiteUser.id === userId;
-  const isBlackPlayer = gameInfo?.BlackUser.id === userId;
+  const isWhitePlayer = gameInfo?.WhiteUser?.id === userId;
+  const isBlackPlayer = gameInfo?.BlackUser?.id === userId;
 
   const getGameResultText = (result: string) => {
     const userId = localStorage.getItem('userId');
     if (!gameInfo || !userId) return 'Игра завершена';
 
-    const isWhitePlayer = gameInfo.WhiteUser.id === userId;
-    const isBlackPlayer = gameInfo.BlackUser.id === userId;
+    const isWhitePlayer = gameInfo.WhiteUser?.id === userId;
+    const isBlackPlayer = gameInfo.BlackUser?.id === userId;
 
     switch (result) {
       case '1-0':
@@ -918,7 +1048,12 @@ const ChessBoardPage: React.FC = () => {
           </>
         )}
 
-        {error && <ErrorMessage>{error}</ErrorMessage>}
+        {error && (
+          <ErrorMessageComponent 
+            message={error} 
+            onClose={() => setError(null)} 
+          />
+        )}
 
         {gameInfo && gameId && (
           <BoardWrapper>
@@ -956,20 +1091,22 @@ const ChessBoardPage: React.FC = () => {
                 <BlackPlayerInfo>
                   <PlayerAvatar>B</PlayerAvatar>
                   <div>
-                    <PlayerName>{gameInfo.BlackUser.name}</PlayerName>
+                    <PlayerName>{gameInfo?.BlackUser?.name}</PlayerName>
                     <PlayerColor>Черные</PlayerColor>
+                    <div style={{ fontSize: '12px', color: '#666' }}>{gameInfo?.BlackUser?.email}</div>
                   </div>
                 </BlackPlayerInfo>
               ) : (
                 <WhitePlayerInfo>
                   <PlayerAvatar>W</PlayerAvatar>
                   <div>
-                    <PlayerName>{gameInfo.WhiteUser.name}</PlayerName>
+                    <PlayerName>{gameInfo?.WhiteUser?.name}</PlayerName>
                     <PlayerColor>Белые</PlayerColor>
+                    <div style={{ fontSize: '12px', color: '#666' }}>{gameInfo?.WhiteUser?.email}</div>
                   </div>
                 </WhitePlayerInfo>
               )}
-              <ChessBoardWrapper>
+              <ChessBoardWrapper playerColor={playerColor}>
                 <Chessboard
                   position={temporaryPosition}
                   onPieceDrop={handlePieceDrop}
@@ -977,10 +1114,11 @@ const ChessBoardPage: React.FC = () => {
                   boardWidth={600}
                   customBoardStyle={{
                     borderRadius: '4px',
-                    boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
+                    boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
                   }}
                   customDarkSquareStyle={{ backgroundColor: '#779556' }}
                   customLightSquareStyle={{ backgroundColor: '#ebecd0' }}
+                  showBoardNotation={true}
                 />
                 {gameResult && gameResult !== "0-0" && (
                   <NewGameButton 
@@ -997,16 +1135,18 @@ const ChessBoardPage: React.FC = () => {
                 <WhitePlayerInfo>
                   <PlayerAvatar>W</PlayerAvatar>
                   <div>
-                    <PlayerName>{gameInfo.WhiteUser.name} <span style={{color:'#27ae60', fontWeight:'bold', fontSize:'14px', marginLeft:'6px'}}>Вы</span></PlayerName>
+                    <PlayerName>{gameInfo?.WhiteUser?.name} <span style={{color:'#27ae60', fontWeight:'bold', fontSize:'14px', marginLeft:'6px'}}>Вы</span></PlayerName>
                     <PlayerColor>Белые</PlayerColor>
+                    <div style={{ fontSize: '12px', color: '#666' }}>{gameInfo?.WhiteUser?.email}</div>
                   </div>
                 </WhitePlayerInfo>
               ) : (
                 <BlackPlayerInfo>
                   <PlayerAvatar>B</PlayerAvatar>
                   <div>
-                    <PlayerName>{gameInfo.BlackUser.name} <span style={{color:'#27ae60', fontWeight:'bold', fontSize:'14px', marginLeft:'6px'}}>Вы</span></PlayerName>
+                    <PlayerName>{gameInfo?.BlackUser?.name} <span style={{color:'#27ae60', fontWeight:'bold', fontSize:'14px', marginLeft:'6px'}}>Вы</span></PlayerName>
                     <PlayerColor>Черные</PlayerColor>
+                    <div style={{ fontSize: '12px', color: '#666' }}>{gameInfo?.BlackUser?.email}</div>
                   </div>
                 </BlackPlayerInfo>
               )}
@@ -1038,6 +1178,26 @@ const ChessBoardPage: React.FC = () => {
         )}
       </MainContent>
     </BoardContainer>
+  );
+};
+
+interface ErrorMessageProps {
+  message: string;
+  onClose: () => void;
+}
+
+const ErrorMessageComponent: React.FC<ErrorMessageProps> = ({ message, onClose }) => {
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onClose();
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, [onClose]);
+
+  return (
+    <ErrorMessage onClick={onClose}>
+      {message}
+    </ErrorMessage>
   );
 };
 

@@ -17,8 +17,7 @@ func JWTAuthMiddleware(service interfaces.IService) gin.HandlerFunc {
 		// Извлекаем токен из заголовка Authorization
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Missing Authorization header"})
-			c.Abort()
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Missing Authorization header"})
 			return
 		}
 
@@ -36,8 +35,7 @@ func JWTAuthMiddleware(service interfaces.IService) gin.HandlerFunc {
 		token, ok := service.IsValidateToken(tokenString)
 
 		if !ok {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
-			c.Abort()
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
 			return
 		}
 

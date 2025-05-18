@@ -119,7 +119,7 @@ export const GameBoard: React.FC = () => {
     useEffect(() => {
         if (!gameId) return;
 
-        const token = localStorage.getItem('authToken');
+        const token = localStorage.getItem('access_token');
         if (!token) {
             setError('Нет токена авторизации');
             navigate('/login');
@@ -182,7 +182,7 @@ export const GameBoard: React.FC = () => {
         return () => {
             cleanupWebSocket();
         };
-    }, [gameId, navigate, cleanupWebSocket]);
+    }, [gameId, navigate]);
 
     // Очистка при размонтировании компонента
     useEffect(() => {
@@ -193,7 +193,8 @@ export const GameBoard: React.FC = () => {
 
     const handleLogout = () => {
         cleanupWebSocket();
-        localStorage.removeItem('authToken');
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
         localStorage.removeItem('userId');
         navigate('/login');
     };

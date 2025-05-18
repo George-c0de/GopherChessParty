@@ -8,6 +8,7 @@ import (
 	"GopherChessParty/internal/interfaces"
 	chesslib "github.com/corentings/chess/v2"
 	"github.com/google/uuid"
+	"time"
 )
 
 // GameService логика для работы с игрой
@@ -48,7 +49,8 @@ func (m *GameService) GameByID(gameID uuid.UUID) (*dto.Match, error) {
 func (m *GameService) startGame(GameID uuid.UUID, whiteUserID, blackUserID uuid.UUID) {
 	m.games[GameID] = &dto.Game{
 		Match:         chesslib.NewGame(),
-		GameID:        GameID,
+		CreatedAt:     time.Now(),
+		ID:            GameID,
 		CurrentMotion: dto.WhiteMotion,
 		WhitePlayer:   &dto.PlayerConn{UserID: whiteUserID},
 		BlackPlayer:   &dto.PlayerConn{UserID: blackUserID},
@@ -63,16 +65,7 @@ func (m *GameService) StatusGame(GameID uuid.UUID) chess.Status {
 }
 
 func (m *GameService) Game(GameID uuid.UUID) (*dto.Game, error) {
-	if m.games[GameID] == nil {
-		status := m.repository.Status(GameID)
-		if status != chess.StatusInProgress {
-			m.log.Error(errors.ErrGameEnd)
-			return nil, errors.ErrGameEnd
-		}
-		m.log.Error(errors.ErrGameEnd)
-		return nil, errors.ErrGameDeleteFailed
-	}
-	return m.games[GameID], nil
+	return m.GameDB(GameID)
 }
 
 func (m *GameService) UpdateStatus(
@@ -161,10 +154,9 @@ func (m *GameService) MoveGame(GameID uuid.UUID, move string, player *dto.Player
 }
 
 func (m *GameService) SetPlayer(GameID uuid.UUID, player *dto.PlayerConn) error {
-	game := m.games[GameID]
-	if game == nil {
-		m.log.Error(errors.ErrGameNotFound)
-		return errors.ErrGameNotFound
+	game, err := m.GameDB(GameID)
+	if err != nil {
+		return err
 	}
 	switch player.UserID {
 	case game.WhitePlayer.UserID:
@@ -194,4 +186,46 @@ func (m *GameService) Opponent(gameID uuid.UUID) *dto.PlayerConn {
 
 func (m *GameService) GameMemory(GameID uuid.UUID) *dto.Game {
 	return m.games[GameID]
+}
+func (m *GameService) GameDB(gameID uuid.UUID) (*dto.Game, error) {
+	game := m.GameMemory(gameID)
+	if game != nil {
+		return game, nil
+	}
+	gameDB, err := m.GameByID(gameID)
+	if err != nil {
+		return nil, err
+	}
+	match := chesslib.NewGame()
+	currentMotion := dto.WhiteMotion
+	historyMove := make([]string, 0, len(gameDB.HistoryMove))
+	NumMoves := 0
+	for _, move := range gameDB.HistoryMove {
+		_ = match.PushNotationMove(
+			move.Move,
+			chesslib.UCINotation{},
+			&chesslib.PushMoveOptions{},
+		)
+		NumMoves++
+		if currentMotion == dto.WhiteMotion {
+			currentMotion = dto.BlackMotion
+		} else {
+			currentMotion = dto.WhiteMotion
+		}
+		historyMove = append(historyMove, move.Move)
+	}
+	game = &dto.Game{
+		ID:            gameID,
+		CreatedAt:     gameDB.CreatedAt,
+		Result:        gameDB.Result,
+		Status:        gameDB.Status,
+		Match:         match,
+		WhitePlayer:   &dto.PlayerConn{UserID: gameDB.WhiteUser.ID},
+		BlackPlayer:   &dto.PlayerConn{UserID: gameDB.BlackUser.ID},
+		CurrentMotion: currentMotion,
+		HistoryMove:   historyMove,
+		NumMove:       NumMoves,
+	}
+	m.games[gameID] = game
+	return game, nil
 }

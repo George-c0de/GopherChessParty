@@ -145,7 +145,8 @@ const Header: React.FC = () => {
   }, [lastScrollY, isHovering, scrollTimeout]);
 
   const handleLogout = () => {
-    localStorage.removeItem('authToken');
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('refresh_token');
     localStorage.removeItem('userId');
     navigate('/login');
   };

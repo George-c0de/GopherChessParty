@@ -4,7 +4,7 @@ import (
 	"log/slog"
 	"os"
 
-	"GopherChessParty/internal/config"
+	"GopherChessParty/internal/dto"
 	"GopherChessParty/internal/interfaces"
 )
 
@@ -32,7 +32,7 @@ func (logger *Logger) ErrorWithMsg(msg string, err error) {
 	logger.log.Error(msg, slog.String("error", err.Error()))
 }
 
-func New(application config.Application) interfaces.ILogger {
+func New(application dto.Application) interfaces.ILogger {
 	var log *slog.Logger
 
 	switch application.Env {

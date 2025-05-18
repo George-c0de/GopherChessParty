@@ -1,13 +1,16 @@
 package interfaces
 
 import (
+	"GopherChessParty/internal/dto"
 	"github.com/golang-jwt/jwt"
 	"github.com/google/uuid"
 )
 
 type IAuthService interface {
-	GenerateToken(userId uuid.UUID) (string, error)
-	ValidateToken(tokenString string) (*jwt.Token, error)
+	GenerateTokenPair(userId uuid.UUID) (*dto.TokenPair, error)
+	RefreshAccessToken(refreshToken string) (*dto.TokenPair, error)
+	ValidateAccess(access string) (*jwt.Token, error)
+	ValidateRefresh(refresh string) (*jwt.Token, error)
 	GeneratePassword(rawPassword string) (string, error)
 	IsValidPassword(hashedPassword string, plainPassword string) bool
 }

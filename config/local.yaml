@@ -6,5 +6,5 @@ database:
   dbPassword: "postgres"
   dbDatabase: "gopher_chess"
 auth:
-  jwtSecret: "secret_key"
-  expTime: 24h
+  SecretAccess: "SecretAccess"
+  SecretRefresh: "SecretRefresh"

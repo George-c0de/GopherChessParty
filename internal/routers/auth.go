@@ -24,13 +24,16 @@ func addAuthRoutes(rg *gin.RouterGroup) {
 			return
 		}
 
-		token, err := service.GenerateToken(*userId)
+		tokens, err := service.GenerateTokenPair(*userId)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
 
-		c.JSON(http.StatusOK, gin.H{"token": token})
+		c.JSON(http.StatusOK, gin.H{
+			"access_token":  tokens.AccessToken,
+			"refresh_token": tokens.RefreshToken,
+		})
 	})
 
 	// Публичный маршрут для регистрации
@@ -49,12 +52,39 @@ func addAuthRoutes(rg *gin.RouterGroup) {
 			return
 		}
 
-		token, err := service.GenerateToken(user.ID)
+		tokens, err := service.GenerateTokenPair(user.ID)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
 
-		c.JSON(http.StatusOK, gin.H{"token": token})
+		c.JSON(http.StatusOK, gin.H{
+			"access_token":  tokens.AccessToken,
+			"refresh_token": tokens.RefreshToken,
+		})
+	})
+
+	// Публичный маршрут для обновления токена
+	rg.POST("/refresh", func(c *gin.Context) {
+		var data struct {
+			RefreshToken string `json:"refresh_token"`
+		}
+
+		if err := c.ShouldBindJSON(&data); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
+			return
+		}
+
+		service := GetService(c)
+		tokens, err := service.RefreshAccessToken(data.RefreshToken)
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid refresh token"})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"access_token":  tokens.AccessToken,
+			"refresh_token": tokens.RefreshToken,
+		})
 	})
 }

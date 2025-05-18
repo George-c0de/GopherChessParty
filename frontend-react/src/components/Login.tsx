@@ -29,14 +29,17 @@ export const Login: React.FC = () => {
 
         try {
             const response = await authApi.login({ email, password });
-            let token = response.token;
-            if (token && token.startsWith('Bearer ')) {
-                token = token.slice(7);
+            const { access_token, refresh_token } = response;
+            
+            if (access_token) {
+                localStorage.setItem('access_token', access_token);
             }
-            localStorage.setItem('authToken', token);
+            if (refresh_token) {
+                localStorage.setItem('refresh_token', refresh_token);
+            }
 
             try {
-                const payload: any = jwtDecode(token);
+                const payload: any = jwtDecode(access_token);
                 if (payload && payload.id) {
                     localStorage.setItem('userId', payload.id);
                 }

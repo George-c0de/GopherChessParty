@@ -16,4 +16,5 @@ type IGameService interface {
 	Opponent(gameID uuid.UUID) *dto.PlayerConn
 	GameMemory(GameID uuid.UUID) *dto.Game
 	MoveValid(GameID uuid.UUID, move string) error
+	GameDB(gameID uuid.UUID) (*dto.Game, error)
 }

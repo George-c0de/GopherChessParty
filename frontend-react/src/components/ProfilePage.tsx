@@ -136,7 +136,7 @@ export const ProfilePage: React.FC = () => {
 
   useEffect(() => {
     const fetchUserData = async () => {
-      const token = localStorage.getItem('authToken');
+      const token = localStorage.getItem('access_token');
       if (!token) {
         navigate('/login');
         return;
@@ -167,7 +167,8 @@ export const ProfilePage: React.FC = () => {
   }, [navigate]);
 
   const handleLogout = () => {
-    localStorage.removeItem('authToken');
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('refresh_token');
     localStorage.removeItem('userId');
     navigate('/login');
   };

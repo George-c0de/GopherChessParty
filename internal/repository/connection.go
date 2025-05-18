@@ -2,7 +2,7 @@ package repository
 
 import (
 	"GopherChessParty/ent"
-	"GopherChessParty/internal/config"
+	"GopherChessParty/internal/dto"
 	"entgo.io/ent/dialect/sql"
 	_ "github.com/lib/pq"
 )
@@ -12,7 +12,7 @@ type Connection struct {
 }
 
 // MustNewConnection Создание нового подключения.
-func MustNewConnection(cfg config.Database) *Connection {
+func MustNewConnection(cfg dto.Database) *Connection {
 	drv, err := sql.Open("postgres", cfg.Url())
 	if err != nil {
 		panic(err)

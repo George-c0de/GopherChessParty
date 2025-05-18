@@ -18,6 +18,7 @@ type PlayerConn struct {
 	UserID uuid.UUID
 	Conn   *websocket.Conn
 }
+
 type Move struct {
 	ID        uuid.UUID `json:"id"         db:"id"`
 	CreatedAt time.Time `json:"created_at" db:"created_at"`
@@ -37,14 +38,16 @@ type Match struct {
 }
 
 type Game struct {
+	ID        uuid.UUID
+	CreatedAt time.Time
+	Result    chess.Result
+	Status    chess.Status
+
 	Match         *chess2.Game
 	WhitePlayer   *PlayerConn
 	BlackPlayer   *PlayerConn
 	CurrentMotion int
-	GameID        uuid.UUID
 	HistoryMove   []string
-	Status        chess.Status
-	Result        chess.Result
 	NumMove       int
 }
 

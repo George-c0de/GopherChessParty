@@ -7,7 +7,8 @@ import { ProfilePage } from './components/ProfilePage';
 import { ChessHistory } from './components/ChessHistory';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const token = localStorage.getItem('authToken');
+    const token = localStorage.getItem('access_token');
+    const userId = localStorage.getItem('userId');
     if (!token) {
         return <Navigate to="/login" replace />;
     }

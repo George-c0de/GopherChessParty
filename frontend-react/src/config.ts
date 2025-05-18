@@ -10,6 +10,10 @@ export const config = {
             move: '/api/game/move',
             search: '/ws/search',
             play: '/ws/game'
+        },
+        auth: {
+            refresh: '/refresh',
+            validate: '/validate'
         }
     }
 } as const; 

@@ -26,14 +26,14 @@ func SearchMatchHandler(logger interfaces.ILogger) gin.HandlerFunc {
 		conn, err := CreateWebSocket(c)
 		if err != nil {
 			logger.Error(err)
-			c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
 
 		// Получение пользователя
 		userId, err := middleware.GetUserID(c)
 		if err != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 			return
 		}
 		player := &dto.PlayerConn{UserID: userId, Conn: conn}

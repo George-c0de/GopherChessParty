@@ -513,7 +513,7 @@ export const ChessBoard: React.FC = () => {
     useEffect(() => {
         if (!gameId) return;
 
-        const token = localStorage.getItem('authToken');
+        const token = localStorage.getItem('access_token');
         const userId = localStorage.getItem('userId');
         if (!token || !userId) {
             navigate('/login');
@@ -554,18 +554,8 @@ export const ChessBoard: React.FC = () => {
             }
         };
 
-        // Проверяем, не в режиме ли разработки
-        const isDev = process.env.NODE_ENV === 'development';
-        if (!isDev) {
-            fetchGameInfo();
-        } else {
-            // В режиме разработки используем setTimeout для предотвращения дублирования запросов
-            const timeoutId = setTimeout(() => {
-                fetchGameInfo();
-            }, 0);
-            return () => clearTimeout(timeoutId);
-        }
-    }, [gameId, navigate, determinePlayerColor]);
+        fetchGameInfo();
+    }, [gameId, navigate]);
 
     // Функция для очистки всех WebSocket ресурсов
     const cleanupWebSocket = useCallback(() => {
@@ -673,7 +663,7 @@ export const ChessBoard: React.FC = () => {
     useEffect(() => {
         if (!gameId || !gameInfo) return;
 
-        const token = localStorage.getItem('authToken');
+        const token = localStorage.getItem('access_token');
         if (!token) {
             setError('Нет токена авторизации');
             return;
@@ -734,7 +724,7 @@ export const ChessBoard: React.FC = () => {
             // Получаем информацию об игре
             const fetchGameInfo = async () => {
                 try {
-                    const token = localStorage.getItem('authToken');
+                    const token = localStorage.getItem('access_token');
                     if (!token) {
                         navigate('/login');
                         return;
@@ -760,7 +750,7 @@ export const ChessBoard: React.FC = () => {
             fetchGameInfo();
 
             // Подключаемся к существующей игре
-            const token = localStorage.getItem('authToken');
+            const token = localStorage.getItem('access_token');
             if (!token) {
                 navigate('/login');
                 return;
@@ -899,9 +889,9 @@ export const ChessBoard: React.FC = () => {
         setIsSearching(true);
         setSearchStatus('Поиск игры...');
         
-        const token = localStorage.getItem('authToken');
+        const token = localStorage.getItem('access_token');
         const userId = localStorage.getItem('userId');
-        console.log('authToken:', localStorage.getItem('authToken'));
+        console.log('access_token:', localStorage.getItem('access_token'));
         console.log('userId:', localStorage.getItem('userId'));
         if (!token || !userId) {
             setSearchStatus('Ошибка: нет токена авторизации');
@@ -998,7 +988,7 @@ export const ChessBoard: React.FC = () => {
     // Добавляем функцию для получения статуса игры
     const fetchGameStatus = async () => {
         try {
-            const token = localStorage.getItem('authToken');
+            const token = localStorage.getItem('access_token');
             if (!token || !gameId) return;
 
             const response = await fetch(`${config.apiBaseUrl}/chess/${gameId}`, {
@@ -1199,7 +1189,8 @@ export const ChessBoard: React.FC = () => {
 
     const handleLogout = () => {
         cleanupWebSocket();
-        localStorage.removeItem('authToken');
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
         localStorage.removeItem('userId');
         navigate('/login');
     };
